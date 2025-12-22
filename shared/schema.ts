@@ -95,3 +95,23 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).om
 
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+// Coverage Checks Table
+export const coverageChecks = pgTable("coverage_checks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  address: text("address").notNull(),
+  technology: text("technology"),
+  maxSpeed: text("max_speed"),
+  available: integer("available").notNull(),
+  rawResponse: text("raw_response"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCoverageCheckSchema = createInsertSchema(coverageChecks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCoverageCheck = z.infer<typeof insertCoverageCheckSchema>;
+export type CoverageCheck = typeof coverageChecks.$inferSelect;
