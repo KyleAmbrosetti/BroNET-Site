@@ -33,10 +33,7 @@ export const api = {
   // Auth
   signup: (data: any) => apiFetch('/auth/signup', {
     method: 'POST',
-    body: JSON.stringify({
-      ...data,
-      passwordHash: btoa(data.password),
-    }),
+    body: JSON.stringify(data),
   }),
 
   login: (email: string, password: string) => apiFetch('/auth/login', {
