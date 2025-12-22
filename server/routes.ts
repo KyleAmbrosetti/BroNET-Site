@@ -54,16 +54,27 @@ export async function registerRoutes(
   // Sign Up
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const data = insertUserSchema.parse(req.body);
+      const { email, password, firstName, lastName, planId } = req.body;
+      
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
       
       // Check if user exists
-      const existing = await storage.getUserByEmail(data.email);
+      const existing = await storage.getUserByEmail(email);
       if (existing) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Create user (password is already "hashed" from client base64)
-      const user = await storage.createUser(data);
+      // Create user with hashed password (base64 for demo)
+      const user = await storage.createUser({
+        email,
+        passwordHash: btoa(password),
+        firstName,
+        lastName,
+        planId: planId || null,
+        isAdmin: 0,
+      });
       
       // Set session
       req.session.userId = user.id;
@@ -158,12 +169,18 @@ export async function registerRoutes(
   // Create ticket
   app.post("/api/tickets", requireAuth, async (req, res) => {
     try {
-      const data = insertTicketSchema.parse({
-        ...req.body,
-        userId: req.session.userId,
-      });
+      const { subject, message } = req.body;
       
-      const ticket = await storage.createTicket(data);
+      if (!subject || !message) {
+        return res.status(400).json({ message: "Subject and message are required" });
+      }
+      
+      const ticket = await storage.createTicket({
+        userId: req.session.userId!,
+        subject,
+        message,
+        status: 'open',
+      });
       res.status(201).json({ ticket });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
