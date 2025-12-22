@@ -15,6 +15,9 @@ import Support from "@/pages/support";
 import Auth from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
+import CIS from "@/pages/cis";
 
 function Router() {
   return (
@@ -27,6 +30,9 @@ function Router() {
         <Route path="/auth" component={Auth} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/admin" component={Admin} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/cis" component={CIS} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
