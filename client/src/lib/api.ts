@@ -80,4 +80,14 @@ export const api = {
 
   // Usage
   getUsage: () => apiFetch('/usage'),
+
+  // Coverage
+  getCoverageStatus: () => apiFetch('/coverage/status'),
+
+  checkCoverage: (address: string) => apiFetch('/coverage/check', {
+    method: 'POST',
+    body: JSON.stringify({ address }),
+  }),
+
+  getCoverageHistory: () => apiFetch('/coverage/history'),
 };

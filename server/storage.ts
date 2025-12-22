@@ -4,6 +4,7 @@ import {
   ticketReplies,
   incidents, 
   contactMessages,
+  coverageChecks,
   type User, 
   type InsertUser,
   type Ticket,
@@ -14,6 +15,8 @@ import {
   type InsertIncident,
   type ContactMessage,
   type InsertContactMessage,
+  type CoverageCheck,
+  type InsertCoverageCheck,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -38,6 +41,10 @@ export interface IStorage {
   // Contact Messages
   getContactMessages(userId: string): Promise<ContactMessage[]>;
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+
+  // Coverage Checks
+  getCoverageChecks(userId: string): Promise<CoverageCheck[]>;
+  createCoverageCheck(check: InsertCoverageCheck): Promise<CoverageCheck>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -145,6 +152,24 @@ export class DatabaseStorage implements IStorage {
       .values(message)
       .returning();
     return newMessage;
+  }
+
+  // Coverage Checks
+  async getCoverageChecks(userId: string): Promise<CoverageCheck[]> {
+    return await db
+      .select()
+      .from(coverageChecks)
+      .where(eq(coverageChecks.userId, userId))
+      .orderBy(desc(coverageChecks.createdAt))
+      .limit(10);
+  }
+
+  async createCoverageCheck(check: InsertCoverageCheck): Promise<CoverageCheck> {
+    const [newCheck] = await db
+      .insert(coverageChecks)
+      .values(check)
+      .returning();
+    return newCheck;
   }
 }
 

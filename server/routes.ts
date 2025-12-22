@@ -263,5 +263,99 @@ export async function registerRoutes(
     }
   });
 
+  // ============ COVERAGE CHECK ============
+  
+  // Check if coverage API is configured
+  app.get("/api/coverage/status", async (_req, res) => {
+    const isConfigured = !!(process.env.COVERAGE_API_URL && process.env.COVERAGE_API_KEY);
+    res.json({ 
+      configured: isConfigured,
+      requiredEnvVars: ['COVERAGE_API_URL', 'COVERAGE_API_KEY']
+    });
+  });
+
+  // Perform coverage check
+  app.post("/api/coverage/check", async (req, res) => {
+    try {
+      const { address } = req.body;
+
+      if (!address || typeof address !== 'string' || address.trim().length < 5) {
+        return res.status(400).json({ message: "Valid address is required" });
+      }
+
+      const apiUrl = process.env.COVERAGE_API_URL;
+      const apiKey = process.env.COVERAGE_API_KEY;
+
+      // Check if API is configured
+      if (!apiUrl || !apiKey) {
+        return res.status(503).json({ 
+          message: "Coverage API not configured",
+          configured: false,
+          requiredEnvVars: ['COVERAGE_API_URL', 'COVERAGE_API_KEY']
+        });
+      }
+
+      // Call external coverage API
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ address: address.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Coverage API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Parse API response (adjust based on actual API structure)
+      const result = {
+        address: data.standardizedAddress || address,
+        technology: data.technology || data.nbnTechnology || 'Unknown',
+        maxSpeed: data.maxSpeed || data.downloadSpeed || 'Unknown',
+        available: data.available !== false ? 1 : 0,
+        rawResponse: JSON.stringify(data),
+      };
+
+      // Store in database if user is logged in
+      if (req.session.userId) {
+        await storage.createCoverageCheck({
+          userId: req.session.userId,
+          ...result,
+        });
+      }
+
+      res.json({ 
+        success: true,
+        result: {
+          address: result.address,
+          technology: result.technology,
+          maxSpeed: result.maxSpeed,
+          available: result.available === 1,
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Coverage check error:', error);
+      res.status(500).json({ 
+        message: error.message || "Failed to check coverage",
+        success: false,
+      });
+    }
+  });
+
+  // Get coverage check history
+  app.get("/api/coverage/history", requireAuth, async (req, res) => {
+    try {
+      const checks = await storage.getCoverageChecks(req.session.userId!);
+      res.json({ checks });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
