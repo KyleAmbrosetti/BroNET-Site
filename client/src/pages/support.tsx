@@ -4,14 +4,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MessageSquare, Activity, AlertTriangle, CheckCircle } from "lucide-react";
+import { Mail, Phone, MessageSquare, Activity, AlertTriangle, CheckCircle, Send } from "lucide-react";
 import { db } from "@/lib/mock-db";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { useUser } from "@/hooks/use-user";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Support() {
   const [status, setStatus] = useState<"operational" | "incident">("operational");
   const [incidents, setIncidents] = useState<any[]>([]);
+  const { user } = useUser();
+  const { toast } = useToast();
+  
+  // Contact Form State
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [topic, setTopic] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     // Poll for incidents
@@ -26,6 +38,50 @@ export default function Support() {
     const interval = setInterval(updateStatus, 5000); // Live update
     return () => clearInterval(interval);
   }, []);
+
+  // Pre-fill form if logged in
+  useEffect(() => {
+    if (user) {
+      setName(user.firstName + ' ' + user.lastName);
+      setEmail(user.email);
+    }
+  }, [user]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !message) {
+      toast({ title: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Simulate network delay
+    setTimeout(() => {
+      db.saveContactMessage({
+        userId: user?.id,
+        name,
+        email,
+        topic: topic || "General Inquiry",
+        message
+      });
+      
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      toast({ title: "Message sent!", description: "We'll get back to you shortly." });
+      
+      // Reset form if not logged in (keep name/email if logged in)
+      if (!user) {
+        setName("");
+        setEmail("");
+      }
+      setTopic("");
+      setMessage("");
+      
+      // Reset success message after 5s
+      setTimeout(() => setIsSuccess(false), 5000);
+    }, 1000);
+  };
 
   return (
     <div className="container py-16 px-4 md:px-6">
@@ -135,30 +191,70 @@ export default function Support() {
             <h2 className="text-2xl font-bold mb-6">Send us a message</h2>
             <Card>
               <CardContent className="pt-6">
-                <form className="space-y-4" onSubmit={(e) => {
-                  e.preventDefault();
-                  alert("Please sign in to the portal to submit support tickets.");
-                }}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input id="name" placeholder="Your name" />
+                {isSuccess ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in duration-300">
+                    <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 mb-4">
+                      <CheckCircle className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
+                    <p className="text-muted-foreground max-w-sm">
+                      Thanks for reaching out. One of our local support legends will get back to you shortly via email.
+                    </p>
+                    <Button variant="outline" className="mt-6" onClick={() => setIsSuccess(false)}>
+                      Send another message
+                    </Button>
+                  </div>
+                ) : (
+                  <form className="space-y-4" onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input 
+                          id="name" 
+                          placeholder="Your name" 
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          placeholder="john@example.com" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="john@example.com" />
+                      <Label htmlFor="topic">Topic</Label>
+                      <Input 
+                        id="topic" 
+                        placeholder="Sales, Support, Billing..." 
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                      />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">Topic</Label>
-                    <Input id="topic" placeholder="Sales, Support, Billing..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea id="message" placeholder="How can we help?" className="min-h-[120px]" />
-                  </div>
-                  <Button className="w-full bg-gradient-brand">Send Message</Button>
-                </form>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message</Label>
+                      <Textarea 
+                        id="message" 
+                        placeholder="How can we help?" 
+                        className="min-h-[120px]" 
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button className="w-full bg-gradient-brand" disabled={isSubmitting}>
+                      {isSubmitting ? "Sending..." : "Send Message"}
+                      {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
+                    </Button>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </section>
