@@ -23,11 +23,35 @@ import {
   PlusCircle,
   Mail
 } from "lucide-react";
-import { db, Ticket, UsageData, ContactMessage } from "@/lib/mock-db";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
+
+type Ticket = {
+  id: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  replies: any[];
+};
+
+type UsageData = {
+  month: string;
+  download: number;
+  upload: number;
+};
+
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+  createdAt: string;
+};
 
 export default function Dashboard() {
   const { user, logout, updateProfile } = useUser();
@@ -52,18 +76,41 @@ export default function Dashboard() {
       setLocation("/auth");
       return;
     }
-    // Load Data
-    setTickets(db.getTickets(user.id));
-    setUsage(db.getUsage(user.id));
-    setContactMessages(db.getContactMessages(user.id));
+    
+    // Load Data from API
+    const loadData = async () => {
+      const [ticketsRes, usageRes, messagesRes] = await Promise.all([
+        api.getTickets(),
+        api.getUsage(),
+        api.getMessages()
+      ]);
+      
+      if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
+      if (usageRes.data) setUsage(usageRes.data.usage);
+      if (messagesRes.data) setContactMessages(messagesRes.data.messages);
+    };
+    
+    loadData();
     setFirstName(user.firstName);
     setLastName(user.lastName);
   }, [user, setLocation]);
 
-  const handleCreateTicket = () => {
+  const handleCreateTicket = async () => {
     if (!user) return;
-    db.createTicket(user.id, newTicketSubject, newTicketMessage);
-    setTickets(db.getTickets(user.id));
+    const { data, error } = await api.createTicket({
+      subject: newTicketSubject,
+      message: newTicketMessage,
+      status: 'open',
+    });
+    
+    if (error) {
+      toast({ title: "Failed to create ticket", description: error, variant: "destructive" });
+      return;
+    }
+    
+    const ticketsRes = await api.getTickets();
+    if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
+    
     setIsTicketDialogOpen(false);
     setNewTicketSubject("");
     setNewTicketMessage("");
