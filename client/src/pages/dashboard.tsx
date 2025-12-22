@@ -20,9 +20,10 @@ import {
   LogOut,
   User as UserIcon,
   ChevronRight,
-  PlusCircle
+  PlusCircle,
+  Mail
 } from "lucide-react";
-import { db, Ticket, UsageData } from "@/lib/mock-db";
+import { db, Ticket, UsageData, ContactMessage } from "@/lib/mock-db";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [usage, setUsage] = useState<UsageData[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const { toast } = useToast();
   
   // New Ticket State
@@ -53,6 +55,7 @@ export default function Dashboard() {
     // Load Data
     setTickets(db.getTickets(user.id));
     setUsage(db.getUsage(user.id));
+    setContactMessages(db.getContactMessages(user.id));
     setFirstName(user.firstName);
     setLastName(user.lastName);
   }, [user, setLocation]);
@@ -97,6 +100,7 @@ export default function Dashboard() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
             <TabsTrigger value="support">My Tickets</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -296,6 +300,40 @@ export default function Dashboard() {
                 ))
               )}
             </div>
+          </TabsContent>
+
+          {/* MESSAGES TAB */}
+          <TabsContent value="messages">
+             <Card>
+               <CardHeader>
+                 <CardTitle>Sent Messages</CardTitle>
+                 <CardDescription>History of contact form submissions.</CardDescription>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-4">
+                   {contactMessages.length === 0 ? (
+                     <div className="text-center py-8 text-muted-foreground">
+                       No messages sent yet.
+                     </div>
+                   ) : (
+                     contactMessages.map((msg) => (
+                       <div key={msg.id} className="border p-4 rounded-lg flex items-start gap-3">
+                         <div className="bg-primary/10 p-2 rounded-full text-primary">
+                           <Mail className="h-4 w-4" />
+                         </div>
+                         <div className="flex-1">
+                           <div className="flex justify-between mb-1">
+                             <h4 className="font-medium">{msg.topic}</h4>
+                             <span className="text-xs text-muted-foreground">{format(new Date(msg.createdAt), 'MMM d, h:mm a')}</span>
+                           </div>
+                           <p className="text-sm text-muted-foreground">{msg.message}</p>
+                         </div>
+                       </div>
+                     ))
+                   )}
+                 </div>
+               </CardContent>
+             </Card>
           </TabsContent>
 
           {/* SETTINGS TAB */}
