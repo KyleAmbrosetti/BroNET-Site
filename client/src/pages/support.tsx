@@ -4,9 +4,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MessageSquare, Activity } from "lucide-react";
+import { Mail, Phone, MessageSquare, Activity, AlertTriangle, CheckCircle } from "lucide-react";
+import { db } from "@/lib/mock-db";
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
 
 export default function Support() {
+  const [status, setStatus] = useState<"operational" | "incident">("operational");
+  const [incidents, setIncidents] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Poll for incidents
+    const updateStatus = () => {
+      const allIncidents = db.getIncidents();
+      const active = allIncidents.filter(i => i.status !== 'resolved');
+      setIncidents(active);
+      setStatus(active.length > 0 ? "incident" : "operational");
+    };
+    
+    updateStatus();
+    const interval = setInterval(updateStatus, 5000); // Live update
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="container py-16 px-4 md:px-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -19,16 +39,30 @@ export default function Support() {
             </p>
           </div>
 
-          <Card className="border-l-4 border-l-green-500">
+          <Card className={`border-l-4 ${status === 'operational' ? 'border-l-green-500' : 'border-l-yellow-500'}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-500" />
+                <Activity className={`h-5 w-5 ${status === 'operational' ? 'text-green-500' : 'text-yellow-500'}`} />
                 <CardTitle className="text-lg">Network Status</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm font-medium">All systems operational</p>
-              <p className="text-xs text-muted-foreground mt-1">Last updated: 5 mins ago</p>
+              {status === 'operational' ? (
+                <>
+                  <p className="text-sm font-medium">All systems operational</p>
+                  <p className="text-xs text-muted-foreground mt-1">Last updated: Just now</p>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Active Incidents:</p>
+                  {incidents.map(inc => (
+                    <div key={inc.id} className="text-xs bg-muted p-2 rounded">
+                      <div className="font-bold">{inc.title}</div>
+                      <div className="text-muted-foreground capitalize">{inc.status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -101,7 +135,10 @@ export default function Support() {
             <h2 className="text-2xl font-bold mb-6">Send us a message</h2>
             <Card>
               <CardContent className="pt-6">
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("Please sign in to the portal to submit support tickets.");
+                }}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Name</Label>
