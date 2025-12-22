@@ -46,3 +46,24 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 integrations = ["javascript_database:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+
+[userenv.shared."https:"]
+
+[userenv.shared."https:".""]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au"]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au".server]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au".server.rest]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au".server.rest.services]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au".server.rest.services.Communications]
+
+[userenv.shared."https:".""."spatial.infrastructure.gov.au".server.rest.services.Communications.NBN_Coverage]
+MapServer = ""
