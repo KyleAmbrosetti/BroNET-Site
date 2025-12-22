@@ -5,11 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Phone, MessageSquare, Activity, AlertTriangle, CheckCircle, Send } from "lucide-react";
-import { db } from "@/lib/mock-db";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 export default function Support() {
   const [status, setStatus] = useState<"operational" | "incident">("operational");
@@ -27,15 +27,17 @@ export default function Support() {
 
   useEffect(() => {
     // Poll for incidents
-    const updateStatus = () => {
-      const allIncidents = db.getIncidents();
-      const active = allIncidents.filter(i => i.status !== 'resolved');
-      setIncidents(active);
-      setStatus(active.length > 0 ? "incident" : "operational");
+    const updateStatus = async () => {
+      const { data } = await api.getIncidents();
+      if (data) {
+        const active = data.incidents.filter((i: any) => i.status !== 'resolved');
+        setIncidents(active);
+        setStatus(active.length > 0 ? "incident" : "operational");
+      }
     };
     
     updateStatus();
-    const interval = setInterval(updateStatus, 5000); // Live update
+    const interval = setInterval(updateStatus, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -47,7 +49,7 @@ export default function Support() {
     }
   }, [user]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
@@ -56,31 +58,33 @@ export default function Support() {
 
     setIsSubmitting(true);
     
-    // Simulate network delay
-    setTimeout(() => {
-      db.saveContactMessage({
-        userId: user?.id,
-        name,
-        email,
-        topic: topic || "General Inquiry",
-        message
-      });
-      
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      toast({ title: "Message sent!", description: "We'll get back to you shortly." });
-      
-      // Reset form if not logged in (keep name/email if logged in)
-      if (!user) {
-        setName("");
-        setEmail("");
-      }
-      setTopic("");
-      setMessage("");
-      
-      // Reset success message after 5s
-      setTimeout(() => setIsSuccess(false), 5000);
-    }, 1000);
+    const { data, error } = await api.createMessage({
+      name,
+      email,
+      topic: topic || "General Inquiry",
+      message
+    });
+    
+    setIsSubmitting(false);
+    
+    if (error) {
+      toast({ title: "Failed to send message", description: error, variant: "destructive" });
+      return;
+    }
+    
+    setIsSuccess(true);
+    toast({ title: "Message sent!", description: "We'll get back to you shortly." });
+    
+    // Reset form if not logged in (keep name/email if logged in)
+    if (!user) {
+      setName("");
+      setEmail("");
+    }
+    setTopic("");
+    setMessage("");
+    
+    // Reset success message after 5s
+    setTimeout(() => setIsSuccess(false), 5000);
   };
 
   return (

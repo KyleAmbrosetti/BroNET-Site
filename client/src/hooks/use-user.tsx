@@ -1,14 +1,24 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, db } from '@/lib/mock-db';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { api } from '@/lib/api';
+
+type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  planId: string | null;
+  isAdmin: number;
+  joinedAt: string;
+};
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
 };
 
@@ -22,76 +32,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for session
-    const session = localStorage.getItem('bronet_session');
-    if (session) {
-      try {
-        const userData = JSON.parse(session);
-        setUser(userData);
-      } catch (e) {
-        localStorage.removeItem('bronet_session');
+    const checkAuth = async () => {
+      const { data, error } = await api.getMe();
+      if (data && !error) {
+        setUser(data.user);
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    checkAuth();
   }, []);
 
   const login = async (email: string, pass: string) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          const user = db.authenticate(email, pass);
-          setUser(user);
-          localStorage.setItem('bronet_session', JSON.stringify(user));
-          toast({ title: "Welcome back!", description: "You have successfully logged in." });
-          resolve();
-        } catch (e: any) {
-          toast({ title: "Login failed", description: e.message, variant: "destructive" });
-          reject(e);
-        }
-      }, 800); // Fake delay
-    });
+    const { data, error } = await api.login(email, pass);
+    if (error) {
+      toast({ title: "Login failed", description: error, variant: "destructive" });
+      throw new Error(error);
+    }
+    setUser(data.user);
+    toast({ title: "Welcome back!", description: "You have successfully logged in." });
   };
 
   const signup = async (data: any) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          const newUser = db.createUser({
-            email: data.email,
-            passwordHash: btoa(data.password), // Simple encoding for mock
-            firstName: data.firstName,
-            lastName: data.lastName,
-            planId: data.planId,
-          });
-          setUser(newUser);
-          localStorage.setItem('bronet_session', JSON.stringify(newUser));
-          toast({ title: "Account created!", description: "Welcome to BroNET." });
-          resolve();
-        } catch (e: any) {
-          toast({ title: "Signup failed", description: e.message, variant: "destructive" });
-          reject(e);
-        }
-      }, 800);
-    });
+    const { data: responseData, error } = await api.signup(data);
+    if (error) {
+      toast({ title: "Signup failed", description: error, variant: "destructive" });
+      throw new Error(error);
+    }
+    setUser(responseData.user);
+    toast({ title: "Account created!", description: "Welcome to BroNET." });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await api.logout();
     setUser(null);
-    localStorage.removeItem('bronet_session');
     setLocation('/auth');
     toast({ title: "Logged out", description: "See you next time." });
   };
 
   const updateProfile = async (data: Partial<User>) => {
-    if (!user) return;
-    return new Promise<void>((resolve) => {
-        setTimeout(() => {
-            const updated = db.updateUser(user.id, data);
-            setUser(updated);
-            localStorage.setItem('bronet_session', JSON.stringify(updated));
-            toast({ title: "Profile updated" });
-            resolve();
-        }, 500);
-    });
+    const { data: responseData, error } = await api.updateProfile(data);
+    if (error) {
+      toast({ title: "Update failed", description: error, variant: "destructive" });
+      throw new Error(error);
+    }
+    setUser(responseData.user);
+    toast({ title: "Profile updated" });
   };
 
   return (

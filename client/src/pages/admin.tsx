@@ -7,10 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { db, Incident } from "@/lib/mock-db";
 import { format } from "date-fns";
 import { Trash2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
+
+type Incident = {
+  id: string;
+  title: string;
+  status: string;
+  severity: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export default function Admin() {
   const { user } = useUser();
@@ -23,28 +32,45 @@ export default function Admin() {
   const [severity, setSeverity] = useState<"minor" | "major" | "critical">("minor");
 
   useEffect(() => {
-    // Simple admin check (in mock, anyone can access /admin if they know the URL, but let's redirect if not logged in)
     if (!user) {
       setLocation("/auth");
       return;
     }
-    setIncidents(db.getIncidents());
+    
+    const loadIncidents = async () => {
+      const { data } = await api.getIncidents();
+      if (data) setIncidents(data.incidents);
+    };
+    loadIncidents();
   }, [user, setLocation]);
 
-  const handleCreate = () => {
-    db.createIncident({
+  const handleCreate = async () => {
+    const { data, error } = await api.createIncident({
       title,
       severity,
       status: "investigating"
     });
-    setIncidents(db.getIncidents());
+    
+    if (error) {
+      toast({ title: "Failed to create incident", description: error, variant: "destructive" });
+      return;
+    }
+    
+    const res = await api.getIncidents();
+    if (res.data) setIncidents(res.data.incidents);
     setTitle("");
     toast({ title: "Incident created" });
   };
 
-  const handleResolve = (id: string) => {
-    db.resolveIncident(id);
-    setIncidents(db.getIncidents());
+  const handleResolve = async (id: string) => {
+    const { error } = await api.resolveIncident(id);
+    if (error) {
+      toast({ title: "Failed to resolve incident", description: error, variant: "destructive" });
+      return;
+    }
+    
+    const res = await api.getIncidents();
+    if (res.data) setIncidents(res.data.incidents);
     toast({ title: "Incident resolved" });
   };
 
