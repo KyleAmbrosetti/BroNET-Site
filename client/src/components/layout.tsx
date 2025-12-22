@@ -6,12 +6,14 @@ import {
   SheetContent, 
   SheetTrigger 
 } from "@/components/ui/sheet";
-import { Menu, Zap, User, Moon, Sun } from "lucide-react";
+import { Menu, Zap, User, Moon, Sun, LayoutDashboard, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/hooks/use-user";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useUser();
 
   const isPortal = location.startsWith("/dashboard");
 
@@ -41,14 +43,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Nav */}
-          {!isPortal && (
-            <nav className="hidden md:flex items-center gap-8">
-              <NavLink href="/">Home</NavLink>
-              <NavLink href="/plans">Plans</NavLink>
-              <NavLink href="/coverage">Coverage</NavLink>
-              <NavLink href="/support">Support</NavLink>
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-8">
+            <NavLink href="/">Home</NavLink>
+            <NavLink href="/plans">Plans</NavLink>
+            <NavLink href="/coverage">Coverage</NavLink>
+            <NavLink href="/support">Support</NavLink>
+            {user?.isAdmin && <NavLink href="/admin">Admin</NavLink>}
+          </nav>
 
           <div className="flex items-center gap-4">
             <Button
@@ -62,10 +63,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {isPortal ? (
-              <Button variant="ghost" asChild>
-                <Link href="/auth">Sign Out</Link>
-              </Button>
+            {user ? (
+               <div className="flex items-center gap-2">
+                 <Button variant="ghost" asChild>
+                   <Link href="/dashboard">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                   </Link>
+                 </Button>
+               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" className="hidden sm:flex" asChild>
@@ -94,7 +100,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Link href="/plans"><a className="text-lg font-medium">Plans</a></Link>
                     <Link href="/coverage"><a className="text-lg font-medium">Coverage</a></Link>
                     <Link href="/support"><a className="text-lg font-medium">Support</a></Link>
-                    <Link href="/auth"><a className="text-lg font-medium">Customer Portal</a></Link>
+                    {user ? (
+                      <>
+                        <Link href="/dashboard"><a className="text-lg font-medium text-primary">My Dashboard</a></Link>
+                        <button onClick={logout} className="text-lg font-medium text-left text-muted-foreground">Sign Out</button>
+                      </>
+                    ) : (
+                      <Link href="/auth"><a className="text-lg font-medium text-primary">Customer Portal</a></Link>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/hooks/use-user";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
@@ -12,6 +13,8 @@ import Plans from "@/pages/plans";
 import Coverage from "@/pages/coverage";
 import Support from "@/pages/support";
 import Auth from "@/pages/auth";
+import Dashboard from "@/pages/dashboard";
+import Admin from "@/pages/admin";
 
 function Router() {
   return (
@@ -22,13 +25,8 @@ function Router() {
         <Route path="/coverage" component={Coverage} />
         <Route path="/support" component={Support} />
         <Route path="/auth" component={Auth} />
-        {/* Placeholder for dashboard - redirecting to auth for now if accessed directly */}
-        <Route path="/dashboard" component={() => (
-          <div className="container py-12 text-center">
-            <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-            <p className="text-muted-foreground">This is where the user dashboard would be.</p>
-          </div>
-        )} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -39,10 +37,12 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
