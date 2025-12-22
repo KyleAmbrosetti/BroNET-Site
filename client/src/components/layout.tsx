@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { 
@@ -20,10 +19,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
     const isActive = location === href;
     return (
-      <Link href={href}>
-        <a className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-          {children}
-        </a>
+      <Link href={href} className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+        {children}
       </Link>
     );
   };
@@ -33,13 +30,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/">
-            <a className="flex items-center gap-2">
-              <div className="bg-gradient-brand p-1.5 rounded-lg text-white">
-                <Zap className="h-5 w-5 fill-current" />
-              </div>
-              <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
-            </a>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-gradient-brand p-1.5 rounded-lg text-white">
+              <Zap className="h-5 w-5 fill-current" />
+            </div>
+            <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -96,17 +91,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </SheetTrigger>
                 <SheetContent side="right">
                   <div className="flex flex-col gap-4 mt-8">
-                    <Link href="/"><a className="text-lg font-medium">Home</a></Link>
-                    <Link href="/plans"><a className="text-lg font-medium">Plans</a></Link>
-                    <Link href="/coverage"><a className="text-lg font-medium">Coverage</a></Link>
-                    <Link href="/support"><a className="text-lg font-medium">Support</a></Link>
+                    <Link href="/" className="text-lg font-medium">Home</Link>
+                    <Link href="/plans" className="text-lg font-medium">Plans</Link>
+                    <Link href="/coverage" className="text-lg font-medium">Coverage</Link>
+                    <Link href="/support" className="text-lg font-medium">Support</Link>
                     {user ? (
                       <>
-                        <Link href="/dashboard"><a className="text-lg font-medium text-primary">My Dashboard</a></Link>
+                        <Link href="/dashboard" className="text-lg font-medium text-primary">My Dashboard</Link>
                         <button onClick={logout} className="text-lg font-medium text-left text-muted-foreground">Sign Out</button>
                       </>
                     ) : (
-                      <Link href="/auth"><a className="text-lg font-medium text-primary">Customer Portal</a></Link>
+                      <Link href="/auth" className="text-lg font-medium text-primary">Customer Portal</Link>
                     )}
                   </div>
                 </SheetContent>
