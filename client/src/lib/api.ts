@@ -102,4 +102,19 @@ export const api = {
   deleteNbnDataset: () => apiFetch('/admin/nbn-dataset', {
     method: 'DELETE',
   }),
+
+  // Modem Enquiries
+  createModemEnquiry: (data: any) => apiFetch('/modems/enquiry', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  getModemEnquiries: () => apiFetch('/modems/enquiry'),
+
+  getAllModemEnquiries: () => apiFetch('/admin/modems/enquiry'),
+
+  updateModemEnquiryStatus: (id: string, status: string) => apiFetch(`/admin/modems/enquiry/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
 };
