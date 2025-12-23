@@ -23,6 +23,7 @@ import ComingSoon from "@/pages/coming-soon";
 import Abuse from "@/pages/abuse";
 import SignupWizard from "@/pages/signup-wizard";
 import Mobile from "@/pages/mobile";
+import SpeedTest from "@/pages/speed-test";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/home" component={Home} />
         <Route path="/plans" component={Plans} />
         <Route path="/mobile" component={Mobile} />
+        <Route path="/speed-test" component={SpeedTest} />
         <Route path="/coverage" component={Coverage} />
         <Route path="/modems" component={Modems} />
         <Route path="/nbn-2000" component={Nbn2000} />

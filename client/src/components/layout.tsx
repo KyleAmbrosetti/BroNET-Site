@@ -45,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/mobile">Mobile</NavLink>
             <NavLink href="/coverage">Coverage</NavLink>
             <NavLink href="/modems">Modems</NavLink>
+            <NavLink href="/speed-test">Speed Test</NavLink>
             <NavLink href="/support">Support</NavLink>
             {user?.isAdmin && <NavLink href="/admin">Admin</NavLink>}
           </nav>
@@ -99,6 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Link href="/mobile" className="text-lg font-medium">Mobile</Link>
                     <Link href="/coverage" className="text-lg font-medium">Coverage</Link>
                     <Link href="/modems" className="text-lg font-medium">Modems</Link>
+                    <Link href="/speed-test" className="text-lg font-medium">Speed Test</Link>
                     <Link href="/support" className="text-lg font-medium">Support</Link>
                     {user ? (
                       <>
