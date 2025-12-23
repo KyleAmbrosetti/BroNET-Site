@@ -2,7 +2,7 @@ import { storage } from "../storage";
 import crypto from "crypto";
 
 export interface SQResult {
-  source: 'wholesale_api' | 'dataset' | 'address_only' | 'nbn_public_api';
+  source: 'wholesale_api' | 'dataset' | 'address_only' | 'nbn_public_api' | 'rapidapi';
   available?: boolean;
   technology?: string;
   maxTier?: string;
@@ -208,6 +208,107 @@ async function checkPublicNBNAPI(
 }
 
 /**
+ * Check NBN availability using RapidAPI NBN Address Search
+ */
+async function checkRapidAPI(
+  normalizedAddress: string
+): Promise<SQResult> {
+  const apiKey = process.env.RAPIDAPI_NBN_KEY;
+  
+  if (!apiKey) {
+    return {
+      source: 'rapidapi',
+      error: 'RapidAPI key not configured',
+    };
+  }
+
+  try {
+    const encodedAddress = encodeURIComponent(normalizedAddress);
+    const response = await fetch(
+      `https://nbnco-address-search-api.p.rapidapi.com/nbn_address_search?address=${encodedAddress}`,
+      {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': 'nbnco-address-search-api.p.rapidapi.com',
+          'x-rapidapi-key': apiKey,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return {
+          source: 'rapidapi',
+          error: 'Rate limit exceeded, please try again later',
+        };
+      }
+      throw new Error(`RapidAPI returned ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Check for API-level errors
+    if (data.messages || data.error) {
+      return {
+        source: 'rapidapi',
+        error: data.messages || data.error || 'API error',
+      };
+    }
+
+    // Parse response - RapidAPI NBN search returns an array of address matches
+    const addresses = data.addresses || data.addressList || data;
+    
+    if (!addresses || (Array.isArray(addresses) && addresses.length === 0)) {
+      return {
+        source: 'rapidapi',
+        error: 'No matching addresses found',
+      };
+    }
+
+    // Get the first/best match
+    const match = Array.isArray(addresses) ? addresses[0] : addresses;
+    
+    // Map technology types
+    const techTypeMap: Record<string, string> = {
+      'FTTP': 'Fibre to the Premises',
+      'FTTC': 'Fibre to the Curb',
+      'FTTN': 'Fibre to the Node',
+      'FTTB': 'Fibre to the Building',
+      'HFC': 'Hybrid Fibre Coaxial',
+      'WIRELESS': 'Fixed Wireless',
+      'SATELLITE': 'Satellite',
+    };
+
+    const techType = match.technologyType || match.techType || match.technology || 'Unknown';
+    const isAvailable = match.serviceAvailable !== false && match.serviceStatus !== 'unavailable';
+    
+    // Determine max speed based on technology
+    let maxTier = match.maxTier || match.maxSpeed || 'Contact for details';
+    if (maxTier === 'Contact for details') {
+      if (techType === 'FTTP') maxTier = '2000 Mbps';
+      else if (techType === 'FTTC' || techType === 'HFC') maxTier = '1000 Mbps';
+      else if (techType === 'FTTN' || techType === 'FTTB') maxTier = '100 Mbps';
+      else if (techType === 'WIRELESS') maxTier = '75 Mbps';
+      else if (techType === 'SATELLITE') maxTier = '25 Mbps';
+    }
+
+    return {
+      source: 'rapidapi',
+      available: isAvailable,
+      technology: techTypeMap[techType] || techType,
+      maxTier,
+      rawResponse: data,
+    };
+  } catch (error: any) {
+    console.error('RapidAPI NBN error:', error.message);
+    return {
+      source: 'rapidapi',
+      error: error.message || 'RapidAPI request failed',
+    };
+  }
+}
+
+/**
  * Check NBN availability using admin dataset (Mode B)
  */
 async function checkDataset(
@@ -270,6 +371,15 @@ export async function checkNBNAvailability(
     console.log('Wholesale API failed, trying dataset fallback');
   }
 
+  // Try RapidAPI NBN search (if configured)
+  if (process.env.RAPIDAPI_NBN_KEY) {
+    const rapidResult = await checkRapidAPI(normalizedAddress);
+    if (!rapidResult.error) {
+      return rapidResult;
+    }
+    console.log('RapidAPI failed:', rapidResult.error, '- trying dataset');
+  }
+
   // Try admin dataset (Mode B)
   const datasetCount = await storage.getAllNbnDataset();
   if (datasetCount.length > 0) {
@@ -296,9 +406,12 @@ export async function checkNBNAvailability(
 /**
  * Get current SQ configuration mode
  */
-export function getSQMode(): 'wholesale_api' | 'dataset' | 'nbn_public_api' | 'none' {
+export function getSQMode(): 'wholesale_api' | 'rapidapi' | 'dataset' | 'nbn_public_api' | 'none' {
   if (process.env.NBN_WHOLESALE_BASE_URL && process.env.NBN_WHOLESALE_API_KEY) {
     return 'wholesale_api';
+  }
+  if (process.env.RAPIDAPI_NBN_KEY) {
+    return 'rapidapi';
   }
   // Public NBN API is always available as fallback
   return 'nbn_public_api';
