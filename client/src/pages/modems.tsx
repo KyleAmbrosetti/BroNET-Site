@@ -185,7 +185,7 @@ export default function ModemsPage() {
           </AlertDescription>
         </Alert>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 gap-8 mb-16 [&>*:last-child:nth-child(odd)]:md:col-span-2 [&>*:last-child:nth-child(odd)]:md:max-w-[calc(50%-1rem)] [&>*:last-child:nth-child(odd)]:md:mx-auto">
           {products.map((product) => (
             <Card key={product.id} className="relative" data-testid={`card-product-${product.id}`}>
               {product.badge && (
