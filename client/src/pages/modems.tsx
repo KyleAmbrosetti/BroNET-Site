@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
 import eero7Image from "@assets/eero_7_1766481389429.jpg";
 import eeroPro7Image from "@assets/eero_pro_7_1766472837873.jpg";
+import eeroMax7Image from "@assets/eero-max-7_bc8e_1766481757902.jpg";
 import {
   Dialog,
   DialogContent,
@@ -97,7 +98,7 @@ const products = [
     maxSpeed: "NBN 2000 (Home Ultrafast)",
     badge: "Ultimate",
     badgeVariant: "destructive" as const,
-    image: eeroPro7Image,
+    image: eeroMax7Image,
   },
 ];
 
