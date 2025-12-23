@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Wifi, Mail, ArrowRight, Clock, Zap, Bell } from "lucide-react";
+import { Wifi, Mail, ArrowRight, Clock, Zap, Bell, Eye } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -132,7 +132,13 @@ export default function ComingSoon() {
             </div>
           </div>
           
-          <div className="mt-12 pt-8 border-t border-border">
+          <div className="mt-12 pt-8 border-t border-border space-y-3">
+            <p className="text-sm text-muted-foreground">
+              <Link href="/home" className="inline-flex items-center gap-1 text-primary hover:underline font-medium" data-testid="link-sneak-peek">
+                <Eye className="h-4 w-4" />
+                Sneak peek at BroNET
+              </Link>
+            </p>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link href="/auth" className="text-primary hover:underline font-medium" data-testid="link-login">
