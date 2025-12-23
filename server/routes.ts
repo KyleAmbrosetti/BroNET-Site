@@ -700,47 +700,45 @@ export async function registerRoutes(
   // Get Stripe products and prices
   app.get("/api/stripe/products", async (req, res) => {
     try {
-      const { getStripeSync } = await import('./stripeClient');
-      const stripeSync = await getStripeSync();
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
       
-      const result = await db.execute(sql`
-        SELECT 
-          p.id as product_id,
-          p.name as product_name,
-          p.description as product_description,
-          p.metadata as product_metadata,
-          pr.id as price_id,
-          pr.unit_amount,
-          pr.currency,
-          pr.recurring
-        FROM stripe.products p
-        LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-        WHERE p.active = true
-        ORDER BY pr.unit_amount
-      `);
+      // Fetch products and prices directly from Stripe API
+      const [products, prices] = await Promise.all([
+        stripe.products.list({ active: true, limit: 100 }),
+        stripe.prices.list({ active: true, limit: 100, expand: ['data.product'] }),
+      ]);
       
+      // Build products with their prices
       const productsMap = new Map();
-      for (const row of result.rows as any[]) {
-        if (!productsMap.has(row.product_id)) {
-          productsMap.set(row.product_id, {
-            id: row.product_id,
-            name: row.product_name,
-            description: row.product_description,
-            metadata: row.product_metadata,
-            prices: []
-          });
-        }
-        if (row.price_id) {
-          productsMap.get(row.product_id).prices.push({
-            id: row.price_id,
-            unit_amount: row.unit_amount,
-            currency: row.currency,
-            recurring: row.recurring,
+      for (const product of products.data) {
+        productsMap.set(product.id, {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          metadata: product.metadata,
+          prices: []
+        });
+      }
+      
+      for (const price of prices.data) {
+        const productId = typeof price.product === 'string' ? price.product : price.product.id;
+        if (productsMap.has(productId)) {
+          productsMap.get(productId).prices.push({
+            id: price.id,
+            unit_amount: price.unit_amount,
+            currency: price.currency,
+            recurring: price.recurring,
           });
         }
       }
       
-      res.json({ products: Array.from(productsMap.values()) });
+      // Sort by price
+      const result = Array.from(productsMap.values())
+        .filter(p => p.prices.length > 0)
+        .sort((a, b) => (a.prices[0]?.unit_amount || 0) - (b.prices[0]?.unit_amount || 0));
+      
+      res.json({ products: result });
     } catch (error: any) {
       console.error("Error fetching products:", error);
       res.status(500).json({ message: "Failed to fetch products" });
