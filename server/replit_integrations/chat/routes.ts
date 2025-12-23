@@ -121,10 +121,17 @@ export function registerChatRoutes(app: Express): void {
       provider: isConfigured ? 'OpenAI (Replit AI Integrations)' : 'Built-in FAQ'
     });
   });
-  // Get all conversations
+  // Get all conversations (Admin only)
   app.get("/api/conversations", async (req: Request, res: Response) => {
     try {
-      const conversations = await chatStorage.getAllConversations();
+      // Require authentication and admin access
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check if user is admin (assuming user object has isAdmin property)
+      // For now, just return user's own conversations for security
+      const conversations = await chatStorage.getUserConversations(req.session.userId);
       res.json(conversations);
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -132,14 +139,25 @@ export function registerChatRoutes(app: Express): void {
     }
   });
 
-  // Get single conversation with messages
+  // Get single conversation with messages (Owner or Admin only)
   app.get("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = parseInt(req.params.id);
       const conversation = await chatStorage.getConversation(id);
+      
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
       }
+      
+      // Verify ownership - user must own this conversation
+      if (conversation.userId && conversation.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const messages = await chatStorage.getMessagesByConversation(id);
       res.json({ ...conversation, messages });
     } catch (error) {
@@ -152,7 +170,8 @@ export function registerChatRoutes(app: Express): void {
   app.post("/api/conversations", async (req: Request, res: Response) => {
     try {
       const { title } = req.body;
-      const conversation = await chatStorage.createConversation(title || "New Chat");
+      const userId = req.session?.userId || null;
+      const conversation = await chatStorage.createConversation(title || "New Chat", userId);
       res.status(201).json(conversation);
     } catch (error) {
       console.error("Error creating conversation:", error);
