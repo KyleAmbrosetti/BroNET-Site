@@ -173,7 +173,7 @@ export default function Support() {
               <AccordionItem value="item-2">
                 <AccordionTrigger>Do I need a new modem?</AccordionTrigger>
                 <AccordionContent>
-                  Not necessarily! If you have a BYO modem that is NBN compatible (VDSL for FTTN, or WAN port for FTTP/HFC), you can use it. We also sell pre-configured eero 6+ routers if you want an upgrade.
+                  Not necessarily! If you have a BYO modem that is NBN compatible (VDSL for FTTN, or WAN port for FTTP/HFC), you can use it. We also sell pre-configured eero 7 routers if you want an upgrade.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">

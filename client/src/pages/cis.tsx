@@ -200,7 +200,7 @@ export default function CIS() {
             </div>
             <div>
               <p className="text-sm font-medium mb-2">Modem/Router</p>
-              <p className="text-muted-foreground mb-2">Not included. Bring Your Own (BYO) compatible modem or purchase eero 6+ router for $199.</p>
+              <p className="text-muted-foreground mb-2">Not included. Bring Your Own (BYO) compatible modem or purchase eero 7 router for $299.</p>
               <p className="text-sm text-muted-foreground">Required: VDSL2-compatible modem for FTTN/FTTC, standard router with WAN port for FTTP/HFC</p>
             </div>
             <div>
