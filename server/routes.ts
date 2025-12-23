@@ -369,30 +369,50 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Valid address is required" });
       }
 
-      // Step 1: Validate and normalize address using Nominatim
-      const addressResult = await validateAddress(address);
+      // Check if address looks like it came from NBN API (contains LOT or is uppercase formatted)
+      const isNbnFormattedAddress = /^(LOT\s+\d+\s+)?\d+\s+[A-Z]+.*\d{4}$/i.test(address.trim());
       
-      if (!addressResult.success || !addressResult.normalizedAddress) {
-        return res.status(400).json({
-          success: false,
-          message: addressResult.error || "Address validation failed",
-        });
-      }
+      let addressResult: any;
+      let addressForNBN: string;
+      
+      if (isNbnFormattedAddress) {
+        // Skip Nominatim validation for NBN-formatted addresses - use directly
+        const postcodeMatch = address.match(/\b(\d{4})\b/);
+        const stateMatch = address.match(/\b(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\b/i);
+        const suburbMatch = address.match(/\b([A-Z]{2,})\s+(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\s+\d{4}/i);
+        
+        addressResult = {
+          success: true,
+          normalizedAddress: address.trim(),
+          postcode: postcodeMatch?.[1],
+          state: stateMatch?.[1]?.toUpperCase(),
+          suburb: suburbMatch?.[1],
+        };
+        addressForNBN = address.trim();
+      } else {
+        // Step 1: Validate and normalize address using Nominatim
+        addressResult = await validateAddress(address);
+        
+        if (!addressResult.success || !addressResult.normalizedAddress) {
+          return res.status(400).json({
+            success: false,
+            message: addressResult.error || "Address validation failed",
+          });
+        }
 
-      // Step 2: Check NBN availability (wholesale API or dataset)
-      // Use original address for NBN API to preserve street number, fall back to normalized
-      const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+(.+)/);
-      let addressForNBN = addressResult.normalizedAddress;
-      
-      // If user input has a street number, ensure it's in the address sent to NBN API
-      if (inputMatch) {
-        const streetNumber = inputMatch[1];
-        // Check if normalized address already has the street number
-        if (!addressResult.normalizedAddress.startsWith(streetNumber)) {
-          // Prepend street number to the normalized address for more accurate NBN lookup
-          addressForNBN = `${streetNumber} ${addressResult.normalizedAddress}`;
+        // Use original address for NBN API to preserve street number
+        const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+(.+)/);
+        addressForNBN = addressResult.normalizedAddress;
+        
+        if (inputMatch) {
+          const streetNumber = inputMatch[1];
+          if (!addressResult.normalizedAddress.startsWith(streetNumber)) {
+            addressForNBN = `${streetNumber} ${addressResult.normalizedAddress}`;
+          }
         }
       }
+      
+      const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+(.+)/);
       
       const sqResult = await checkNBNAvailability(
         addressForNBN,
