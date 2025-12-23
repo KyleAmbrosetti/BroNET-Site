@@ -7,8 +7,7 @@ import {
   Clock, 
   Wifi, 
   Gamepad2, 
-  Download, 
-  Star 
+  Download 
 } from "lucide-react";
 import generatedImage from '@assets/generated_images/abstract_blue-purple_fiber_optic_waves_background.png'
 
@@ -163,33 +162,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24">
-        <div className="container px-4 md:px-6">
-          <h2 className="text-3xl font-bold text-center mb-16">What legends are saying</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card p-6 rounded-2xl border shadow-sm">
-                <div className="flex gap-1 mb-4 text-yellow-400">
-                  <Star className="fill-current h-4 w-4" />
-                  <Star className="fill-current h-4 w-4" />
-                  <Star className="fill-current h-4 w-4" />
-                  <Star className="fill-current h-4 w-4" />
-                  <Star className="fill-current h-4 w-4" />
-                </div>
-                <p className="text-muted-foreground mb-6">"Honestly the best internet I've had in years. Support actually answers the phone and the speeds are exactly what I pay for."</p>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                  <div>
-                    <div className="font-bold">Sarah J.</div>
-                    <div className="text-xs text-muted-foreground">Surry Hills, NSW</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
