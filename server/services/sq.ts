@@ -2,7 +2,7 @@ import { storage } from "../storage";
 import crypto from "crypto";
 
 export interface SQResult {
-  source: 'wholesale_api' | 'dataset' | 'address_only';
+  source: 'wholesale_api' | 'dataset' | 'address_only' | 'nbn_public_api';
   available?: boolean;
   technology?: string;
   maxTier?: string;
@@ -91,6 +91,81 @@ async function checkWholesaleAPI(
 }
 
 /**
+ * Check NBN availability using the unofficial public NBN API
+ * This API scrapes NBN Co's public address checker and requires no authentication
+ */
+async function checkPublicNBNAPI(
+  normalizedAddress: string
+): Promise<SQResult> {
+  try {
+    const encodedAddress = encodeURIComponent(normalizedAddress);
+    const response = await fetch(
+      `https://nbn-service-check.deta.dev/check?address=${encodedAddress}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Public NBN API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Check if service is available
+    if (!data || data.error) {
+      return {
+        source: 'nbn_public_api',
+        error: data?.error || 'No data returned from NBN API',
+      };
+    }
+
+    // Map technology types to friendly names
+    const techTypeMap: Record<string, string> = {
+      'FTTP': 'Fibre to the Premises',
+      'FTTC': 'Fibre to the Curb',
+      'FTTN': 'Fibre to the Node',
+      'FTTB': 'Fibre to the Building',
+      'HFC': 'Hybrid Fibre Coaxial',
+      'WIRELESS': 'Fixed Wireless',
+      'SATELLITE': 'Satellite',
+    };
+
+    // Map speed tiers
+    const speedTierMap: Record<string, string> = {
+      '12': '12 Mbps',
+      '25': '25 Mbps',
+      '50': '50 Mbps',
+      '100': '100 Mbps',
+      '250': '250 Mbps',
+      '500': '500 Mbps',
+      '1000': '1000 Mbps',
+      '2000': '2000 Mbps',
+    };
+
+    const techType = data.techType || data.technology || 'Unknown';
+    const maxSpeed = data.maxSpeed || data.downloadSpeed || 'Unknown';
+    
+    return {
+      source: 'nbn_public_api',
+      available: data.serviceAvailable !== false && data.addressMatch !== false,
+      technology: techTypeMap[techType] || techType,
+      maxTier: speedTierMap[maxSpeed] || `${maxSpeed} Mbps`,
+      rawResponse: data,
+    };
+  } catch (error: any) {
+    console.error('Public NBN API error:', error);
+    return {
+      source: 'nbn_public_api',
+      error: error.message || 'Public NBN API request failed',
+    };
+  }
+}
+
+/**
  * Check NBN availability using admin dataset (Mode B)
  */
 async function checkDataset(
@@ -160,10 +235,17 @@ export async function checkNBNAvailability(
     if (!result.error) {
       return result;
     }
-    console.log('Dataset lookup failed, returning address-only');
+    console.log('Dataset lookup failed, trying public NBN API');
   }
 
-  // Neither mode available - return address-only validation
+  // Try public NBN API (Mode C) - no configuration required
+  const publicResult = await checkPublicNBNAPI(normalizedAddress);
+  if (!publicResult.error) {
+    return publicResult;
+  }
+  console.log('Public NBN API failed, returning address-only');
+
+  // All modes failed - return address-only validation
   return {
     source: 'address_only',
   };
@@ -172,12 +254,12 @@ export async function checkNBNAvailability(
 /**
  * Get current SQ configuration mode
  */
-export function getSQMode(): 'wholesale_api' | 'dataset' | 'none' {
+export function getSQMode(): 'wholesale_api' | 'dataset' | 'nbn_public_api' | 'none' {
   if (process.env.NBN_WHOLESALE_BASE_URL && process.env.NBN_WHOLESALE_API_KEY) {
     return 'wholesale_api';
   }
-  // We'll check dataset count at runtime in the API route
-  return 'none';
+  // Public NBN API is always available as fallback
+  return 'nbn_public_api';
 }
 
 export { generateAddressHash };
