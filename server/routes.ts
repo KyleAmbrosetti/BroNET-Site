@@ -11,6 +11,7 @@ import {
 import { validateAddress } from "./services/nominatim";
 import { checkNBNAvailability, getSQMode, generateAddressHash } from "./services/sq";
 import bcrypt from "bcrypt";
+import { registerChatRoutes } from "./replit_integrations/chat";
 
 // Middleware to require authentication
 function requireAuth(req: any, res: any, next: any) {
@@ -439,6 +440,9 @@ export async function registerRoutes(
       res.status(400).json({ message: error.message });
     }
   });
+
+  // Register AI chat routes
+  registerChatRoutes(app);
 
   return httpServer;
 }
