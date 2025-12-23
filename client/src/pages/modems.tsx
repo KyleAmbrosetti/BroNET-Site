@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
 import eero7Image from "@assets/eero_7_1766456146814.png";
-import eeroPro7Image from "@assets/eero_pro_7_1766456340140.jpg";
+import eeroPro7Image from "@assets/eero_pro_7_1766472837873.jpg";
 import {
   Dialog,
   DialogContent,
