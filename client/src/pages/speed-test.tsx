@@ -7,9 +7,9 @@ import { Link } from "wouter";
 export default function SpeedTest() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <section className="py-12 md:py-20">
+      <section className="py-8 md:py-12">
         <div className="container px-4 md:px-6">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <Badge variant="outline" className="mb-4">
               <Activity className="h-3 w-3 mr-1" />
               Powered by Ookla
@@ -22,21 +22,17 @@ export default function SpeedTest() {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card className="border-2 overflow-hidden">
-              <CardContent className="p-0">
-                <iframe 
-                  width="100%" 
-                  height="650" 
-                  frameBorder="0" 
-                  src="https://brointernet.speedtestcustom.com"
-                  title="BroNET Speed Test powered by Ookla"
-                  data-testid="speedtest-iframe"
-                  className="w-full"
-                  style={{ minHeight: "650px" }}
-                />
-              </CardContent>
-            </Card>
+          <div className="w-full max-w-5xl mx-auto">
+            <iframe 
+              width="100%" 
+              height="650" 
+              frameBorder="0" 
+              src="https://brointernet.speedtestcustom.com"
+              title="BroNET Speed Test powered by Ookla"
+              data-testid="speedtest-iframe"
+              className="w-full"
+              style={{ minHeight: "650px", border: "none" }}
+            />
 
             <div className="mt-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
@@ -55,7 +51,7 @@ export default function SpeedTest() {
               </Button>
             </div>
 
-            <div className="mt-8 grid md:grid-cols-3 gap-6">
+            <div className="mt-8 grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -99,7 +95,7 @@ export default function SpeedTest() {
               </Card>
             </div>
 
-            <Card className="mt-8 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20">
+            <Card className="mt-8 max-w-4xl mx-auto bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20">
               <CardContent className="p-6 md:p-8">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div>
