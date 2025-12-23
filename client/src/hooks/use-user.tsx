@@ -9,6 +9,7 @@ type User = {
   firstName: string;
   lastName: string;
   planId: string | null;
+  serviceAddress: string | null;
   isAdmin: number;
   joinedAt: string;
 };

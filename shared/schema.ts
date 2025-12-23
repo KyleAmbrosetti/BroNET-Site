@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   planId: text("plan_id"),
+  serviceAddress: text("service_address"),
   isAdmin: integer("is_admin").notNull().default(0),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
@@ -208,6 +209,41 @@ export const insertEmailSignupSchema = createInsertSchema(emailSignups).omit({
 
 export type InsertEmailSignup = z.infer<typeof insertEmailSignupSchema>;
 export type EmailSignup = typeof emailSignups.$inferSelect;
+
+// Billing History Table
+export const billingHistory = pgTable("billing_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  amount: text("amount").notNull(),
+  description: text("description").notNull(),
+  planId: text("plan_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBillingHistorySchema = createInsertSchema(billingHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertBillingHistory = z.infer<typeof insertBillingHistorySchema>;
+export type BillingHistory = typeof billingHistory.$inferSelect;
+
+// Usage Records Table
+export const usageRecords = pgTable("usage_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  downloadGb: text("download_gb").notNull(),
+  uploadGb: text("upload_gb").notNull(),
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+});
+
+export const insertUsageRecordSchema = createInsertSchema(usageRecords).omit({
+  id: true,
+  recordedAt: true,
+});
+
+export type InsertUsageRecord = z.infer<typeof insertUsageRecordSchema>;
+export type UsageRecord = typeof usageRecords.$inferSelect;
 
 // Re-export chat models
 export * from "./models/chat";

@@ -125,4 +125,22 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ conversationId, subject }),
   }),
+
+  // User Management
+  changePlan: (planId: string) => apiFetch('/user/plan', {
+    method: 'POST',
+    body: JSON.stringify({ planId }),
+  }),
+
+  updateAddress: (serviceAddress: string) => apiFetch('/user/address', {
+    method: 'PUT',
+    body: JSON.stringify({ serviceAddress }),
+  }),
+
+  changePassword: (oldPassword: string, newPassword: string) => apiFetch('/user/password', {
+    method: 'POST',
+    body: JSON.stringify({ oldPassword, newPassword }),
+  }),
+
+  getBillingHistory: () => apiFetch('/billing'),
 };

@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { storage } from "./storage";
 import {
   insertUserSchema,
@@ -25,6 +27,25 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Set up session middleware
+  const PgStore = connectPgSimple(session);
+  app.use(
+    session({
+      store: new PgStore({
+        conString: process.env.DATABASE_URL,
+        createTableIfMissing: true,
+      }),
+      secret: process.env.SESSION_SECRET || "bronet-dev-secret-key",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      },
+    })
+  );
   
   // ============ AUTH ROUTES ============
   
@@ -103,6 +124,92 @@ export async function registerRoutes(
       res.json({ user: { ...user, password: undefined } });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
+    }
+  });
+
+  // ============ USER MANAGEMENT ROUTES ============
+
+  app.post("/api/user/plan", requireAuth, async (req, res) => {
+    try {
+      const { planId } = req.body;
+      
+      if (!planId || typeof planId !== 'string') {
+        return res.status(400).json({ message: "Plan ID is required" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const oldPlanId = user.planId;
+      const updatedUser = await storage.updateUser(req.session.userId!, { planId });
+
+      await storage.createBillingRecord({
+        userId: req.session.userId!,
+        amount: "0.00",
+        description: `Plan changed from ${oldPlanId || 'None'} to ${planId}`,
+        planId,
+      });
+
+      res.json({ user: { ...updatedUser, password: undefined } });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/user/address", requireAuth, async (req, res) => {
+    try {
+      const { serviceAddress } = req.body;
+      
+      if (typeof serviceAddress !== 'string') {
+        return res.status(400).json({ message: "Service address is required" });
+      }
+
+      const updatedUser = await storage.updateUser(req.session.userId!, { serviceAddress });
+      res.json({ user: { ...updatedUser, password: undefined } });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/user/password", requireAuth, async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: "Both old and new passwords are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isValid = await bcrypt.compare(oldPassword, user.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUser(req.session.userId!, { password: hashedPassword });
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/billing", requireAuth, async (req, res) => {
+    try {
+      const history = await storage.getBillingHistory(req.session.userId!);
+      res.json({ history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
   });
 
