@@ -8,6 +8,7 @@ import {
   nbnDataset,
   coverageChecks,
   modemEnquiries,
+  emailSignups,
   type User, 
   type InsertUser,
   type Ticket,
@@ -26,6 +27,8 @@ import {
   type InsertCoverageCheck,
   type ModemEnquiry,
   type InsertModemEnquiry,
+  type EmailSignup,
+  type InsertEmailSignup,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -78,6 +81,10 @@ export interface IStorage {
   getAllModemEnquiries(): Promise<ModemEnquiry[]>;
   createModemEnquiry(enquiry: InsertModemEnquiry): Promise<ModemEnquiry>;
   updateModemEnquiryStatus(id: string, status: string): Promise<ModemEnquiry>;
+
+  // Email Signups
+  getEmailSignupByEmail(email: string): Promise<EmailSignup | undefined>;
+  createEmailSignup(signup: InsertEmailSignup): Promise<EmailSignup>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -294,6 +301,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(modemEnquiries.id, id))
       .returning();
     return updated;
+  }
+
+  // Email Signups
+  async getEmailSignupByEmail(email: string): Promise<EmailSignup | undefined> {
+    const result = await db
+      .select()
+      .from(emailSignups)
+      .where(eq(emailSignups.email, email))
+      .limit(1);
+    return result[0];
+  }
+
+  async createEmailSignup(signup: InsertEmailSignup): Promise<EmailSignup> {
+    const [newSignup] = await db
+      .insert(emailSignups)
+      .values(signup)
+      .returning();
+    return newSignup;
   }
 }
 

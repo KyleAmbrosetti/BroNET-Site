@@ -17,15 +17,39 @@ export default function ComingSoon() {
     
     setIsSubmitting(true);
     
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    toast({
-      title: "You're on the list!",
-      description: "We'll notify you when we launch.",
-    });
-    
-    setEmail("");
-    setIsSubmitting(false);
+    try {
+      const response = await fetch("/api/email-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "coming-soon" }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: data.alreadySubscribed ? "Already subscribed!" : "You're on the list!",
+          description: data.alreadySubscribed 
+            ? "This email is already registered for updates."
+            : "We'll notify you when we launch.",
+        });
+        setEmail("");
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to connect. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
