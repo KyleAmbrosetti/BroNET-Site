@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
-import eero7Image from "@assets/stock_images/modern_white_mesh_wi_7311b6dd.jpg";
+import eero7Image from "@assets/eero_pro_7_1766456264009.jpg";
 import eeroPro7Image from "@assets/eero_pro_7_1766456174994.jpg";
 import {
   Dialog,

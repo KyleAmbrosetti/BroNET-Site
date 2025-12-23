@@ -8,6 +8,7 @@ import {
 import { Menu, Zap, User, Moon, Sun, LayoutDashboard, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/use-user";
+import { ChatBot } from "@/components/chatbot";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -167,6 +168,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </footer>
       )}
+      
+      {/* AI Chatbot */}
+      <ChatBot />
     </div>
   );
 }
