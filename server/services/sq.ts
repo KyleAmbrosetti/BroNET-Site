@@ -225,11 +225,11 @@ async function checkRapidAPI(
   try {
     const encodedAddress = encodeURIComponent(normalizedAddress);
     const response = await fetch(
-      `https://nbnco-address-search-api.p.rapidapi.com/nbn_address_search?address=${encodedAddress}`,
+      `https://nbnco-address-check.p.rapidapi.com/nbn_address?address=${encodedAddress}`,
       {
         method: 'GET',
         headers: {
-          'x-rapidapi-host': 'nbnco-address-search-api.p.rapidapi.com',
+          'x-rapidapi-host': 'nbnco-address-check.p.rapidapi.com',
           'x-rapidapi-key': apiKey,
         },
       }
