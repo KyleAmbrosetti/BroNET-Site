@@ -64,22 +64,17 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
       return [];
     }
 
-    // Try RapidAPI NBN address search first (more accurate for Australian addresses)
+    // Try NBN address check API for suggestions (returns accurate NBN addresses)
     const rapidApiKey = process.env.RAPIDAPI_NBN_KEY;
     if (rapidApiKey) {
       try {
-        // Clean up the API key in case it has extra formatting
-        let cleanKey = rapidApiKey;
-        if (cleanKey.includes("'")) {
-          const match = cleanKey.match(/'([^']+)'/);
-          if (match) cleanKey = match[1];
-        }
+        let cleanKey = rapidApiKey.trim().replace(/^['"]|['"]$/g, '');
 
-        const url = `https://nbnco-address-search-api.p.rapidapi.com/nbn_address_search?address=${encodeURIComponent(query + ' Australia')}`;
+        const url = `https://nbnco-address-check.p.rapidapi.com/nbn_address?address=${encodeURIComponent(query)}`;
         
         const response = await fetch(url, {
           headers: {
-            'x-rapidapi-host': 'nbnco-address-search-api.p.rapidapi.com',
+            'x-rapidapi-host': 'nbnco-address-check.p.rapidapi.com',
             'x-rapidapi-key': cleanKey,
           },
         });
@@ -87,24 +82,22 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
         if (response.ok) {
           const data = await response.json();
           
-          if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-            return data.suggestions.slice(0, 5).map((item: any) => {
-              const formattedAddress = item.formattedAddress || item.address || '';
-              const parts = formattedAddress.split(',').map((p: string) => p.trim());
-              
-              return {
-                displayName: formattedAddress,
-                address: formattedAddress,
-                suburb: item.locality || parts[1] || '',
-                state: item.state || parts[2]?.split(' ')[0] || '',
-                postcode: item.postcode || parts[2]?.match(/\d{4}/)?.[0] || '',
-                locId: item.id || item.locId,
-              };
-            });
+          // If we get a valid address result, use it as a suggestion
+          if (data.addressDetail && data.addressDetail.formattedAddress) {
+            const addr = data.addressDetail;
+            const formattedAddress = addr.formattedAddress.replace(/\s+Australia$/i, '');
+            
+            return [{
+              displayName: formattedAddress,
+              address: formattedAddress,
+              suburb: addr.locality || '',
+              state: addr.address2?.match(/([A-Z]{2,3})\s+\d{4}/)?.[1] || '',
+              postcode: addr.address2?.match(/\d{4}/)?.[0] || '',
+            }];
           }
         }
       } catch (rapidError) {
-        console.error('RapidAPI address search error:', rapidError);
+        console.error('RapidAPI address suggestion error:', rapidError);
       }
     }
 
