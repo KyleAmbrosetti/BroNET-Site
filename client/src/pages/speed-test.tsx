@@ -65,7 +65,7 @@ export default function SpeedTest() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
             <Award className="h-10 w-10 text-primary" />
             <p className="text-xl md:text-2xl font-semibold">
-              <span className="text-gradient-brand">BroNET</span> - <span className="text-primary">Lightning fast</span> NBN for Aussie legends
+              <span className="text-gradient-brand">BroNET</span> - <span className="text-gradient-flame font-bold">Lightning fast</span> NBN for Aussie legends
             </p>
           </div>
         </div>

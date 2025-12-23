@@ -203,6 +203,34 @@
   background-clip: text;
 }
 
+.text-gradient-flame {
+  background: linear-gradient(
+    90deg,
+    hsl(250 100% 65%),
+    hsl(280 100% 60%),
+    hsl(300 100% 70%),
+    hsl(280 100% 60%),
+    hsl(250 100% 65%)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flame-flow 2s ease-in-out infinite;
+}
+
+@keyframes flame-flow {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
+
 .font-heading {
   font-family: var(--font-heading);
 }
