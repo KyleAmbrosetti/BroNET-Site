@@ -203,7 +203,7 @@ export default function ModemsPage() {
                   <img 
                     src={product.image} 
                     alt={product.name}
-                    className="h-full w-full object-cover"
+                    className={`h-full w-full object-cover ${product.id === 'eero-max-7' ? 'object-[center_35%]' : ''}`}
                     data-testid={`image-${product.id}`}
                   />
                 </div>
