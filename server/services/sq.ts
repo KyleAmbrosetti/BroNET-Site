@@ -8,6 +8,11 @@ export interface SQResult {
   maxTier?: string;
   rawResponse?: any;
   error?: string;
+  // Address details from RapidAPI when available
+  formattedAddress?: string;
+  locality?: string;
+  postcode?: string;
+  state?: string;
 }
 
 function generateAddressHash(normalizedAddress: string, postcode: string): string {
@@ -302,12 +307,21 @@ async function checkRapidAPI(
     else if (techType === 'WIRELESS') maxTier = '75 Mbps';
     else if (techType === 'SATELLITE') maxTier = '25 Mbps';
 
+    // Extract address details from RapidAPI response
+    const addressSplit = data.addressSplitDetails || {};
+    const formattedAddress = addressDetail?.formattedAddress || 
+                            (addressSplit.address1 ? `${addressSplit.address1}, ${addressSplit.locality || ''} ${addressSplit.state || ''} ${addressSplit.postcode || ''}`.trim() : undefined);
+    
     return {
       source: 'rapidapi',
       available: isAvailable,
       technology: techTypeMap[techType] || techType,
       maxTier,
       rawResponse: data,
+      formattedAddress,
+      locality: addressDetail?.locality || addressSplit.locality || servingArea?.description,
+      postcode: addressSplit.postcode || undefined,
+      state: addressSplit.state || undefined,
     };
   } catch (error: any) {
     console.error('RapidAPI NBN error:', error.message);

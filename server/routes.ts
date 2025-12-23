@@ -387,14 +387,28 @@ export async function registerRoutes(
         });
       }
 
-      // Step 4: Return result
+      // Step 4: Return result - prefer RapidAPI address details when available
+      // Extract street number from user input if RapidAPI doesn't have it
+      let finalAddress = sqResult.formattedAddress || addressResult.normalizedAddress;
+      const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+/);
+      const inputStreetNumber = inputMatch ? inputMatch[1] : null;
+      
+      // If we have a street number from input but not in the formatted address, prepend it
+      if (inputStreetNumber && finalAddress && !finalAddress.match(/^\d+/)) {
+        finalAddress = `${inputStreetNumber} ${finalAddress}`;
+      }
+      
+      const finalSuburb = sqResult.locality || addressResult.suburb;
+      const finalPostcode = sqResult.postcode || addressResult.postcode;
+      const finalState = sqResult.state || addressResult.state;
+      
       res.json({
         success: true,
         result: {
-          normalizedAddress: addressResult.normalizedAddress,
-          postcode: addressResult.postcode,
-          suburb: addressResult.suburb,
-          state: addressResult.state,
+          normalizedAddress: finalAddress,
+          postcode: finalPostcode,
+          suburb: finalSuburb,
+          state: finalState,
           technology: sqResult.technology,
           maxTier: sqResult.maxTier,
           available: sqResult.available,
