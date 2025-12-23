@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, X, Smartphone, Phone, MessageSquare, Globe, Zap, Shield, Users, Wifi } from "lucide-react";
 
@@ -63,44 +61,7 @@ const simOnlyPlans: MobilePlan[] = [
   },
 ];
 
-const devicePlans: MobilePlan[] = [
-  {
-    name: "Device Basic",
-    data: "20GB",
-    price: 45,
-    calls: "Unlimited",
-    sms: "Unlimited",
-    features: ["5G Network Access", "24-month plan", "Latest smartphones available"],
-  },
-  {
-    name: "Device Plus",
-    data: "60GB",
-    price: 65,
-    calls: "Unlimited",
-    sms: "Unlimited",
-    popular: true,
-    features: ["5G Network Access", "24-month plan", "Latest smartphones available", "International Calls 20 countries"],
-  },
-  {
-    name: "Device Premium",
-    data: "120GB",
-    price: 85,
-    calls: "Unlimited",
-    sms: "Unlimited",
-    features: ["5G Network Access", "24-month plan", "Premium smartphones", "International Calls 35 countries", "Roaming Included"],
-  },
-  {
-    name: "Device Unlimited",
-    data: "Unlimited",
-    price: 99,
-    calls: "Unlimited",
-    sms: "Unlimited",
-    badge: "Premium",
-    features: ["5G Network Access", "24-month plan", "Any smartphone", "Truly Unlimited Data", "International Calls 35 countries", "Roaming Included", "Priority Support"],
-  },
-];
-
-function PlanCard({ plan, type }: { plan: MobilePlan; type: "sim" | "device" }) {
+function PlanCard({ plan }: { plan: MobilePlan }) {
   return (
     <Card className={`relative flex flex-col ${plan.popular ? "border-primary shadow-lg scale-105" : ""}`} data-testid={`card-mobile-plan-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
       {plan.popular && (
@@ -115,7 +76,7 @@ function PlanCard({ plan, type }: { plan: MobilePlan; type: "sim" | "device" }) 
       )}
       <CardHeader className="text-center pb-2">
         <CardTitle className="text-xl">{plan.name}</CardTitle>
-        <CardDescription>{type === "sim" ? "SIM Only" : "With Device"}</CardDescription>
+        <CardDescription>SIM Only</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 text-center space-y-4">
         <div>
@@ -150,7 +111,7 @@ function PlanCard({ plan, type }: { plan: MobilePlan; type: "sim" | "device" }) 
       </CardContent>
       <CardFooter>
         <Button className="w-full" variant={plan.popular ? "default" : "outline"} data-testid={`button-select-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
-          {type === "sim" ? "Get Started" : "Choose Device"}
+          Get Started
         </Button>
       </CardFooter>
     </Card>
@@ -158,8 +119,6 @@ function PlanCard({ plan, type }: { plan: MobilePlan; type: "sim" | "device" }) 
 }
 
 export default function Mobile() {
-  const [activeTab, setActiveTab] = useState("sim");
-
   return (
     <div className="min-h-screen">
       <section className="relative py-20 bg-gradient-to-br from-primary/10 via-background to-purple-500/10 overflow-hidden">
@@ -168,13 +127,13 @@ export default function Mobile() {
           <div className="text-center max-w-3xl mx-auto">
             <Badge className="mb-4" variant="outline">
               <Smartphone className="h-3 w-3 mr-1" />
-              Mobile Plans
+              SIM Only Plans
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
               Stay Connected with <span className="text-primary">BroNET Mobile</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Australia's fastest 5G network. No lock-in contracts on SIM-only plans. 
+              Australia's fastest 5G network. No lock-in contracts. Bring your own device and save.
               Bundle with your NBN for extra savings.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
@@ -204,7 +163,7 @@ export default function Mobile() {
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold">No Lock-in</h3>
-              <p className="text-sm text-muted-foreground">Cancel anytime on SIM plans</p>
+              <p className="text-sm text-muted-foreground">Cancel anytime</p>
             </div>
             <div className="flex flex-col items-center text-center p-4">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
@@ -229,33 +188,16 @@ export default function Mobile() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Choose Your Mobile Plan</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Whether you're bringing your own device or looking for the latest smartphone, 
-              we have a plan that's right for you.
+              Bring your own device and enjoy our competitive SIM-only plans. 
+              No contracts, no hassle - just great value.
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-              <TabsTrigger value="sim" data-testid="tab-sim-only">SIM Only</TabsTrigger>
-              <TabsTrigger value="device" data-testid="tab-with-device">With Device</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="sim">
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {simOnlyPlans.map((plan) => (
-                  <PlanCard key={plan.name} plan={plan} type="sim" />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="device">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {devicePlans.map((plan) => (
-                  <PlanCard key={plan.name} plan={plan} type="device" />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            {simOnlyPlans.map((plan) => (
+              <PlanCard key={plan.name} plan={plan} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -263,135 +205,68 @@ export default function Mobile() {
         <div className="container px-4 md:px-6">
           <h2 className="text-3xl font-bold text-center mb-12">Plan Comparison</h2>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-              <TabsTrigger value="sim">SIM Only</TabsTrigger>
-              <TabsTrigger value="device">With Device</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="sim">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Feature</TableHead>
-                      {simOnlyPlans.map(plan => (
-                        <TableHead key={plan.name} className="text-center">{plan.name}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">Monthly Price</TableCell>
-                      {simOnlyPlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center font-bold">${plan.price}</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Data</TableCell>
-                      {simOnlyPlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center">{plan.data}</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Calls & SMS</TableCell>
-                      {simOnlyPlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center">Unlimited</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">5G Access</TableCell>
-                      {simOnlyPlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Data Banking</TableCell>
-                      {simOnlyPlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">International Calls</TableCell>
-                      {simOnlyPlans.map((plan, i) => (
-                        <TableCell key={plan.name} className="text-center">
-                          {i === 0 ? <X className="h-5 w-5 text-muted-foreground mx-auto" /> : 
-                           i === 1 ? "10 countries" :
-                           i === 2 ? "20 countries" : "35 countries"}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Roaming Included</TableCell>
-                      {simOnlyPlans.map((plan, i) => (
-                        <TableCell key={plan.name} className="text-center">
-                          {i >= 3 ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="device">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Feature</TableHead>
-                      {devicePlans.map(plan => (
-                        <TableHead key={plan.name} className="text-center">{plan.name}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">Monthly Price</TableCell>
-                      {devicePlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center font-bold">${plan.price}</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Data</TableCell>
-                      {devicePlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center">{plan.data}</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Contract Length</TableCell>
-                      {devicePlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center">24 months</TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">5G Access</TableCell>
-                      {devicePlans.map(plan => (
-                        <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">International Calls</TableCell>
-                      {devicePlans.map((plan, i) => (
-                        <TableCell key={plan.name} className="text-center">
-                          {i === 0 ? <X className="h-5 w-5 text-muted-foreground mx-auto" /> : 
-                           i === 1 ? "20 countries" : "35 countries"}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Roaming Included</TableCell>
-                      {devicePlans.map((plan, i) => (
-                        <TableCell key={plan.name} className="text-center">
-                          {i >= 2 ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Feature</TableHead>
+                  {simOnlyPlans.map(plan => (
+                    <TableHead key={plan.name} className="text-center">{plan.name}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Monthly Price</TableCell>
+                  {simOnlyPlans.map(plan => (
+                    <TableCell key={plan.name} className="text-center font-bold">${plan.price}</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Data</TableCell>
+                  {simOnlyPlans.map(plan => (
+                    <TableCell key={plan.name} className="text-center">{plan.data}</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Calls & SMS</TableCell>
+                  {simOnlyPlans.map(plan => (
+                    <TableCell key={plan.name} className="text-center">Unlimited</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">5G Access</TableCell>
+                  {simOnlyPlans.map(plan => (
+                    <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Data Banking</TableCell>
+                  {simOnlyPlans.map(plan => (
+                    <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">International Calls</TableCell>
+                  {simOnlyPlans.map((plan, i) => (
+                    <TableCell key={plan.name} className="text-center">
+                      {i === 0 ? <X className="h-5 w-5 text-muted-foreground mx-auto" /> : 
+                       i === 1 ? "10 countries" :
+                       i === 2 ? "20 countries" : "35 countries"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Roaming Included</TableCell>
+                  {simOnlyPlans.map((plan, i) => (
+                    <TableCell key={plan.name} className="text-center">
+                      {i >= 3 ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </section>
 
