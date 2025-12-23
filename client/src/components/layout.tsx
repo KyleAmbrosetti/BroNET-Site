@@ -160,6 +160,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <li><Link href="/terms">Terms of Service</Link></li>
                   <li><Link href="/privacy">Privacy Policy</Link></li>
                   <li><Link href="/cis">Critical Info Summary</Link></li>
+                  <li><Link href="/abuse">Report Abuse</Link></li>
                 </ul>
               </div>
             </div>

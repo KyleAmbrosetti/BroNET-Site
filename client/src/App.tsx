@@ -20,6 +20,7 @@ import Cis from "@/pages/cis";
 import Modems from "@/pages/modems";
 import Nbn2000 from "@/pages/nbn-2000";
 import ComingSoon from "@/pages/coming-soon";
+import Abuse from "@/pages/abuse";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
         <Route path="/cis" component={Cis} />
+        <Route path="/abuse" component={Abuse} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
