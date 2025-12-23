@@ -156,7 +156,7 @@ export default function Home() {
               <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
               <Wifi className="h-10 w-10 text-blue-500 mb-6" />
               <h3 className="text-xl font-bold mb-2">Premium Wi-Fi</h3>
-              <p className="text-muted-foreground">Add a pre-configured eero 6+ mesh router for wall-to-wall coverage.</p>
+              <p className="text-muted-foreground">Add a pre-configured eero 7 mesh router for wall-to-wall coverage.</p>
             </div>
           </div>
         </div>
