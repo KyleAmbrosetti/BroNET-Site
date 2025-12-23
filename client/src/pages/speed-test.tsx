@@ -65,9 +65,15 @@ export default function SpeedTest() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
             <Award className="h-10 w-10 text-primary" />
             <p className="text-xl md:text-2xl font-semibold">
-              BroNET - <span className="text-primary">Lightning fast</span> NBN for Aussie legends
+              <span className="text-gradient-brand">BroNET</span> - <span className="text-primary">Lightning fast</span> NBN for Aussie legends
             </p>
-            <img src="https://www.speedtest.net/images/logo/logo-horizontal.svg" alt="Speedtest by Ookla" className="h-6 opacity-70" />
+            <div className="flex items-center gap-2 opacity-70">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 75" className="h-6 w-auto" fill="currentColor">
+                <path d="M55.2 37.5c0 9.8-7.9 17.7-17.7 17.7S19.8 47.3 19.8 37.5s7.9-17.7 17.7-17.7 17.7 7.9 17.7 17.7zm-17.7-12.7c-7 0-12.7 5.7-12.7 12.7s5.7 12.7 12.7 12.7 12.7-5.7 12.7-12.7-5.7-12.7-12.7-12.7z"/>
+                <text x="65" y="48" fontSize="28" fontWeight="bold" fontFamily="Arial, sans-serif">Speedtest</text>
+                <text x="230" y="48" fontSize="20" fontFamily="Arial, sans-serif" opacity="0.7">by Ookla</text>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
