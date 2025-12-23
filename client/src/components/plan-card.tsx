@@ -111,7 +111,7 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
           </Button>
         ) : (
           <Button 
-            className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
+            className="w-full" 
             size="lg" 
             variant="outline"
             data-testid={`button-check-${name.toLowerCase().replace(/\s+/g, '-')}`}
