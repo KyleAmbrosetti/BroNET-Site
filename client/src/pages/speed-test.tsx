@@ -39,23 +39,6 @@ export default function SpeedTest() {
             </p>
           </div>
 
-          {/* Fallback link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500 mb-2">
-              Speed test not loading?
-            </p>
-            <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800" asChild>
-              <a 
-                href="https://brointernet.speedtestcustom.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="gap-2"
-              >
-                Open Speed Test
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-          </div>
         </div>
       </div>
 
