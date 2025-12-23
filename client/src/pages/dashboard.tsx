@@ -25,7 +25,11 @@ import {
   Package,
   MapPin,
   Lock,
-  Calendar
+  Calendar,
+  FileText,
+  Clock,
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
@@ -78,6 +82,28 @@ type BillingRecord = {
   createdAt: string;
 };
 
+type ServiceOrder = {
+  id: string;
+  orderReference: string;
+  nbnOrderId: string | null;
+  avcId: string | null;
+  cvcId: string | null;
+  planId: string;
+  planName: string;
+  downloadSpeed: number;
+  uploadSpeed: number;
+  serviceAddress: string;
+  locId: string | null;
+  technology: string | null;
+  status: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  estimatedConnectionDate: string | null;
+  actualConnectionDate: string | null;
+  createdAt: string;
+};
+
 const PLANS = [
   { id: 'nbn25', name: 'NBN 25', speed: '25/10 Mbps', price: '$59' },
   { id: 'nbn50', name: 'NBN 50', speed: '50/20 Mbps', price: '$69' },
@@ -95,6 +121,7 @@ export default function Dashboard() {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [modemEnquiries, setModemEnquiries] = useState<ModemEnquiry[]>([]);
   const [billingHistory, setBillingHistory] = useState<BillingRecord[]>([]);
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const { toast } = useToast();
   
   // New Ticket State
@@ -124,12 +151,13 @@ export default function Dashboard() {
     
     // Load Data from API
     const loadData = async () => {
-      const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes, billingRes] = await Promise.all([
+      const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes, billingRes, ordersRes] = await Promise.all([
         api.getTickets(),
         api.getUsage(),
         api.getMessages(),
         api.getModemEnquiries(),
-        api.getBillingHistory()
+        api.getBillingHistory(),
+        fetch("/api/orders", { credentials: "include" }).then(r => r.json()).catch(() => ({ orders: [] }))
       ]);
       
       if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
@@ -137,6 +165,7 @@ export default function Dashboard() {
       if (messagesRes.data) setContactMessages(messagesRes.data.messages);
       if (modemEnquiriesRes.data) setModemEnquiries(modemEnquiriesRes.data.enquiries);
       if (billingRes.data) setBillingHistory(billingRes.data.history);
+      if (ordersRes?.orders) setOrders(ordersRes.orders);
     };
     
     loadData();
@@ -250,6 +279,7 @@ export default function Dashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="orders">My Orders</TabsTrigger>
             <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
             <TabsTrigger value="support">My Tickets</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
@@ -347,6 +377,100 @@ export default function Dashboard() {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ORDERS TAB */}
+          <TabsContent value="orders" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold">Service Orders</h2>
+              <Button asChild>
+                <Link href="/signup">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Order
+                </Link>
+              </Button>
+            </div>
+
+            {orders.length === 0 ? (
+              <Card className="text-center py-12">
+                <div className="flex justify-center mb-4">
+                  <FileText className="h-12 w-12 text-muted-foreground/50" />
+                </div>
+                <h3 className="font-bold text-lg">No orders yet</h3>
+                <p className="text-muted-foreground mb-4">Ready to get connected? Start a new order.</p>
+                <Button asChild>
+                  <Link href="/signup">Start New Order</Link>
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card key={order.id} data-testid={`order-${order.id}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{order.planName}</CardTitle>
+                          <CardDescription>
+                            Order: {order.orderReference} • {format(new Date(order.createdAt), 'MMM d, yyyy')}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          variant={order.status === 'active' ? 'default' : order.status === 'failed' ? 'destructive' : 'secondary'}
+                          className={order.status === 'active' ? 'bg-green-500' : ''}
+                        >
+                          {order.status === 'active' && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                          {order.status === 'submitted' && <Clock className="h-3 w-3 mr-1" />}
+                          {order.status === 'in_progress' && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                          {order.status.toUpperCase().replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Service Address:</span>
+                          <p className="font-medium">{order.serviceAddress}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Technology:</span>
+                          <p className="font-medium">{order.technology || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Speed:</span>
+                          <p className="font-medium">{order.downloadSpeed}/{order.uploadSpeed} Mbps</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">LOC ID:</span>
+                          <p className="font-medium font-mono text-xs">{order.locId || 'Pending'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">AVC ID:</span>
+                          <p className="font-medium font-mono text-xs">{order.avcId || 'Assigned on activation'}</p>
+                        </div>
+                        {order.nbnOrderId && (
+                          <div>
+                            <span className="text-muted-foreground">NBN Order:</span>
+                            <p className="font-medium font-mono text-xs">{order.nbnOrderId}</p>
+                          </div>
+                        )}
+                        {order.estimatedConnectionDate && (
+                          <div>
+                            <span className="text-muted-foreground">Est. Connection:</span>
+                            <p className="font-medium">{format(new Date(order.estimatedConnectionDate), 'MMM d, yyyy')}</p>
+                          </div>
+                        )}
+                        {order.actualConnectionDate && (
+                          <div>
+                            <span className="text-muted-foreground">Connected:</span>
+                            <p className="font-medium text-green-600">{format(new Date(order.actualConnectionDate), 'MMM d, yyyy')}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* BILLING TAB */}
