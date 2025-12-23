@@ -601,6 +601,10 @@ export async function registerRoutes(
   // Get all modem enquiries (admin only)
   app.get("/api/admin/modems/enquiry", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
       const enquiries = await storage.getAllModemEnquiries();
       res.json({ enquiries });
     } catch (error: any) {
@@ -611,6 +615,10 @@ export async function registerRoutes(
   // Update enquiry status (admin only)
   app.patch("/api/admin/modems/enquiry/:id", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
       const { status } = req.body;
       const enquiry = await storage.updateModemEnquiryStatus(req.params.id, status);
       res.json({ enquiry });
@@ -622,6 +630,10 @@ export async function registerRoutes(
   // Get all tickets (admin only)
   app.get("/api/admin/tickets", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
       const tickets = await storage.getAllTickets();
       res.json({ tickets });
     } catch (error: any) {
@@ -632,6 +644,10 @@ export async function registerRoutes(
   // Get all contact messages (admin only)
   app.get("/api/admin/messages", requireAuth, async (req, res) => {
     try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
       const messages = await storage.getAllContactMessages();
       res.json({ messages });
     } catch (error: any) {
