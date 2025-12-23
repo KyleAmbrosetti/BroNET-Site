@@ -77,6 +77,19 @@ Database tables:
 - date-fns for date formatting
 - class-variance-authority for component variants
 
+### NBN Service Qualification
+The coverage checker uses a multi-source fallback system:
+1. **RapidAPI NBN** (primary) - Real-time NBN address lookup via RapidAPI
+2. **Admin Dataset** - Pre-loaded coverage data for known addresses
+3. **NBN Public API** - Direct NBN Co API (may be blocked from server)
+4. **Address Only** - Fallback mode with address validation only
+
+The RapidAPI integration returns:
+- Technology type (FTTP, FTTB, FTTC, HFC, Wireless, Satellite)
+- Maximum available speed tier
+- Service availability status
+
 ### Environment Variables Required
 - `DATABASE_URL` - PostgreSQL connection string
 - `SESSION_SECRET` - Secret key for session encryption (defaults to development value)
+- `RAPIDAPI_NBN_KEY` - RapidAPI key for NBN address lookup (nbnco-address-check API)
