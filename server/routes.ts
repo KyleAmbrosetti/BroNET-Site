@@ -70,7 +70,13 @@ export async function registerRoutes(
       });
 
       req.session.userId = user.id;
-      res.json({ user: { ...user, password: undefined } });
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.json({ user: { ...user, password: undefined } });
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -92,7 +98,13 @@ export async function registerRoutes(
       }
 
       req.session.userId = user.id;
-      res.json({ user: { ...user, password: undefined } });
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.json({ user: { ...user, password: undefined } });
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
