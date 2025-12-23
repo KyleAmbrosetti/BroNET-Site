@@ -91,35 +91,66 @@ async function checkWholesaleAPI(
 }
 
 /**
- * Check NBN availability using the unofficial public NBN API
- * This API scrapes NBN Co's public address checker and requires no authentication
+ * Check NBN availability using NBN Co's official places API
+ * This uses the same API as the NBN website address checker
  */
 async function checkPublicNBNAPI(
   normalizedAddress: string
 ): Promise<SQResult> {
   try {
+    // Step 1: Search for the location ID using NBN's places API
     const encodedAddress = encodeURIComponent(normalizedAddress);
-    const response = await fetch(
-      `https://nbn-service-check.deta.dev/check?address=${encodedAddress}`,
+    const searchResponse = await fetch(
+      `https://places.nbnco.net.au/places/v2/autocomplete?query=${encodedAddress}`,
       {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
+          'Referer': 'https://www.nbnco.com.au/',
         },
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`Public NBN API returned ${response.status}`);
+    if (!searchResponse.ok) {
+      throw new Error(`NBN Places API returned ${searchResponse.status}`);
     }
 
-    const data = await response.json();
+    const searchData = await searchResponse.json();
 
-    // Check if service is available
-    if (!data || data.error) {
+    // Check if we got any suggestions
+    if (!searchData.suggestions || searchData.suggestions.length === 0) {
       return {
         source: 'nbn_public_api',
-        error: data?.error || 'No data returned from NBN API',
+        error: 'No matching addresses found',
+      };
+    }
+
+    // Get the first matching location
+    const locationId = searchData.suggestions[0].id;
+
+    // Step 2: Get detailed info for this location
+    const detailResponse = await fetch(
+      `https://places.nbnco.net.au/places/v1/details/${locationId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Referer': 'https://www.nbnco.com.au/',
+        },
+      }
+    );
+
+    if (!detailResponse.ok) {
+      throw new Error(`NBN Details API returned ${detailResponse.status}`);
+    }
+
+    const detailData = await detailResponse.json();
+    const addressDetail = detailData.addressDetail;
+
+    if (!addressDetail) {
+      return {
+        source: 'nbn_public_api',
+        error: 'No service details available for this address',
       };
     }
 
@@ -130,31 +161,42 @@ async function checkPublicNBNAPI(
       'FTTN': 'Fibre to the Node',
       'FTTB': 'Fibre to the Building',
       'HFC': 'Hybrid Fibre Coaxial',
+      'Wireless': 'Fixed Wireless',
       'WIRELESS': 'Fixed Wireless',
+      'Satellite': 'Satellite',
       'SATELLITE': 'Satellite',
     };
 
-    // Map speed tiers
-    const speedTierMap: Record<string, string> = {
-      '12': '12 Mbps',
-      '25': '25 Mbps',
-      '50': '50 Mbps',
-      '100': '100 Mbps',
-      '250': '250 Mbps',
-      '500': '500 Mbps',
-      '1000': '1000 Mbps',
-      '2000': '2000 Mbps',
-    };
+    // Parse speed tier from programType or reasonCode
+    const techType = addressDetail.techType || addressDetail.techChangeStatus || 'Unknown';
+    const serviceStatus = addressDetail.serviceStatus || '';
+    const reasonCode = addressDetail.reasonCode || '';
+    
+    // Determine max speed based on technology
+    let maxTier = 'Contact for details';
+    if (techType === 'FTTP') {
+      maxTier = '2000 Mbps';
+    } else if (techType === 'FTTC' || techType === 'HFC') {
+      maxTier = '1000 Mbps';
+    } else if (techType === 'FTTN' || techType === 'FTTB') {
+      maxTier = '100 Mbps';
+    } else if (techType === 'Wireless' || techType === 'WIRELESS') {
+      maxTier = '75 Mbps';
+    } else if (techType === 'Satellite' || techType === 'SATELLITE') {
+      maxTier = '25 Mbps';
+    }
 
-    const techType = data.techType || data.technology || 'Unknown';
-    const maxSpeed = data.maxSpeed || data.downloadSpeed || 'Unknown';
+    const isAvailable = serviceStatus === 'available' || 
+                        reasonCode === 'FTTP_SA' || 
+                        reasonCode === 'HFC_CT' ||
+                        addressDetail.serviceType === 'Fixed Line';
     
     return {
       source: 'nbn_public_api',
-      available: data.serviceAvailable !== false && data.addressMatch !== false,
+      available: isAvailable,
       technology: techTypeMap[techType] || techType,
-      maxTier: speedTierMap[maxSpeed] || `${maxSpeed} Mbps`,
-      rawResponse: data,
+      maxTier,
+      rawResponse: { search: searchData, detail: detailData },
     };
   } catch (error: any) {
     console.error('Public NBN API error:', error);
