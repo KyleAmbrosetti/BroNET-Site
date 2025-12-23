@@ -68,6 +68,13 @@ export default function Coverage() {
     if (user) {
       loadHistory();
     }
+    
+    // Read address from URL query parameter
+    const params = new URLSearchParams(window.location.search);
+    const addressParam = params.get('address');
+    if (addressParam) {
+      setAddress(addressParam);
+    }
   }, [user]);
 
   const fetchSuggestions = useCallback(async (query: string) => {
