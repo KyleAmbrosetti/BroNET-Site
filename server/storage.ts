@@ -48,6 +48,7 @@ export interface IStorage {
 
   // Tickets
   getTickets(userId: string): Promise<Ticket[]>;
+  getAllTickets(): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   updateTicket(id: string, data: Partial<InsertTicket>): Promise<Ticket>;
@@ -63,6 +64,7 @@ export interface IStorage {
 
   // Contact Messages
   getContactMessages(userId: string): Promise<ContactMessage[]>;
+  getAllContactMessages(): Promise<ContactMessage[]>;
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
 
   // Address Cache
@@ -136,6 +138,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(tickets.createdAt));
   }
 
+  async getAllTickets(): Promise<Ticket[]> {
+    return await db
+      .select()
+      .from(tickets)
+      .orderBy(desc(tickets.createdAt));
+  }
+
   async getTicket(id: string): Promise<Ticket | undefined> {
     const result = await db.select().from(tickets).where(eq(tickets.id, id)).limit(1);
     return result[0];
@@ -195,6 +204,13 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(contactMessages)
       .where(eq(contactMessages.userId, userId))
+      .orderBy(desc(contactMessages.createdAt));
+  }
+
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    return await db
+      .select()
+      .from(contactMessages)
       .orderBy(desc(contactMessages.createdAt));
   }
 

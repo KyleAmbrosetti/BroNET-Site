@@ -113,6 +113,10 @@ export const api = {
 
   getAllModemEnquiries: () => apiFetch('/admin/modems/enquiry'),
 
+  getAllTickets: () => apiFetch('/admin/tickets'),
+
+  getAllContactMessages: () => apiFetch('/admin/messages'),
+
   updateModemEnquiryStatus: (id: string, status: string) => apiFetch(`/admin/modems/enquiry/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),

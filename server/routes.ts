@@ -619,6 +619,26 @@ export async function registerRoutes(
     }
   });
 
+  // Get all tickets (admin only)
+  app.get("/api/admin/tickets", requireAuth, async (req, res) => {
+    try {
+      const tickets = await storage.getAllTickets();
+      res.json({ tickets });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all contact messages (admin only)
+  app.get("/api/admin/messages", requireAuth, async (req, res) => {
+    try {
+      const messages = await storage.getAllContactMessages();
+      res.json({ messages });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ EMAIL SIGNUP ROUTES ============
 
   // Subscribe to email notifications (coming soon page)
