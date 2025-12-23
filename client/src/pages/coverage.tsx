@@ -19,11 +19,11 @@ type CoverageResult = {
   technology?: string;
   maxTier?: string;
   available?: boolean;
-  source: 'wholesale_api' | 'dataset' | 'address_only';
+  source: 'wholesale_api' | 'dataset' | 'address_only' | 'rapidapi' | 'nbn_public_api';
 };
 
 type CoverageStatus = {
-  mode: 'wholesale_api' | 'dataset' | 'none';
+  mode: 'wholesale_api' | 'dataset' | 'none' | 'rapidapi' | 'nbn_public_api';
   wholesaleConfigured: boolean;
   datasetRecords: number;
   addressValidationEnabled: boolean;
@@ -110,14 +110,20 @@ export default function Coverage() {
   const getModeLabel = (mode: string) => {
     switch (mode) {
       case 'wholesale_api': return 'Wholesale API';
+      case 'rapidapi': return 'NBN Live Lookup';
+      case 'nbn_public_api': return 'NBN Public API';
       case 'dataset': return 'Admin Dataset';
+      case 'address_only': return 'Address Validation';
       case 'none': return 'Address Only';
-      default: return 'Unknown';
+      default: return mode;
     }
   };
 
   const getModeIcon = (mode: string) => {
-    return mode === 'wholesale_api' ? <Cloud className="h-4 w-4" /> : <Database className="h-4 w-4" />;
+    if (mode === 'wholesale_api' || mode === 'rapidapi' || mode === 'nbn_public_api') {
+      return <Cloud className="h-4 w-4" />;
+    }
+    return <Database className="h-4 w-4" />;
   };
 
   return (
@@ -183,21 +189,44 @@ export default function Coverage() {
 
       {result && (
         <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Address Validated</AlertTitle>
-            <AlertDescription>
-              <div className="font-semibold mt-1">{result.normalizedAddress}</div>
-              {result.suburb && result.state && (
-                <div className="text-sm mt-1">
-                  {result.suburb}, {result.state} {result.postcode}
+          {/* Address Card */}
+          <Card className="mb-6 border-2" data-testid="card-address">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Address Details</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="font-semibold text-lg">{result.normalizedAddress}</div>
+              {(result.suburb || result.state || result.postcode) && (
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  {result.suburb && (
+                    <div>
+                      <span className="text-muted-foreground block">Suburb</span>
+                      <span className="font-medium">{result.suburb}</span>
+                    </div>
+                  )}
+                  {result.state && (
+                    <div>
+                      <span className="text-muted-foreground block">State</span>
+                      <span className="font-medium">{result.state}</span>
+                    </div>
+                  )}
+                  {result.postcode && (
+                    <div>
+                      <span className="text-muted-foreground block">Postcode</span>
+                      <span className="font-medium">{result.postcode}</span>
+                    </div>
+                  )}
                 </div>
               )}
-              <div className="text-xs mt-2 text-muted-foreground">
-                Source: {getModeLabel(result.source)}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
+                {getModeIcon(result.source)}
+                <span>Data Source: {getModeLabel(result.source)}</span>
               </div>
-            </AlertDescription>
-          </Alert>
+            </CardContent>
+          </Card>
 
           {result.source === 'address_only' ? (
             <Alert className="mb-8 border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
@@ -209,45 +238,74 @@ export default function Coverage() {
               </AlertDescription>
             </Alert>
           ) : (
-            <div className={`${
+            <Card className={`mb-8 border-2 ${
               result.available
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-            } border rounded-xl p-6 mb-8 flex items-start gap-4`} data-testid="card-result">
-              {result.available ? (
-                <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" />
-              )}
-              <div className="flex-1">
-                <h3 className={`font-bold text-lg ${
-                  result.available
-                    ? 'text-green-800 dark:text-green-300'
-                    : 'text-orange-800 dark:text-orange-300'
-                }`} data-testid="text-result-title">
-                  {result.available ? "NBN Service Available" : "Limited Availability"}
-                </h3>
-                <div className={`mt-2 space-y-1 ${
-                  result.available
-                    ? 'text-green-700 dark:text-green-400'
-                    : 'text-orange-700 dark:text-orange-400'
-                }`}>
+                ? 'border-green-300 dark:border-green-700'
+                : 'border-orange-300 dark:border-orange-700'
+            }`} data-testid="card-result">
+              <CardHeader className={`pb-3 ${
+                result.available
+                  ? 'bg-green-50 dark:bg-green-900/30'
+                  : 'bg-orange-50 dark:bg-orange-900/30'
+              }`}>
+                <div className="flex items-center gap-3">
+                  {result.available ? (
+                    <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <AlertCircle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                  )}
+                  <div>
+                    <CardTitle className={`text-xl ${
+                      result.available
+                        ? 'text-green-800 dark:text-green-300'
+                        : 'text-orange-800 dark:text-orange-300'
+                    }`} data-testid="text-result-title">
+                      {result.available ? "NBN Service Available" : "Limited Availability"}
+                    </CardTitle>
+                    <CardDescription>
+                      {result.available 
+                        ? "Great news! NBN services are available at this address."
+                        : "NBN may have limited availability at this location."}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {result.technology && (
-                    <p className="text-sm">
-                      <span className="font-semibold">Technology:</span> {result.technology}
-                    </p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Connection Technology</span>
+                      <div className="font-bold text-lg flex items-center gap-2" data-testid="text-technology">
+                        {result.technology}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {result.technology.includes('Fibre to the Premises') && 'Direct fibre connection to your home - the fastest NBN technology.'}
+                        {result.technology.includes('Fibre to the Building') && 'Fibre to your building with existing copper to your unit.'}
+                        {result.technology.includes('Fibre to the Curb') && 'Fibre to your street with short copper run to your home.'}
+                        {result.technology.includes('Fibre to the Node') && 'Fibre to nearby node with copper to your premises.'}
+                        {result.technology.includes('Hybrid Fibre Coaxial') && 'High-speed coaxial cable network - supports up to 1000 Mbps.'}
+                        {result.technology.includes('Fixed Wireless') && 'Wireless connection from nearby NBN tower.'}
+                        {result.technology.includes('Satellite') && 'Sky Muster satellite connection for remote areas.'}
+                      </p>
+                    </div>
                   )}
                   {result.maxTier && (
-                    <p className="text-sm">
-                      <span className="font-semibold">Maximum Tier:</span> {result.maxTier}
-                    </p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Maximum Speed Available</span>
+                      <div className="font-bold text-lg text-primary" data-testid="text-max-speed">
+                        Up to {result.maxTier}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Download speeds. Actual speeds may vary based on network conditions.
+                      </p>
+                    </div>
                   )}
                 </div>
-                <p className="text-xs mt-3 opacity-80">
+                <p className="text-xs mt-6 text-muted-foreground border-t pt-4">
                   Note: Final service qualification depends on NBN and wholesale provider checks at time of order.
                 </p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {result.available && result.source !== 'address_only' && (
