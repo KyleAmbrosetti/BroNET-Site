@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Wifi, Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
+import { Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
+import eero7Image from "@assets/stock_images/modern_white_mesh_wi_7311b6dd.jpg";
+import eeroPro7Image from "@assets/stock_images/modern_white_mesh_wi_36100931.jpg";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +51,7 @@ const products = [
     maxSpeed: "NBN 1000 (Home Fast)",
     badge: "Popular",
     badgeVariant: "default" as const,
+    image: eero7Image,
   },
   {
     id: "eero-pro-7",
@@ -71,6 +74,7 @@ const products = [
     maxSpeed: "NBN 2000 (Home Ultrafast)",
     badge: "Best Performance",
     badgeVariant: "secondary" as const,
+    image: eeroPro7Image,
   },
 ];
 
@@ -171,8 +175,13 @@ export default function ModemsPage() {
               )}
               
               <CardHeader>
-                <div className="h-48 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-4 flex items-center justify-center">
-                  <Wifi className="h-24 w-24 text-primary" />
+                <div className="h-48 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                    data-testid={`image-${product.id}`}
+                  />
                 </div>
                 <CardTitle className="text-2xl font-heading" data-testid={`title-${product.id}`}>
                   {product.name}
