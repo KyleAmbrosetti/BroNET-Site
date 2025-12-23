@@ -17,8 +17,33 @@ interface PlanProps {
   showSignup?: boolean;
 }
 
+function getDownloadTime(speedMbps: number): string {
+  const fileSizeGB = 4;
+  const fileSizeMb = fileSizeGB * 8 * 1024;
+  const seconds = fileSizeMb / speedMbps;
+  
+  if (seconds < 60) {
+    return `${Math.round(seconds)}s`;
+  } else if (seconds < 3600) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  } else {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.round((seconds % 3600) / 60);
+    return `${hours}h ${mins}m`;
+  }
+}
+
+function getSpeedPercentage(speed: number): number {
+  const maxSpeed = 2000;
+  return Math.min((speed / maxSpeed) * 100, 100);
+}
+
 export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup, disabled, showSignup }: PlanProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const downloadTime = getDownloadTime(speed);
+  const speedPercentage = getSpeedPercentage(speed);
   
   const handleSignupClick = async () => {
     if (!onSignup) return;
@@ -47,6 +72,21 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
         <div className="p-4 bg-muted/50 rounded-lg text-center">
           <div className="text-3xl font-bold font-heading text-primary">{speed} Mbps</div>
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mt-1">Download Speed</div>
+        </div>
+        
+        <div className="px-1">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs text-muted-foreground">4GB Ultra HD video</span>
+            <span className="text-sm font-bold text-primary">{downloadTime}</span>
+          </div>
+          <div className="speed-bar">
+            <div 
+              className="speed-bar-fill" 
+              style={{ width: `${speedPercentage}%` }}
+            >
+              <div className="speed-bar-flame" />
+            </div>
+          </div>
         </div>
         
         <ul className="space-y-3 text-sm">
