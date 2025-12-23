@@ -7,26 +7,25 @@ import { Link } from "wouter";
 export default function SpeedTest() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <section className="py-8 md:py-12">
-        <div className="container px-4 md:px-6">
-          <div className="text-center mb-6">
-            <Badge variant="outline" className="mb-4">
-              <Activity className="h-3 w-3 mr-1" />
-              Powered by Ookla
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              <span className="text-primary">BroNET</span> Speed Test
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Test your internet connection speed. Check your download, upload, and ping to ensure you're getting the speeds you're paying for.
-            </p>
+      <div className="w-full bg-black">
+        <section className="py-8 md:py-12">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-6">
+              <Badge variant="outline" className="mb-4 border-white/20 text-white">
+                <Activity className="h-3 w-3 mr-1" />
+                Powered by Ookla
+              </Badge>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
+                <span className="text-primary">BroNET</span> Speed Test
+              </h1>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Test your internet connection speed. Check your download, upload, and ping to ensure you're getting the speeds you're paying for.
+              </p>
+            </div>
           </div>
+        </section>
 
-        </div>
-      </section>
-
-      <div className="w-full bg-black py-8">
-        <div className="container px-4 md:px-6">
+        <div className="container px-4 md:px-6 pb-8">
           <iframe 
             width="100%" 
             height="650" 
