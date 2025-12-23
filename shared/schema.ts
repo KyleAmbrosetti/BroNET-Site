@@ -193,5 +193,21 @@ export const insertModemEnquirySchema = createInsertSchema(modemEnquiries).omit(
 export type InsertModemEnquiry = z.infer<typeof insertModemEnquirySchema>;
 export type ModemEnquiry = typeof modemEnquiries.$inferSelect;
 
+// Email Signups Table (Coming Soon notifications)
+export const emailSignups = pgTable("email_signups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  source: text("source").notNull().default("coming-soon"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEmailSignupSchema = createInsertSchema(emailSignups).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertEmailSignup = z.infer<typeof insertEmailSignupSchema>;
+export type EmailSignup = typeof emailSignups.$inferSelect;
+
 // Re-export chat models
 export * from "./models/chat";

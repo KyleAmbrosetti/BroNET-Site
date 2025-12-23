@@ -441,6 +441,41 @@ export async function registerRoutes(
     }
   });
 
+  // ============ EMAIL SIGNUP ROUTES ============
+
+  // Subscribe to email notifications (coming soon page)
+  app.post("/api/email-signup", async (req, res) => {
+    try {
+      const { email, source } = req.body;
+      
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      // Check if already subscribed
+      const existing = await storage.getEmailSignupByEmail(email);
+      if (existing) {
+        return res.json({ message: "You're already on the list!", alreadySubscribed: true });
+      }
+
+      await storage.createEmailSignup({
+        email,
+        source: source || "coming-soon",
+      });
+
+      res.status(201).json({ message: "You're on the list!", success: true });
+    } catch (error: any) {
+      console.error("Email signup error:", error);
+      res.status(500).json({ message: "Failed to subscribe. Please try again." });
+    }
+  });
+
   // Register AI chat routes
   registerChatRoutes(app);
 
