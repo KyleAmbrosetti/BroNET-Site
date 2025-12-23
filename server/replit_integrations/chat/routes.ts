@@ -59,6 +59,79 @@ export function registerChatRoutes(app: Express): void {
     }
   });
 
+  // Simplified chat stream endpoint for customer support chatbot
+  app.post("/api/chat/stream", async (req: Request, res: Response) => {
+    try {
+      const { conversationId, message, systemPrompt } = req.body;
+      
+      let convId = conversationId;
+      
+      // Create new conversation if needed
+      if (!convId) {
+        const conversation = await chatStorage.createConversation("Support Chat");
+        convId = conversation.id;
+      }
+      
+      // Save user message
+      await chatStorage.createMessage(convId, "user", message);
+      
+      // Get conversation history for context
+      const messages = await chatStorage.getMessagesByConversation(convId);
+      const chatMessages: Array<{ role: "user" | "assistant" | "system"; content: string }> = [];
+      
+      // Add system prompt if provided
+      if (systemPrompt) {
+        chatMessages.push({ role: "system", content: systemPrompt });
+      }
+      
+      // Add conversation history
+      chatMessages.push(...messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })));
+      
+      // Set up SSE
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      
+      // Send conversation ID first
+      res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
+      
+      // Stream response from OpenAI
+      const stream = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: chatMessages,
+        stream: true,
+        max_completion_tokens: 1024,
+      });
+      
+      let fullResponse = "";
+      
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+      
+      // Save assistant message
+      await chatStorage.createMessage(convId, "assistant", fullResponse);
+      
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error("Error in chat stream:", error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ error: "Failed to get response" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to process chat" });
+      }
+    }
+  });
+
   // Send message and get AI response (streaming)
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
