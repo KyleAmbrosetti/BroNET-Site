@@ -7,6 +7,7 @@ import {
   addressCache,
   nbnDataset,
   coverageChecks,
+  modemEnquiries,
   type User, 
   type InsertUser,
   type Ticket,
@@ -23,6 +24,8 @@ import {
   type InsertNbnDataset,
   type CoverageCheck,
   type InsertCoverageCheck,
+  type ModemEnquiry,
+  type InsertModemEnquiry,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -69,6 +72,12 @@ export interface IStorage {
   // Coverage Checks
   getCoverageChecks(userId: string): Promise<CoverageCheck[]>;
   createCoverageCheck(check: InsertCoverageCheck): Promise<CoverageCheck>;
+
+  // Modem Enquiries
+  getModemEnquiries(userId: string): Promise<ModemEnquiry[]>;
+  getAllModemEnquiries(): Promise<ModemEnquiry[]>;
+  createModemEnquiry(enquiry: InsertModemEnquiry): Promise<ModemEnquiry>;
+  updateModemEnquiryStatus(id: string, status: string): Promise<ModemEnquiry>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -252,6 +261,39 @@ export class DatabaseStorage implements IStorage {
       .values(check)
       .returning();
     return newCheck;
+  }
+
+  // Modem Enquiries
+  async getModemEnquiries(userId: string): Promise<ModemEnquiry[]> {
+    return await db
+      .select()
+      .from(modemEnquiries)
+      .where(eq(modemEnquiries.userId, userId))
+      .orderBy(desc(modemEnquiries.createdAt));
+  }
+
+  async getAllModemEnquiries(): Promise<ModemEnquiry[]> {
+    return await db
+      .select()
+      .from(modemEnquiries)
+      .orderBy(desc(modemEnquiries.createdAt));
+  }
+
+  async createModemEnquiry(enquiry: InsertModemEnquiry): Promise<ModemEnquiry> {
+    const [newEnquiry] = await db
+      .insert(modemEnquiries)
+      .values(enquiry)
+      .returning();
+    return newEnquiry;
+  }
+
+  async updateModemEnquiryStatus(id: string, status: string): Promise<ModemEnquiry> {
+    const [updated] = await db
+      .update(modemEnquiries)
+      .set({ status })
+      .where(eq(modemEnquiries.id, id))
+      .returning();
+    return updated;
   }
 }
 

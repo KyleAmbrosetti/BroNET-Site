@@ -381,5 +381,64 @@ export async function registerRoutes(
     }
   });
 
+  // ============ MODEM ENQUIRY ROUTES ============
+  
+  // Submit modem enquiry
+  app.post("/api/modems/enquiry", async (req, res) => {
+    try {
+      const { name, email, phone, product, quantity, message } = req.body;
+
+      if (!name || !email || !product) {
+        return res.status(400).json({ message: "Name, email, and product are required" });
+      }
+
+      const enquiry = await storage.createModemEnquiry({
+        userId: req.session?.userId || null,
+        name,
+        email,
+        phone: phone || null,
+        product,
+        quantity: quantity || 1,
+        message: message || null,
+        status: "pending",
+      });
+
+      res.status(201).json({ enquiry });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Get user's modem enquiries
+  app.get("/api/modems/enquiry", requireAuth, async (req, res) => {
+    try {
+      const enquiries = await storage.getModemEnquiries(req.session.userId!);
+      res.json({ enquiries });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all modem enquiries (admin only)
+  app.get("/api/admin/modems/enquiry", requireAuth, async (req, res) => {
+    try {
+      const enquiries = await storage.getAllModemEnquiries();
+      res.json({ enquiries });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update enquiry status (admin only)
+  app.patch("/api/admin/modems/enquiry/:id", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const enquiry = await storage.updateModemEnquiryStatus(req.params.id, status);
+      res.json({ enquiry });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
