@@ -231,6 +231,49 @@
   }
 }
 
+.speed-bar {
+  position: relative;
+  height: 8px;
+  background: hsl(var(--muted));
+  border-radius: 9999px;
+  overflow: visible;
+}
+
+.speed-bar-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, hsl(250 100% 60%), hsl(280 100% 60%));
+  transition: width 0.5s ease-out;
+}
+
+.speed-bar-flame {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(280 100% 70%) 0%, hsl(250 100% 60%) 50%, transparent 70%);
+  box-shadow: 
+    0 0 8px 2px hsl(280 100% 60% / 0.8),
+    0 0 16px 4px hsl(250 100% 60% / 0.5),
+    0 0 24px 6px hsl(280 100% 50% / 0.3);
+  animation: flame-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes flame-pulse {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
 .font-heading {
   font-family: var(--font-heading);
 }
