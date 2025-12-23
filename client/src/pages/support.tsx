@@ -142,7 +142,7 @@ export default function Support() {
                 <Mail className="h-5 w-5" />
               </div>
               <div>
-                <div className="font-bold">support@bronet.com.au</div>
+                <div className="font-bold">support@brointernet.com</div>
                 <div className="text-xs text-muted-foreground">Response within 24 hours</div>
               </div>
             </div>

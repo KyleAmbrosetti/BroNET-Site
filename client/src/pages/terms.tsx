@@ -156,7 +156,7 @@ export default function Terms() {
         <section>
           <h2 className="text-2xl font-bold mt-8 mb-4">12. Dispute Resolution</h2>
           <p className="text-muted-foreground leading-relaxed mb-4">
-            <strong>12.1 Internal Complaints:</strong> If you have a complaint, contact our support team at support@bronet.com.au or 1300 BRO NET. We aim to resolve complaints within 15 business days.
+            <strong>12.1 Internal Complaints:</strong> If you have a complaint, contact our support team at support@brointernet.com or 1300 BRO NET. We aim to resolve complaints within 15 business days.
           </p>
           <p className="text-muted-foreground leading-relaxed mb-4">
             <strong>12.2 External Resolution:</strong> If you are not satisfied with our response, you may escalate to the Telecommunications Industry Ombudsman (TIO) at www.tio.com.au or 1800 062 058.
@@ -182,7 +182,7 @@ export default function Terms() {
           <div className="text-muted-foreground leading-relaxed space-y-2">
             <p><strong>BroNET Pty Ltd</strong></p>
             <p>ABN: 12 345 678 901</p>
-            <p>Email: support@bronet.com.au<br />
+            <p>Email: support@brointernet.com<br />
             Phone: 1300 BRO NET (1300 276 638)<br />
             Hours: 8am - 8pm AEDT, 7 days<br />
             Post: PO Box 12345, Sydney NSW 2000</p>

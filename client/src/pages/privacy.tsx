@@ -129,7 +129,7 @@ export default function Privacy() {
           <div className="text-muted-foreground leading-relaxed space-y-2">
             <p><strong>Privacy Officer</strong></p>
             <p>BroNET Pty Ltd<br />
-            Email: privacy@bronet.com.au<br />
+            Email: privacy@brointernet.com<br />
             Phone: 1300 BRO NET (1300 276 638)<br />
             Post: PO Box 12345, Sydney NSW 2000</p>
             <p className="mt-4">
