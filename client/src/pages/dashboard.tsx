@@ -21,7 +21,8 @@ import {
   User as UserIcon,
   ChevronRight,
   PlusCircle,
-  Mail
+  Mail,
+  Package
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -53,6 +54,18 @@ type ContactMessage = {
   createdAt: string;
 };
 
+type ModemEnquiry = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  product: string;
+  quantity: number;
+  message: string | null;
+  status: string;
+  createdAt: string;
+};
+
 export default function Dashboard() {
   const { user, logout, updateProfile } = useUser();
   const [, setLocation] = useLocation();
@@ -60,6 +73,7 @@ export default function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [usage, setUsage] = useState<UsageData[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [modemEnquiries, setModemEnquiries] = useState<ModemEnquiry[]>([]);
   const { toast } = useToast();
   
   // New Ticket State
@@ -79,15 +93,17 @@ export default function Dashboard() {
     
     // Load Data from API
     const loadData = async () => {
-      const [ticketsRes, usageRes, messagesRes] = await Promise.all([
+      const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes] = await Promise.all([
         api.getTickets(),
         api.getUsage(),
-        api.getMessages()
+        api.getMessages(),
+        api.getModemEnquiries()
       ]);
       
       if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
       if (usageRes.data) setUsage(usageRes.data.usage);
       if (messagesRes.data) setContactMessages(messagesRes.data.messages);
+      if (modemEnquiriesRes.data) setModemEnquiries(modemEnquiriesRes.data.enquiries);
     };
     
     loadData();
@@ -148,6 +164,7 @@ export default function Dashboard() {
             <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
             <TabsTrigger value="support">My Tickets</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="modems">Modem Requests</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -380,6 +397,80 @@ export default function Dashboard() {
                    )}
                  </div>
                </CardContent>
+             </Card>
+          </TabsContent>
+
+          {/* MODEM REQUESTS TAB */}
+          <TabsContent value="modems">
+             <Card>
+               <CardHeader>
+                 <CardTitle>Modem Purchase Requests</CardTitle>
+                 <CardDescription>Track your modem and router enquiries.</CardDescription>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-4">
+                   {modemEnquiries.length === 0 ? (
+                     <div className="text-center py-8">
+                       <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                       <p className="text-muted-foreground mb-4">No modem requests yet.</p>
+                       <Button variant="outline" asChild>
+                         <Link href="/modems">Browse Modems</Link>
+                       </Button>
+                     </div>
+                   ) : (
+                     modemEnquiries.map((enquiry) => (
+                       <div key={enquiry.id} className="border p-4 rounded-lg flex items-start gap-3" data-testid={`enquiry-${enquiry.id}`}>
+                         <div className="bg-primary/10 p-2 rounded-full text-primary">
+                           <Package className="h-4 w-4" />
+                         </div>
+                         <div className="flex-1">
+                           <div className="flex justify-between items-start mb-2">
+                             <div>
+                               <h4 className="font-medium" data-testid={`product-${enquiry.id}`}>{enquiry.product}</h4>
+                               <p className="text-sm text-muted-foreground">
+                                 Quantity: {enquiry.quantity}
+                               </p>
+                             </div>
+                             <div className="flex flex-col items-end gap-1">
+                               <Badge 
+                                 variant={
+                                   enquiry.status === 'pending' ? 'secondary' : 
+                                   enquiry.status === 'processing' ? 'default' :
+                                   enquiry.status === 'completed' ? 'outline' : 
+                                   'destructive'
+                                 }
+                                 data-testid={`status-${enquiry.id}`}
+                               >
+                                 {enquiry.status.toUpperCase()}
+                               </Badge>
+                               <span className="text-xs text-muted-foreground">
+                                 {format(new Date(enquiry.createdAt), 'MMM d, h:mm a')}
+                               </span>
+                             </div>
+                           </div>
+                           {enquiry.message && (
+                             <p className="text-sm text-muted-foreground mt-2" data-testid={`message-${enquiry.id}`}>
+                               {enquiry.message}
+                             </p>
+                           )}
+                           {enquiry.phone && (
+                             <p className="text-xs text-muted-foreground mt-1">
+                               Contact: {enquiry.phone}
+                             </p>
+                           )}
+                         </div>
+                       </div>
+                     ))
+                   )}
+                 </div>
+               </CardContent>
+               {modemEnquiries.length > 0 && (
+                 <CardFooter>
+                   <Button variant="outline" asChild className="w-full">
+                     <Link href="/modems">View More Modems</Link>
+                   </Button>
+                 </CardFooter>
+               )}
              </Card>
           </TabsContent>
 
