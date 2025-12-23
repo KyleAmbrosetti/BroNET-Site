@@ -1,7 +1,10 @@
 import { PlanCard } from "@/components/plan-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, Radio } from "lucide-react";
+import { Check, X, Radio, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useUser } from "@/hooks/use-user";
@@ -18,9 +21,18 @@ type StripeProduct = {
 
 export default function Plans() {
   const [stripeProducts, setStripeProducts] = useState<StripeProduct[]>([]);
+  const [address, setAddress] = useState("");
   const { user } = useUser();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const handleCheckAvailability = () => {
+    if (address.trim()) {
+      setLocation(`/coverage?address=${encodeURIComponent(address.trim())}`);
+    } else {
+      setLocation("/coverage");
+    }
+  };
 
   const plans = [
     { name: "NBN 50", speed: 50, upload: 20, price: 69, typical: "50 Mbps" },
@@ -79,13 +91,43 @@ export default function Plans() {
 
   return (
     <div className="container py-16 px-4 md:px-6">
-      <div className="text-center max-w-3xl mx-auto mb-16">
+      <div className="text-center max-w-3xl mx-auto mb-12">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Simple, transparent pricing</h1>
         <p className="text-muted-foreground text-lg">
           No hidden fees, no lock-in contracts. Just fast internet at a fair price.
           Change your plan anytime in the portal.
         </p>
       </div>
+
+      {/* Check Availability Section */}
+      <Card className="max-w-2xl mx-auto mb-16 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-lg">Check your address first</h3>
+          </div>
+          <p className="text-muted-foreground text-sm mb-4">
+            Enter your address to see which plans are available at your location and the technology type.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input
+              placeholder="Enter your street address..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCheckAvailability()}
+              className="flex-1"
+              data-testid="input-check-address"
+            />
+            <Button 
+              onClick={handleCheckAvailability}
+              className="bg-gradient-brand border-0"
+              data-testid="button-check-availability"
+            >
+              Check Availability
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Fibre/Cable Plans */}
       <div className="mb-8">
