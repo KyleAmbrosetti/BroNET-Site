@@ -27,14 +27,16 @@ export default function SpeedTest() {
               <CardContent className="p-0">
                 <iframe 
                   width="100%" 
-                  height="650px" 
+                  height="650" 
                   frameBorder="0" 
-                  src="//brointernet.speedtestcustom.com"
+                  src="https://brointernet.speedtestcustom.com"
                   title="BroNET Speed Test powered by Ookla"
                   data-testid="speedtest-iframe"
-                  className="w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-                  style={{ minHeight: "650px" }}
+                  className="w-full block"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  loading="lazy"
+                  style={{ minHeight: "650px", border: "none" }}
                 />
               </CardContent>
             </Card>
