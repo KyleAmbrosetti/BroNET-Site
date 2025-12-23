@@ -162,7 +162,7 @@ export function ChatBot() {
 
 Key information about BroNET:
 - We offer NBN plans: Basic (25Mbps, $59/month), Standard (50Mbps, $69/month), Fast (100Mbps, $79/month), Superfast (250Mbps, $99/month), Ultra (1000Mbps, $129/month)
-- We sell eero 7 ($299) and eero Pro 7 ($599) mesh routers
+- We sell eero 7 ($299), eero Pro 7 ($599), and eero Max 7 ($899) mesh routers
 - Coverage check is available on our website at /coverage
 - Support is available 24/7 via support tickets in the dashboard at /dashboard
 - We service all NBN-connected areas in Australia

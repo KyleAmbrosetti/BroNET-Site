@@ -76,6 +76,29 @@ const products = [
     badgeVariant: "secondary" as const,
     image: eeroPro7Image,
   },
+  {
+    id: "eero-max-7",
+    name: "eero Max 7",
+    subtitle: "Ultimate quad-band Wi-Fi 7 mesh router",
+    price: "$899",
+    priceNote: "Starting from",
+    description: "The ultimate mesh router for demanding users. Quad-band Wi-Fi 7 with 10 GbE support for maximum performance.",
+    features: [
+      "Wi-Fi 7 (802.11be)",
+      "Quad-band (2.4GHz, dual 5GHz, 6GHz)",
+      "Up to 11 Gbps aggregate speeds",
+      "Covers up to 400 sqm",
+      "Supports NBN 2000+ plans",
+      "10 GbE + 2.5 GbE ethernet ports",
+      "Thread border router built-in",
+      "Priority support included",
+    ],
+    ideal: "Ultra-large homes & enthusiasts",
+    maxSpeed: "NBN 2000 (Home Ultrafast)",
+    badge: "Ultimate",
+    badgeVariant: "destructive" as const,
+    image: eeroPro7Image,
+  },
 ];
 
 export default function ModemsPage() {
@@ -251,9 +274,10 @@ export default function ModemsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/3">Feature</TableHead>
+                  <TableHead className="w-1/4">Feature</TableHead>
                   <TableHead className="text-center">eero 7</TableHead>
                   <TableHead className="text-center">eero Pro 7</TableHead>
+                  <TableHead className="text-center">eero Max 7</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,36 +285,49 @@ export default function ModemsPage() {
                   <TableCell className="font-medium">Wi-Fi Standard</TableCell>
                   <TableCell className="text-center" data-testid="compare-wifi-eero-7">Wi-Fi 7</TableCell>
                   <TableCell className="text-center" data-testid="compare-wifi-eero-pro-7">Wi-Fi 7</TableCell>
+                  <TableCell className="text-center" data-testid="compare-wifi-eero-max-7">Wi-Fi 7</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Bands</TableCell>
+                  <TableCell className="text-center" data-testid="compare-bands-eero-7">Tri-band</TableCell>
+                  <TableCell className="text-center" data-testid="compare-bands-eero-pro-7">Tri-band</TableCell>
+                  <TableCell className="text-center" data-testid="compare-bands-eero-max-7">Quad-band</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Maximum Speed</TableCell>
                   <TableCell className="text-center" data-testid="compare-maxspeed-eero-7">2.1 Gbps</TableCell>
                   <TableCell className="text-center" data-testid="compare-maxspeed-eero-pro-7">4.3 Gbps</TableCell>
+                  <TableCell className="text-center" data-testid="compare-maxspeed-eero-max-7">11 Gbps</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Coverage Area</TableCell>
                   <TableCell className="text-center" data-testid="compare-coverage-eero-7">Up to 200 sqm</TableCell>
                   <TableCell className="text-center" data-testid="compare-coverage-eero-pro-7">Up to 300 sqm</TableCell>
+                  <TableCell className="text-center" data-testid="compare-coverage-eero-max-7">Up to 400 sqm</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">NBN Plan Support</TableCell>
                   <TableCell className="text-center" data-testid="compare-nbn-eero-7">Up to NBN 1000</TableCell>
                   <TableCell className="text-center" data-testid="compare-nbn-eero-pro-7">Up to NBN 2000</TableCell>
+                  <TableCell className="text-center" data-testid="compare-nbn-eero-max-7">NBN 2000+</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Ethernet Ports</TableCell>
                   <TableCell className="text-center" data-testid="compare-ethernet-eero-7">Dual GbE</TableCell>
                   <TableCell className="text-center" data-testid="compare-ethernet-eero-pro-7">2.5 GbE + GbE</TableCell>
+                  <TableCell className="text-center" data-testid="compare-ethernet-eero-max-7">10 GbE + 2.5 GbE</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Ideal For</TableCell>
                   <TableCell className="text-center" data-testid="compare-ideal-eero-7">2-4 bedrooms</TableCell>
                   <TableCell className="text-center" data-testid="compare-ideal-eero-pro-7">4+ bedrooms</TableCell>
+                  <TableCell className="text-center" data-testid="compare-ideal-eero-max-7">Enthusiasts</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Starting Price</TableCell>
                   <TableCell className="text-center font-bold" data-testid="compare-price-eero-7">$299</TableCell>
                   <TableCell className="text-center font-bold" data-testid="compare-price-eero-pro-7">$599</TableCell>
+                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-max-7">$899</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
