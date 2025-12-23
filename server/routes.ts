@@ -380,8 +380,22 @@ export async function registerRoutes(
       }
 
       // Step 2: Check NBN availability (wholesale API or dataset)
+      // Use original address for NBN API to preserve street number, fall back to normalized
+      const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+(.+)/);
+      let addressForNBN = addressResult.normalizedAddress;
+      
+      // If user input has a street number, ensure it's in the address sent to NBN API
+      if (inputMatch) {
+        const streetNumber = inputMatch[1];
+        // Check if normalized address already has the street number
+        if (!addressResult.normalizedAddress.startsWith(streetNumber)) {
+          // Prepend street number to the normalized address for more accurate NBN lookup
+          addressForNBN = `${streetNumber} ${addressResult.normalizedAddress}`;
+        }
+      }
+      
       const sqResult = await checkNBNAvailability(
-        addressResult.normalizedAddress,
+        addressForNBN,
         addressResult.postcode || '',
         addressResult.latitude,
         addressResult.longitude
@@ -405,15 +419,21 @@ export async function registerRoutes(
       }
 
       // Step 4: Return result - prefer RapidAPI address details when available
-      // Extract street number from user input if RapidAPI doesn't have it
       let finalAddress = sqResult.formattedAddress || addressResult.normalizedAddress;
-      const inputMatch = address.trim().match(/^(\d+[A-Za-z]?)\s+/);
       const inputStreetNumber = inputMatch ? inputMatch[1] : null;
       
-      // If we have a street number from input but not in the formatted address, prepend it
-      if (inputStreetNumber && finalAddress && !finalAddress.match(/^\d+/)) {
-        finalAddress = `${inputStreetNumber} ${finalAddress}`;
+      // Clean up the address - if RapidAPI returned address already contains the street number, use it as-is
+      // Otherwise, prepend the user's street number
+      if (inputStreetNumber && finalAddress) {
+        // Check if the address already contains the street number somewhere
+        const addressContainsNumber = finalAddress.match(new RegExp(`\\b${inputStreetNumber}\\b`));
+        if (!addressContainsNumber && !finalAddress.match(/^\d+/)) {
+          finalAddress = `${inputStreetNumber} ${finalAddress}`;
+        }
       }
+      
+      // Clean up address formatting (remove "Australia" suffix, normalize spacing)
+      finalAddress = finalAddress?.replace(/\s+Australia$/i, '').replace(/\s+/g, ' ').trim();
       
       const finalSuburb = sqResult.locality || addressResult.suburb;
       const finalPostcode = sqResult.postcode || addressResult.postcode;
