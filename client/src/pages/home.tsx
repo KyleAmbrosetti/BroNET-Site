@@ -82,46 +82,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature Grid */}
-      <section className="py-24">
-        <div className="container px-4 md:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Why choose BroNET?</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">We built the ISP we wanted to use ourselves. Optimized for modern internet usage.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-              <Rocket className="h-10 w-10 text-primary mb-6" />
-              <h3 className="text-xl font-bold mb-2">Blistering Speed</h3>
-              <p className="text-muted-foreground">Consistently top-tier speeds even during peak evening hours.</p>
-            </div>
-            
-            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-              <Gamepad2 className="h-10 w-10 text-purple-600 mb-6" />
-              <h3 className="text-xl font-bold mb-2">Gamer Friendly</h3>
-              <p className="text-muted-foreground">Optimized routing for lower latency in competitive games.</p>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-              <Download className="h-10 w-10 text-indigo-600 mb-6" />
-              <h3 className="text-xl font-bold mb-2">Unlimited Data</h3>
-              <p className="text-muted-foreground">No caps, no shaping, no worries. Download as much as you want.</p>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-              <Wifi className="h-10 w-10 text-blue-500 mb-6" />
-              <h3 className="text-xl font-bold mb-2">Premium Wi-Fi</h3>
-              <p className="text-muted-foreground">Add a pre-configured eero 6+ mesh router for wall-to-wall coverage.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Featured Plans Snippet */}
       <section className="py-24 bg-muted/30">
         <div className="container px-4 md:px-6">
@@ -158,6 +118,46 @@ export default function Home() {
               price={109} 
               typicalSpeed="245 Mbps" 
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Grid */}
+      <section className="py-24">
+        <div className="container px-4 md:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Why choose BroNET?</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">We built the ISP we wanted to use ourselves. Optimized for modern internet usage.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+              <Rocket className="h-10 w-10 text-primary mb-6" />
+              <h3 className="text-xl font-bold mb-2">Blistering Speed</h3>
+              <p className="text-muted-foreground">Consistently top-tier speeds even during peak evening hours.</p>
+            </div>
+            
+            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+              <Gamepad2 className="h-10 w-10 text-purple-600 mb-6" />
+              <h3 className="text-xl font-bold mb-2">Gamer Friendly</h3>
+              <p className="text-muted-foreground">Optimized routing for lower latency in competitive games.</p>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+              <Download className="h-10 w-10 text-indigo-600 mb-6" />
+              <h3 className="text-xl font-bold mb-2">Unlimited Data</h3>
+              <p className="text-muted-foreground">No caps, no shaping, no worries. Download as much as you want.</p>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-3xl bg-card border p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+              <Wifi className="h-10 w-10 text-blue-500 mb-6" />
+              <h3 className="text-xl font-bold mb-2">Premium Wi-Fi</h3>
+              <p className="text-muted-foreground">Add a pre-configured eero 6+ mesh router for wall-to-wall coverage.</p>
+            </div>
           </div>
         </div>
       </section>
