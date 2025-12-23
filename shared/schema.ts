@@ -192,3 +192,6 @@ export const insertModemEnquirySchema = createInsertSchema(modemEnquiries).omit(
 
 export type InsertModemEnquiry = z.infer<typeof insertModemEnquirySchema>;
 export type ModemEnquiry = typeof modemEnquiries.$inferSelect;
+
+// Re-export chat models
+export * from "./models/chat";
