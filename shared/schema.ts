@@ -247,5 +247,92 @@ export const insertUsageRecordSchema = createInsertSchema(usageRecords).omit({
 export type InsertUsageRecord = z.infer<typeof insertUsageRecordSchema>;
 export type UsageRecord = typeof usageRecords.$inferSelect;
 
+// Service Qualifications Table (NBN SQ responses)
+export const serviceQualifications = pgTable("service_qualifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  locId: text("loc_id"), // NBN Location ID
+  csaId: text("csa_id"), // Connectivity Serving Area ID
+  address: text("address").notNull(),
+  postcode: text("postcode"),
+  suburb: text("suburb"),
+  state: text("state"),
+  technology: text("technology").notNull(), // FTTP, FTTC, FTTB, HFC, FW, SAT
+  maxDownload: integer("max_download"), // Mbps
+  maxUpload: integer("max_upload"), // Mbps
+  bandwidthProfile: text("bandwidth_profile"), // e.g., "TC4/1000/50"
+  serviceClass: integer("service_class"), // 1-4
+  newDevelopment: integer("new_development").default(0),
+  sqReference: text("sq_reference"), // SQ transaction reference
+  validUntil: timestamp("valid_until"),
+  rawResponse: text("raw_response"), // Store full API response for debugging
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertServiceQualificationSchema = createInsertSchema(serviceQualifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertServiceQualification = z.infer<typeof insertServiceQualificationSchema>;
+export type ServiceQualification = typeof serviceQualifications.$inferSelect;
+
+// Service Orders Table (NBN connection orders)
+export const serviceOrders = pgTable("service_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  qualificationId: varchar("qualification_id").references(() => serviceQualifications.id),
+  orderReference: text("order_reference").notNull(), // BroNET order number
+  nbnOrderId: text("nbn_order_id"), // NBN Co order ID (when RSP connected)
+  avcId: text("avc_id"), // Access Virtual Circuit ID (assigned by NBN)
+  cvcId: text("cvc_id"), // Connectivity Virtual Circuit ID
+  planId: text("plan_id").notNull(),
+  planName: text("plan_name").notNull(),
+  downloadSpeed: integer("download_speed"), // Mbps
+  uploadSpeed: integer("upload_speed"), // Mbps
+  serviceAddress: text("service_address").notNull(),
+  locId: text("loc_id"),
+  technology: text("technology"),
+  status: text("status").notNull().default("pending"), // pending, submitted, in_progress, provisioning, active, cancelled, failed
+  contactName: text("contact_name").notNull(),
+  contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  preferredDate: timestamp("preferred_date"),
+  estimatedConnectionDate: timestamp("estimated_connection_date"),
+  actualConnectionDate: timestamp("actual_connection_date"),
+  stripeSessionId: text("stripe_session_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertServiceOrderSchema = createInsertSchema(serviceOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertServiceOrder = z.infer<typeof insertServiceOrderSchema>;
+export type ServiceOrder = typeof serviceOrders.$inferSelect;
+
+// Order status history for tracking
+export const orderStatusHistory = pgTable("order_status_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").references(() => serviceOrders.id).notNull(),
+  status: text("status").notNull(),
+  message: text("message"),
+  updatedBy: text("updated_by"), // 'system', 'admin', 'nbn_api'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertOrderStatusHistorySchema = createInsertSchema(orderStatusHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertOrderStatusHistory = z.infer<typeof insertOrderStatusHistorySchema>;
+export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;
+
 // Re-export chat models
 export * from "./models/chat";
