@@ -1,0 +1,124 @@
+import { storage } from "../storage";
+import type { AddressCache } from "@shared/schema";
+
+// Rate limiting: Max 1 request per second to Nominatim
+const RATE_LIMIT_MS = 1000;
+let lastRequestTime = 0;
+
+export interface AddressValidationResult {
+  success: boolean;
+  normalizedAddress?: string;
+  latitude?: string;
+  longitude?: string;
+  postcode?: string;
+  suburb?: string;
+  state?: string;
+  error?: string;
+}
+
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function callNominatim(inputAddress: string): Promise<any> {
+  // Rate limiting
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < RATE_LIMIT_MS) {
+    await delay(RATE_LIMIT_MS - timeSinceLastRequest);
+  }
+  lastRequestTime = Date.now();
+
+  // Call Nominatim API with Australian country bias
+  const url = `https://nominatim.openstreetmap.org/search?` +
+    `q=${encodeURIComponent(inputAddress)}` +
+    `&format=json` +
+    `&addressdetails=1` +
+    `&limit=1` +
+    `&countrycodes=au`;
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'BroNET-ISP/1.0 (https://bronet.example.com; support@bronet.example.com)',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Nominatim API error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export async function validateAddress(inputAddress: string): Promise<AddressValidationResult> {
+  try {
+    const normalizedInput = inputAddress.toLowerCase().trim();
+
+    // Check cache first
+    const cached = await storage.getAddressCacheByInput(normalizedInput);
+    if (cached) {
+      return {
+        success: true,
+        normalizedAddress: cached.normalizedAddress,
+        latitude: cached.latitude || undefined,
+        longitude: cached.longitude || undefined,
+        postcode: cached.postcode || undefined,
+        suburb: cached.suburb || undefined,
+        state: cached.state || undefined,
+      };
+    }
+
+    // Call Nominatim
+    const results = await callNominatim(inputAddress);
+
+    if (!results || results.length === 0) {
+      return {
+        success: false,
+        error: "Address not found. Please check the address and try again.",
+      };
+    }
+
+    const result = results[0];
+    const address = result.address || {};
+
+    // Build normalized address
+    const addressParts = [
+      address.house_number,
+      address.road,
+      address.suburb || address.city,
+      address.state,
+      address.postcode,
+      'Australia',
+    ].filter(Boolean);
+
+    const normalizedAddress = addressParts.join(', ');
+
+    // Cache the result
+    await storage.createAddressCache({
+      inputAddress: normalizedInput,
+      normalizedAddress,
+      latitude: result.lat || null,
+      longitude: result.lon || null,
+      postcode: address.postcode || null,
+      suburb: address.suburb || address.city || null,
+      state: address.state || null,
+      rawResponse: JSON.stringify(result),
+    });
+
+    return {
+      success: true,
+      normalizedAddress,
+      latitude: result.lat,
+      longitude: result.lon,
+      postcode: address.postcode,
+      suburb: address.suburb || address.city,
+      state: address.state,
+    };
+  } catch (error: any) {
+    console.error('Nominatim validation error:', error);
+    return {
+      success: false,
+      error: error.message || "Failed to validate address",
+    };
+  }
+}

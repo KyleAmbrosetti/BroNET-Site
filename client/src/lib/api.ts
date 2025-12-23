@@ -90,4 +90,16 @@ export const api = {
   }),
 
   getCoverageHistory: () => apiFetch('/coverage/history'),
+
+  // Admin: NBN Dataset
+  getNbnDataset: () => apiFetch('/admin/nbn-dataset'),
+
+  uploadNbnDataset: (data: any[], replace: boolean) => apiFetch('/admin/nbn-dataset/upload', {
+    method: 'POST',
+    body: JSON.stringify({ data, replace }),
+  }),
+
+  deleteNbnDataset: () => apiFetch('/admin/nbn-dataset', {
+    method: 'DELETE',
+  }),
 };
