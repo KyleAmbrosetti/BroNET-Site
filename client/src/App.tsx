@@ -25,12 +25,12 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={ComingSoon} />
+        <Route path="/home" component={Home} />
         <Route path="/plans" component={Plans} />
         <Route path="/coverage" component={Coverage} />
         <Route path="/modems" component={Modems} />
         <Route path="/nbn-2000" component={Nbn2000} />
-        <Route path="/coming-soon" component={ComingSoon} />
         <Route path="/support" component={Support} />
         <Route path="/auth" component={Auth} />
         <Route path="/dashboard" component={Dashboard} />
