@@ -21,6 +21,7 @@ import Modems from "@/pages/modems";
 import Nbn2000 from "@/pages/nbn-2000";
 import ComingSoon from "@/pages/coming-soon";
 import Abuse from "@/pages/abuse";
+import SignupWizard from "@/pages/signup-wizard";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/terms" component={Terms} />
         <Route path="/cis" component={Cis} />
         <Route path="/abuse" component={Abuse} />
+        <Route path="/signup" component={SignupWizard} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

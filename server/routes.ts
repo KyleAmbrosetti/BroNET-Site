@@ -826,5 +826,156 @@ export async function registerRoutes(
     }
   });
 
+  // =========== NBN Service Order Routes ===========
+  
+  // Perform service qualification (enhanced coverage check)
+  app.post("/api/orders/qualify", async (req, res) => {
+    try {
+      const { address, technology, postcode, suburb, state } = req.body;
+      
+      if (!address || !technology) {
+        return res.status(400).json({ message: "Address and technology are required" });
+      }
+
+      const { nbnService } = await import('./nbnService');
+      const result = await nbnService.performServiceQualification(
+        address,
+        technology,
+        postcode,
+        suburb,
+        state,
+        req.session?.userId
+      );
+
+      res.json({ success: true, qualification: result });
+    } catch (error: any) {
+      console.error("Qualification error:", error);
+      res.status(500).json({ message: error.message || "Service qualification failed" });
+    }
+  });
+
+  // Submit a service order
+  app.post("/api/orders", requireAuth, async (req, res) => {
+    try {
+      const {
+        qualificationId,
+        planId,
+        planName,
+        downloadSpeed,
+        uploadSpeed,
+        serviceAddress,
+        locId,
+        technology,
+        contactName,
+        contactEmail,
+        contactPhone,
+        preferredDate,
+        stripeSessionId,
+      } = req.body;
+
+      if (!planId || !planName || !serviceAddress || !contactName || !contactEmail || !contactPhone) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const { nbnService } = await import('./nbnService');
+      const result = await nbnService.submitOrder({
+        userId: req.session.userId!,
+        qualificationId,
+        planId,
+        planName,
+        downloadSpeed: downloadSpeed || 0,
+        uploadSpeed: uploadSpeed || 0,
+        serviceAddress,
+        locId,
+        technology,
+        contactName,
+        contactEmail,
+        contactPhone,
+        preferredDate: preferredDate ? new Date(preferredDate) : undefined,
+        stripeSessionId,
+      });
+
+      res.json({
+        ...result.result,
+        orderId: result.orderId,
+        orderReference: result.orderReference,
+      });
+    } catch (error: any) {
+      console.error("Order submission error:", error);
+      res.status(500).json({ message: error.message || "Order submission failed" });
+    }
+  });
+
+  // Get user's orders
+  app.get("/api/orders", requireAuth, async (req, res) => {
+    try {
+      const { nbnService } = await import('./nbnService');
+      const orders = await nbnService.getUserOrders(req.session.userId!);
+      res.json({ orders });
+    } catch (error: any) {
+      console.error("Get orders error:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  // Get single order details
+  app.get("/api/orders/:orderId", requireAuth, async (req, res) => {
+    try {
+      const { nbnService } = await import('./nbnService');
+      const status = await nbnService.getOrderStatus(req.params.orderId);
+      
+      if (!status) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      const history = await nbnService.getOrderHistory(req.params.orderId);
+      res.json({ order: status, history });
+    } catch (error: any) {
+      console.error("Get order error:", error);
+      res.status(500).json({ message: "Failed to fetch order" });
+    }
+  });
+
+  // Admin: Update order status
+  app.patch("/api/orders/:orderId/status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { status, message } = req.body;
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      const { nbnService } = await import('./nbnService');
+      await nbnService.updateOrderStatus(req.params.orderId, status, message, "admin");
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Update order status error:", error);
+      res.status(500).json({ message: "Failed to update order status" });
+    }
+  });
+
+  // Admin: Activate service (assign AVC ID)
+  app.post("/api/orders/:orderId/activate", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { nbnService } = await import('./nbnService');
+      await nbnService.activateService(req.params.orderId);
+      
+      res.json({ success: true, message: "Service activated" });
+    } catch (error: any) {
+      console.error("Activate service error:", error);
+      res.status(500).json({ message: error.message || "Failed to activate service" });
+    }
+  });
+
   return httpServer;
 }
