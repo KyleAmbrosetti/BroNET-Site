@@ -19,7 +19,7 @@ Preferred communication style: Simple, everyday language.
 - **Build Tool**: Vite with custom plugins for Replit integration
 
 The frontend follows a page-based architecture with shared components:
-- Pages: Home, Plans, Coverage, Support, Auth, Dashboard, Admin
+- Pages: Home, Plans, Coverage, Support, Auth, Dashboard, Admin, SignupWizard
 - Reusable UI components from shadcn/ui in `client/src/components/ui/`
 - Custom hooks for authentication (`use-user`) and mobile detection (`use-mobile`)
 
@@ -46,6 +46,9 @@ Database tables:
 - `ticket_replies` - Threaded replies on tickets
 - `incidents` - Network status incidents
 - `contact_messages` - Public contact form submissions
+- `service_qualifications` - NBN service qualification results with LOC ID, CSA ID
+- `service_orders` - Customer service orders with NBN identifiers and status
+- `order_status_history` - Audit trail for order status changes
 
 ### Authentication
 - Session-based authentication stored in PostgreSQL
@@ -89,7 +92,35 @@ The RapidAPI integration returns:
 - Maximum available speed tier
 - Service availability status
 
+### NBN Service Order System
+The application includes a complete NBN service order system:
+
+**Multi-Step Signup Wizard** (`/signup`):
+1. Address - Enter and verify service address with NBN coverage check
+2. Qualification - Perform formal service qualification (generates LOC ID, CSA ID, SQ Reference)
+3. Details - Enter contact information
+4. Plan - Select internet plan based on available technology/speeds
+5. Payment - Review order and pay via Stripe checkout
+6. Confirmation - Display order reference and NBN identifiers
+
+**NBN Identifiers**:
+- LOC ID (Location ID) - Unique NBN location identifier
+- CSA ID (Connectivity Serving Area) - NBN network area
+- AVC ID (Access Virtual Circuit) - Assigned when service is active
+- CVC ID (Connectivity Virtual Circuit) - Network connection ID
+- SQ Reference - Service qualification reference number
+
+**Service Order Flow**:
+pending → submitted → in_progress → provisioning → active
+
+**NBN Service Abstraction** (`server/nbnService.ts`):
+- Currently uses simulated responses
+- Designed for easy swap to real NBN B2B APIs when RSP agreement obtained
+- Set `NBN_RSP_API_KEY` environment variable to enable real API mode
+
 ### Environment Variables Required
 - `DATABASE_URL` - PostgreSQL connection string
 - `SESSION_SECRET` - Secret key for session encryption (defaults to development value)
 - `RAPIDAPI_NBN_KEY` - RapidAPI key for NBN address lookup (nbnco-address-check API)
+- `STRIPE_SECRET_KEY` - Stripe secret key for payment processing
+- `NBN_RSP_API_KEY` - (Optional) NBN RSP API key for real B2B integration
