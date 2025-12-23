@@ -120,13 +120,22 @@ export default function Plans() {
     }
   };
 
-  const handleSignup = async (priceId: string, planName: string) => {
+  const handleSignup = async (priceId: string | undefined, planName: string) => {
     if (!user) {
       toast({
         title: "Login Required",
         description: "Please log in or create an account to sign up for a plan.",
       });
       setLocation("/auth");
+      return;
+    }
+
+    if (!priceId) {
+      toast({
+        title: "Loading...",
+        description: "Please wait a moment and try again.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -274,6 +283,7 @@ export default function Plans() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-24">
         {plans.map((plan) => {
           const available = isPlanAvailable(plan.speed, false);
+          const priceId = getPriceId(plan.name);
           return (
             <PlanCard
               key={plan.name}
@@ -283,9 +293,10 @@ export default function Plans() {
               price={plan.price}
               typicalSpeed={plan.typical}
               isPopular={plan.popular}
-              priceId={available ? getPriceId(plan.name) : undefined}
-              onSignup={available ? handleSignup : undefined}
+              priceId={priceId}
+              onSignup={available ? () => handleSignup(priceId, plan.name) : undefined}
               disabled={coverageVerified && !available}
+              showSignup={available}
             />
           );
         })}
@@ -303,6 +314,7 @@ export default function Plans() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
         {fixedWirelessPlans.map((plan) => {
           const available = isPlanAvailable(plan.speed, true);
+          const priceId = getPriceId(plan.name);
           return (
             <PlanCard
               key={plan.name}
@@ -312,9 +324,10 @@ export default function Plans() {
               price={plan.price}
               typicalSpeed={plan.typical}
               isPopular={plan.popular}
-              priceId={available ? getPriceId(plan.name) : undefined}
-              onSignup={available ? handleSignup : undefined}
+              priceId={priceId}
+              onSignup={available ? () => handleSignup(priceId, plan.name) : undefined}
               disabled={coverageVerified && !available}
+              showSignup={available}
             />
           );
         })}
