@@ -213,7 +213,7 @@ async function checkPublicNBNAPI(
 async function checkRapidAPI(
   normalizedAddress: string
 ): Promise<SQResult> {
-  const apiKey = process.env.RAPIDAPI_NBN_KEY;
+  let apiKey = process.env.RAPIDAPI_NBN_KEY;
   
   if (!apiKey) {
     return {
@@ -221,6 +221,14 @@ async function checkRapidAPI(
       error: 'RapidAPI key not configured',
     };
   }
+  
+  // Clean up API key - extract just the key if entire curl command was pasted
+  if (apiKey.includes('x-rapidapi-key:')) {
+    const match = apiKey.match(/x-rapidapi-key[:\s]+([a-zA-Z0-9]+)/);
+    if (match) apiKey = match[1];
+  }
+  // Remove any leading/trailing whitespace or quotes
+  apiKey = apiKey.trim().replace(/^['"]|['"]$/g, '');
 
   try {
     const encodedAddress = encodeURIComponent(normalizedAddress);
@@ -255,18 +263,16 @@ async function checkRapidAPI(
       };
     }
 
-    // Parse response - RapidAPI NBN search returns an array of address matches
-    const addresses = data.addresses || data.addressList || data;
+    // Parse response - RapidAPI returns addressDetail and servingArea objects
+    const addressDetail = data.addressDetail;
+    const servingArea = data.servingArea;
     
-    if (!addresses || (Array.isArray(addresses) && addresses.length === 0)) {
+    if (!addressDetail && !servingArea) {
       return {
         source: 'rapidapi',
         error: 'No matching addresses found',
       };
     }
-
-    // Get the first/best match
-    const match = Array.isArray(addresses) ? addresses[0] : addresses;
     
     // Map technology types
     const techTypeMap: Record<string, string> = {
@@ -279,18 +285,22 @@ async function checkRapidAPI(
       'SATELLITE': 'Satellite',
     };
 
-    const techType = match.technologyType || match.techType || match.technology || 'Unknown';
-    const isAvailable = match.serviceAvailable !== false && match.serviceStatus !== 'unavailable';
+    // Get technology type from addressDetail or servingArea
+    const techType = addressDetail?.techType || servingArea?.techType || 'Unknown';
+    
+    // Check availability from servingArea status or addressDetail
+    const serviceStatus = servingArea?.serviceStatus || addressDetail?.serviceStatus || '';
+    const isAvailable = serviceStatus === 'available' || 
+                        serviceStatus === 'in_construction' ||
+                        addressDetail?.serviceType === 'Fixed line';
     
     // Determine max speed based on technology
-    let maxTier = match.maxTier || match.maxSpeed || 'Contact for details';
-    if (maxTier === 'Contact for details') {
-      if (techType === 'FTTP') maxTier = '2000 Mbps';
-      else if (techType === 'FTTC' || techType === 'HFC') maxTier = '1000 Mbps';
-      else if (techType === 'FTTN' || techType === 'FTTB') maxTier = '100 Mbps';
-      else if (techType === 'WIRELESS') maxTier = '75 Mbps';
-      else if (techType === 'SATELLITE') maxTier = '25 Mbps';
-    }
+    let maxTier = 'Contact for details';
+    if (techType === 'FTTP') maxTier = '2000 Mbps';
+    else if (techType === 'FTTC' || techType === 'HFC') maxTier = '1000 Mbps';
+    else if (techType === 'FTTN' || techType === 'FTTB') maxTier = '100 Mbps';
+    else if (techType === 'WIRELESS') maxTier = '75 Mbps';
+    else if (techType === 'SATELLITE') maxTier = '25 Mbps';
 
     return {
       source: 'rapidapi',
