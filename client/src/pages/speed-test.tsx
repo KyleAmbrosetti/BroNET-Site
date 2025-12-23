@@ -22,21 +22,27 @@ export default function SpeedTest() {
             </p>
           </div>
 
+        </div>
+      </section>
+
+      <div className="w-full bg-black py-8">
+        <div className="container px-4 md:px-6">
+          <iframe 
+            width="100%" 
+            height="650" 
+            frameBorder="0" 
+            src="https://brointernet.speedtestcustom.com"
+            title="BroNET Speed Test powered by Ookla"
+            data-testid="speedtest-iframe"
+            className="w-full"
+            style={{ minHeight: "650px", border: "none" }}
+          />
+        </div>
+      </div>
+
+      <section className="py-8 md:py-12">
+        <div className="container px-4 md:px-6">
           <div className="w-full">
-            <div className="bg-black py-8 -mx-4 md:-mx-6 px-4 md:px-6">
-              <div className="max-w-5xl mx-auto">
-                <iframe 
-                  width="100%" 
-                  height="650" 
-                  frameBorder="0" 
-                  src="https://brointernet.speedtestcustom.com"
-                  title="BroNET Speed Test powered by Ookla"
-                  data-testid="speedtest-iframe"
-                  className="w-full"
-                  style={{ minHeight: "650px", border: "none" }}
-                />
-              </div>
-            </div>
 
             <div className="mt-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
