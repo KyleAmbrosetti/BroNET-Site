@@ -34,9 +34,6 @@ export default function SpeedTest() {
               className="w-full rounded-lg"
               style={{ minHeight: "650px", border: "none" }}
             />
-            <p className="text-center text-gray-500 text-sm mt-4">
-              All trademarks of Ookla, LLC, including Speedtest®, are used under license.
-            </p>
           </div>
 
         </div>
