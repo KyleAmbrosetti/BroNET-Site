@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
-import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info } from "lucide-react";
+import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
@@ -53,6 +53,10 @@ export default function Admin() {
   const [isLoadingDataset, setIsLoadingDataset] = useState(true);
   const [replaceMode, setReplaceMode] = useState(true);
 
+  // Chat Config State
+  const [chatConfig, setChatConfig] = useState<any>(null);
+  const [isLoadingChatConfig, setIsLoadingChatConfig] = useState(false);
+
   useEffect(() => {
     if (!user) {
       setLocation("/auth");
@@ -76,6 +80,7 @@ export default function Admin() {
     loadIncidents();
 
     loadDataset();
+    loadChatConfig();
   }, [user, setLocation]);
 
   const loadDataset = async () => {
@@ -85,6 +90,15 @@ export default function Admin() {
       setDataset(data.dataset);
     }
     setIsLoadingDataset(false);
+  };
+
+  const loadChatConfig = async () => {
+    setIsLoadingChatConfig(true);
+    const { data } = await api.getChatConfigStatus();
+    if (data) {
+      setChatConfig(data);
+    }
+    setIsLoadingChatConfig(false);
   };
 
   const handleCreate = async () => {
@@ -208,9 +222,13 @@ export default function Admin() {
       <h1 className="text-3xl font-bold mb-8" data-testid="text-admin-title">Admin Console</h1>
       
       <Tabs defaultValue="incidents" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="incidents" data-testid="tab-incidents">Network Incidents</TabsTrigger>
           <TabsTrigger value="dataset" data-testid="tab-dataset">NBN Dataset</TabsTrigger>
+          <TabsTrigger value="chatconfig" data-testid="tab-chatconfig">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Chat Config
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="incidents" className="mt-6">
@@ -453,6 +471,140 @@ export default function Admin() {
                       </div>
                     ))}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="chatconfig" className="mt-6">
+          <div className="grid gap-6 max-w-2xl">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="h-5 w-5" />
+                  AI Chatbot Configuration
+                </CardTitle>
+                <CardDescription>
+                  Status and configuration of the customer support chatbot
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {isLoadingChatConfig ? (
+                  <p className="text-muted-foreground text-center py-4">Loading configuration...</p>
+                ) : chatConfig ? (
+                  <>
+                    <div className="grid gap-4">
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <Label className="text-base font-semibold">AI Mode</Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {chatConfig.mode === 'ai' 
+                              ? 'Using AI for intelligent responses' 
+                              : 'Using built-in FAQ fallback mode'}
+                          </p>
+                        </div>
+                        <Badge variant={chatConfig.isConfigured ? "default" : "secondary"}>
+                          {chatConfig.mode === 'ai' ? 'AI Enabled' : 'FAQ Mode'}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <Label className="text-base font-semibold">Provider</Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {chatConfig.provider}
+                          </p>
+                        </div>
+                        {chatConfig.isConfigured && (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <Label className="text-base font-semibold">Chat Logging</Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {chatConfig.saveLogs 
+                              ? 'Conversations are saved to database' 
+                              : 'Conversations are ephemeral (not saved)'}
+                          </p>
+                        </div>
+                        <Badge variant={chatConfig.saveLogs ? "default" : "outline"}>
+                          {chatConfig.saveLogs ? 'Enabled' : 'Disabled'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {!chatConfig.isConfigured && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>AI Mode Not Configured</AlertTitle>
+                        <AlertDescription>
+                          The chatbot is running in FAQ fallback mode. To enable AI mode, the OpenAI integration needs to be configured with Replit AI Integrations.
+                          The chatbot will still work using built-in BroNET knowledge.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="pt-4 border-t">
+                      <h4 className="font-semibold mb-3">Environment Variables</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between p-2 bg-muted rounded">
+                          <code className="text-xs">SAVE_CHAT_LOGS</code>
+                          <Badge variant="outline" className="text-xs">
+                            {chatConfig.saveLogs ? 'true' : 'false'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Set SAVE_CHAT_LOGS=true to enable conversation logging to database
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <h4 className="font-semibold mb-2">Features</h4>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Rate limiting (20 requests per minute per IP)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Secret redaction (passwords, API keys, credit cards)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Privacy notice displayed to users
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Export to support ticket (for logged-in users)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Mobile-responsive full-screen mode
+                        </li>
+                      </ul>
+                    </div>
+
+                    <Button 
+                      onClick={loadChatConfig} 
+                      variant="outline" 
+                      className="w-full"
+                      data-testid="button-refresh-chat-config"
+                    >
+                      Refresh Configuration
+                    </Button>
+                  </>
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Configuration Error</AlertTitle>
+                    <AlertDescription>
+                      Could not load chat configuration. Please check the server logs.
+                    </AlertDescription>
+                  </Alert>
                 )}
               </CardContent>
             </Card>

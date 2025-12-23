@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageCircle, X, Send, Bot, User, Loader2, Minimize2, Zap, AlertCircle, Download, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/use-user";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,7 +32,7 @@ export function ChatBot() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   useEffect(() => {
