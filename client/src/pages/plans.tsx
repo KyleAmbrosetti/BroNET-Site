@@ -85,27 +85,37 @@ export default function Plans() {
     setCoverageResult(null);
     setCoverageVerified(false);
 
-    const { data, error } = await api.checkCoverage(address);
+    try {
+      const { data, error } = await api.checkCoverage(address);
 
-    setIsChecking(false);
+      setIsChecking(false);
 
-    if (error || !data?.success) {
+      if (error || !data?.success) {
+        toast({
+          title: "Check failed",
+          description: error || data?.message || "Failed to validate address. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data.result) {
+        setCoverageResult(data.result);
+        setCoverageVerified(data.result.available !== false);
+        toast({ 
+          title: "Coverage check complete",
+          description: data.result.available !== false 
+            ? "NBN is available at your address!" 
+            : "NBN may not be available at this address"
+        });
+      }
+    } catch (err) {
+      setIsChecking(false);
+      console.error('Coverage check error:', err);
       toast({
-        title: "Check failed",
-        description: error || data?.message || "Failed to validate address",
+        title: "Connection error",
+        description: "Unable to check coverage. Please try again.",
         variant: "destructive"
-      });
-      return;
-    }
-
-    if (data.result) {
-      setCoverageResult(data.result);
-      setCoverageVerified(data.result.available !== false);
-      toast({ 
-        title: "Coverage check complete",
-        description: data.result.available !== false 
-          ? "NBN is available at your address!" 
-          : "NBN may not be available at this address"
       });
     }
   };
