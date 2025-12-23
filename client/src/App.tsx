@@ -22,6 +22,7 @@ import Nbn2000 from "@/pages/nbn-2000";
 import ComingSoon from "@/pages/coming-soon";
 import Abuse from "@/pages/abuse";
 import SignupWizard from "@/pages/signup-wizard";
+import Mobile from "@/pages/mobile";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
         <Route path="/" component={ComingSoon} />
         <Route path="/home" component={Home} />
         <Route path="/plans" component={Plans} />
+        <Route path="/mobile" component={Mobile} />
         <Route path="/coverage" component={Coverage} />
         <Route path="/modems" component={Modems} />
         <Route path="/nbn-2000" component={Nbn2000} />

@@ -42,6 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <nav className="hidden md:flex items-center gap-8">
             <NavLink href="/home">Home</NavLink>
             <NavLink href="/plans">Plans</NavLink>
+            <NavLink href="/mobile">Mobile</NavLink>
             <NavLink href="/coverage">Coverage</NavLink>
             <NavLink href="/modems">Modems</NavLink>
             <NavLink href="/support">Support</NavLink>
@@ -95,6 +96,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <div className="flex flex-col gap-4 mt-8">
                     <Link href="/home" className="text-lg font-medium">Home</Link>
                     <Link href="/plans" className="text-lg font-medium">Plans</Link>
+                    <Link href="/mobile" className="text-lg font-medium">Mobile</Link>
                     <Link href="/coverage" className="text-lg font-medium">Coverage</Link>
                     <Link href="/modems" className="text-lg font-medium">Modems</Link>
                     <Link href="/support" className="text-lg font-medium">Support</Link>
