@@ -32,14 +32,28 @@ export default function SpeedTest() {
                   src="https://brointernet.speedtestcustom.com"
                   title="BroNET Speed Test powered by Ookla"
                   data-testid="speedtest-iframe"
-                  className="w-full block"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  loading="lazy"
-                  style={{ minHeight: "650px", border: "none" }}
+                  className="w-full"
+                  style={{ minHeight: "650px" }}
                 />
               </CardContent>
             </Card>
+
+            <div className="mt-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Speed test not loading? Open it directly:
+              </p>
+              <Button variant="outline" asChild>
+                <a 
+                  href="https://brointernet.speedtestcustom.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="gap-2"
+                >
+                  Open Speed Test
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
 
             <div className="mt-8 grid md:grid-cols-3 gap-6">
               <Card>
