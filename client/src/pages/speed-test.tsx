@@ -12,7 +12,7 @@ export default function SpeedTest() {
         <div className="container px-4 md:px-6 py-12 md:py-16">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              BroNET Speed Test
+              <span className="text-gradient-brand">BroNET</span> Speed Test
             </h1>
             <h2 className="text-2xl md:text-3xl text-gray-300 mb-4">
               Check your internet speed
