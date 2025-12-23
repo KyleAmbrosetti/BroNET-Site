@@ -9,6 +9,8 @@ import {
   coverageChecks,
   modemEnquiries,
   emailSignups,
+  billingHistory,
+  usageRecords,
   type User, 
   type InsertUser,
   type Ticket,
@@ -29,6 +31,10 @@ import {
   type InsertModemEnquiry,
   type EmailSignup,
   type InsertEmailSignup,
+  type BillingHistory,
+  type InsertBillingHistory,
+  type UsageRecord,
+  type InsertUsageRecord,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -85,6 +91,14 @@ export interface IStorage {
   // Email Signups
   getEmailSignupByEmail(email: string): Promise<EmailSignup | undefined>;
   createEmailSignup(signup: InsertEmailSignup): Promise<EmailSignup>;
+
+  // Billing History
+  getBillingHistory(userId: string): Promise<BillingHistory[]>;
+  createBillingRecord(record: InsertBillingHistory): Promise<BillingHistory>;
+
+  // Usage Records
+  getUsageRecords(userId: string): Promise<UsageRecord[]>;
+  createUsageRecord(record: InsertUsageRecord): Promise<UsageRecord>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -319,6 +333,41 @@ export class DatabaseStorage implements IStorage {
       .values(signup)
       .returning();
     return newSignup;
+  }
+
+  // Billing History
+  async getBillingHistory(userId: string): Promise<BillingHistory[]> {
+    return await db
+      .select()
+      .from(billingHistory)
+      .where(eq(billingHistory.userId, userId))
+      .orderBy(desc(billingHistory.createdAt));
+  }
+
+  async createBillingRecord(record: InsertBillingHistory): Promise<BillingHistory> {
+    const [newRecord] = await db
+      .insert(billingHistory)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  // Usage Records
+  async getUsageRecords(userId: string): Promise<UsageRecord[]> {
+    return await db
+      .select()
+      .from(usageRecords)
+      .where(eq(usageRecords.userId, userId))
+      .orderBy(desc(usageRecords.recordedAt))
+      .limit(12);
+  }
+
+  async createUsageRecord(record: InsertUsageRecord): Promise<UsageRecord> {
+    const [newRecord] = await db
+      .insert(usageRecords)
+      .values(record)
+      .returning();
+    return newRecord;
   }
 }
 

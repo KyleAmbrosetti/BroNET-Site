@@ -22,8 +22,12 @@ import {
   ChevronRight,
   PlusCircle,
   Mail,
-  Package
+  Package,
+  MapPin,
+  Lock,
+  Calendar
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,6 +70,22 @@ type ModemEnquiry = {
   createdAt: string;
 };
 
+type BillingRecord = {
+  id: string;
+  amount: string;
+  description: string;
+  planId: string | null;
+  createdAt: string;
+};
+
+const PLANS = [
+  { id: 'nbn25', name: 'NBN 25', speed: '25/10 Mbps', price: '$59' },
+  { id: 'nbn50', name: 'NBN 50', speed: '50/20 Mbps', price: '$69' },
+  { id: 'nbn100', name: 'NBN 100', speed: '100/20 Mbps', price: '$89' },
+  { id: 'nbn250', name: 'NBN 250', speed: '250/25 Mbps', price: '$109' },
+  { id: 'nbn1000', name: 'NBN 1000', speed: '1000/50 Mbps', price: '$139' },
+];
+
 export default function Dashboard() {
   const { user, logout, updateProfile } = useUser();
   const [, setLocation] = useLocation();
@@ -74,6 +94,7 @@ export default function Dashboard() {
   const [usage, setUsage] = useState<UsageData[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [modemEnquiries, setModemEnquiries] = useState<ModemEnquiry[]>([]);
+  const [billingHistory, setBillingHistory] = useState<BillingRecord[]>([]);
   const { toast } = useToast();
   
   // New Ticket State
@@ -84,6 +105,16 @@ export default function Dashboard() {
   // Profile Edit State
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
+  const [serviceAddress, setServiceAddress] = useState(user?.serviceAddress || "");
+  
+  // Password Change State
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Plan Change State
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -93,22 +124,25 @@ export default function Dashboard() {
     
     // Load Data from API
     const loadData = async () => {
-      const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes] = await Promise.all([
+      const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes, billingRes] = await Promise.all([
         api.getTickets(),
         api.getUsage(),
         api.getMessages(),
-        api.getModemEnquiries()
+        api.getModemEnquiries(),
+        api.getBillingHistory()
       ]);
       
       if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
       if (usageRes.data) setUsage(usageRes.data.usage);
       if (messagesRes.data) setContactMessages(messagesRes.data.messages);
       if (modemEnquiriesRes.data) setModemEnquiries(modemEnquiriesRes.data.enquiries);
+      if (billingRes.data) setBillingHistory(billingRes.data.history);
     };
     
     loadData();
     setFirstName(user.firstName);
     setLastName(user.lastName);
+    setServiceAddress(user.serviceAddress || "");
   }, [user, setLocation]);
 
   const handleCreateTicket = async () => {
@@ -135,6 +169,61 @@ export default function Dashboard() {
 
   const handleUpdateProfile = () => {
     updateProfile({ firstName, lastName });
+  };
+
+  const handleUpdateAddress = async () => {
+    const { error } = await api.updateAddress(serviceAddress);
+    if (error) {
+      toast({ title: "Failed to update address", description: error, variant: "destructive" });
+      return;
+    }
+    updateProfile({ serviceAddress });
+    toast({ title: "Address updated" });
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    const { error } = await api.changePassword(oldPassword, newPassword);
+    setIsChangingPassword(false);
+    
+    if (error) {
+      toast({ title: "Failed to change password", description: error, variant: "destructive" });
+      return;
+    }
+    
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    toast({ title: "Password changed successfully" });
+  };
+
+  const handleChangePlan = async (planId: string) => {
+    setIsChangingPlan(true);
+    const { data, error } = await api.changePlan(planId);
+    setIsChangingPlan(false);
+    
+    if (error) {
+      toast({ title: "Failed to change plan", description: error, variant: "destructive" });
+      return;
+    }
+    
+    if (data?.user) {
+      updateProfile({ planId: data.user.planId });
+    }
+    
+    const billingRes = await api.getBillingHistory();
+    if (billingRes.data) setBillingHistory(billingRes.data.history);
+    
+    toast({ title: "Plan changed successfully" });
   };
 
   if (!user) return null;
@@ -261,24 +350,115 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* BILLING TAB */}
-          <TabsContent value="billing">
-             <Card>
-               <CardHeader>
-                 <CardTitle>Billing & Invoices</CardTitle>
-                 <CardDescription>Manage your payment methods and view history.</CardDescription>
-               </CardHeader>
-               <CardContent className="py-8 text-center space-y-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg inline-block border border-yellow-200 dark:border-yellow-800">
-                    <p className="text-yellow-800 dark:text-yellow-300 font-medium flex items-center gap-2">
-                       <CreditCard className="h-5 w-5" />
-                       Billing system coming soon
-                    </p>
+          <TabsContent value="billing" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card data-testid="card-current-plan">
+                <CardHeader>
+                  <CardTitle>Current Plan</CardTitle>
+                  <CardDescription>Your active internet plan</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center py-4">
+                    <div className="text-2xl font-bold text-primary mb-1" data-testid="text-plan-name">
+                      {PLANS.find(p => p.id === user.planId)?.name || user.planId?.replace('nbn', 'NBN ') || 'NBN 100'}
+                    </div>
+                    <div className="text-muted-foreground" data-testid="text-plan-speed">
+                      {PLANS.find(p => p.id === user.planId)?.speed || '100/20 Mbps'}
+                    </div>
+                    <div className="text-xl font-semibold mt-2" data-testid="text-plan-price">
+                      {PLANS.find(p => p.id === user.planId)?.price || '$89'}/mo
+                    </div>
+                    <Badge variant="outline" className="mt-2 bg-green-50 text-green-700 border-green-200">Active</Badge>
                   </div>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    We are currently upgrading our billing infrastructure. You will not be charged during this demo period.
-                  </p>
-               </CardContent>
-             </Card>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label>Change Plan</Label>
+                    <Select 
+                      value={user.planId || 'nbn100'} 
+                      onValueChange={handleChangePlan}
+                      disabled={isChangingPlan}
+                      data-testid="select-plan"
+                    >
+                      <SelectTrigger data-testid="select-plan-trigger">
+                        <SelectValue placeholder="Select a plan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLANS.map(plan => (
+                          <SelectItem key={plan.id} value={plan.id} data-testid={`option-plan-${plan.id}`}>
+                            {plan.name} - {plan.speed} - {plan.price}/mo
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-next-payment">
+                <CardHeader>
+                  <CardTitle>Next Payment</CardTitle>
+                  <CardDescription>Your upcoming billing date</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                    <div className="p-3 bg-primary/10 rounded-full">
+                      <Calendar className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold" data-testid="text-next-bill-date">
+                        {format(nextBillDate, 'MMMM d, yyyy')}
+                      </div>
+                      <div className="text-muted-foreground" data-testid="text-next-bill-amount">
+                        Amount: {PLANS.find(p => p.id === user.planId)?.price || '$89'}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card data-testid="card-billing-history">
+              <CardHeader>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>Recent transactions and plan changes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {billingHistory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground" data-testid="text-no-billing-history">
+                    No billing history yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3" data-testid="list-billing-history">
+                    {billingHistory.map((record) => (
+                      <div 
+                        key={record.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                        data-testid={`billing-record-${record.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-muted rounded-full">
+                            <CreditCard className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="font-medium" data-testid={`billing-description-${record.id}`}>
+                              {record.description}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(record.createdAt), 'MMM d, yyyy h:mm a')}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium" data-testid={`billing-amount-${record.id}`}>
+                            ${record.amount}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* TICKETS TAB */}
@@ -475,8 +655,8 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* SETTINGS TAB */}
-          <TabsContent value="settings">
-            <Card>
+          <TabsContent value="settings" className="space-y-6">
+            <Card data-testid="card-profile-settings">
               <CardHeader>
                 <CardTitle>Profile Settings</CardTitle>
                 <CardDescription>Update your personal information.</CardDescription>
@@ -485,20 +665,103 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>First Name</Label>
-                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    <Input 
+                      value={firstName} 
+                      onChange={(e) => setFirstName(e.target.value)} 
+                      data-testid="input-first-name"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Last Name</Label>
-                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                    <Input 
+                      value={lastName} 
+                      onChange={(e) => setLastName(e.target.value)} 
+                      data-testid="input-last-name"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input value={user.email} disabled className="bg-muted" />
+                  <Input value={user.email} disabled className="bg-muted" data-testid="input-email" />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={handleUpdateProfile}>Save Changes</Button>
+                <Button onClick={handleUpdateProfile} data-testid="button-save-profile">Save Changes</Button>
+              </CardFooter>
+            </Card>
+
+            <Card data-testid="card-service-address">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Service Address
+                </CardTitle>
+                <CardDescription>The address where your internet service is installed.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Input 
+                    value={serviceAddress} 
+                    onChange={(e) => setServiceAddress(e.target.value)}
+                    placeholder="123 Main Street, Sydney NSW 2000"
+                    data-testid="input-service-address"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleUpdateAddress} data-testid="button-save-address">Update Address</Button>
+              </CardFooter>
+            </Card>
+
+            <Card data-testid="card-change-password">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Change Password
+                </CardTitle>
+                <CardDescription>Update your account password for security.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Current Password</Label>
+                  <Input 
+                    type="password" 
+                    value={oldPassword} 
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    data-testid="input-old-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>New Password</Label>
+                  <Input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    data-testid="input-new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirm New Password</Label>
+                  <Input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    data-testid="input-confirm-password"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleChangePassword} 
+                  disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword}
+                  data-testid="button-change-password"
+                >
+                  {isChangingPassword ? 'Changing...' : 'Change Password'}
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
