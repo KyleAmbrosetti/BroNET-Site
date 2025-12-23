@@ -136,6 +136,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <li><Link href="/plans">NBN 100</Link></li>
                   <li><Link href="/plans">NBN 250</Link></li>
                   <li><Link href="/plans">NBN 1000</Link></li>
+                  <li><Link href="/nbn-2000" className="text-primary font-medium">NBN 2000</Link></li>
                 </ul>
               </div>
               <div>
