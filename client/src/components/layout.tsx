@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <NavLink href="/">Home</NavLink>
+            <NavLink href="/home">Home</NavLink>
             <NavLink href="/plans">Plans</NavLink>
             <NavLink href="/coverage">Coverage</NavLink>
             <NavLink href="/modems">Modems</NavLink>
@@ -93,7 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </SheetTrigger>
                 <SheetContent side="right">
                   <div className="flex flex-col gap-4 mt-8">
-                    <Link href="/" className="text-lg font-medium">Home</Link>
+                    <Link href="/home" className="text-lg font-medium">Home</Link>
                     <Link href="/plans" className="text-lg font-medium">Plans</Link>
                     <Link href="/coverage" className="text-lg font-medium">Coverage</Link>
                     <Link href="/modems" className="text-lg font-medium">Modems</Link>
