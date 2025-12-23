@@ -64,7 +64,51 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
       return [];
     }
 
-    // Rate limiting
+    // Try RapidAPI NBN address search first (more accurate for Australian addresses)
+    const rapidApiKey = process.env.RAPIDAPI_NBN_KEY;
+    if (rapidApiKey) {
+      try {
+        // Clean up the API key in case it has extra formatting
+        let cleanKey = rapidApiKey;
+        if (cleanKey.includes("'")) {
+          const match = cleanKey.match(/'([^']+)'/);
+          if (match) cleanKey = match[1];
+        }
+
+        const url = `https://nbnco-address-search-api.p.rapidapi.com/nbn_address_search?address=${encodeURIComponent(query + ' Australia')}`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'x-rapidapi-host': 'nbnco-address-search-api.p.rapidapi.com',
+            'x-rapidapi-key': cleanKey,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+            return data.suggestions.slice(0, 5).map((item: any) => {
+              const formattedAddress = item.formattedAddress || item.address || '';
+              const parts = formattedAddress.split(',').map((p: string) => p.trim());
+              
+              return {
+                displayName: formattedAddress,
+                address: formattedAddress,
+                suburb: item.locality || parts[1] || '',
+                state: item.state || parts[2]?.split(' ')[0] || '',
+                postcode: item.postcode || parts[2]?.match(/\d{4}/)?.[0] || '',
+                locId: item.id || item.locId,
+              };
+            });
+          }
+        }
+      } catch (rapidError) {
+        console.error('RapidAPI address search error:', rapidError);
+      }
+    }
+
+    // Fallback to Nominatim
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTime;
     if (timeSinceLastRequest < RATE_LIMIT_MS) {
@@ -72,7 +116,6 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
     }
     lastRequestTime = Date.now();
 
-    // Call Nominatim with multiple results for suggestions
     const url = `https://nominatim.openstreetmap.org/search?` +
       `q=${encodeURIComponent(query + ' Australia')}` +
       `&format=json` +
