@@ -170,3 +170,25 @@ export const insertCoverageCheckSchema = createInsertSchema(coverageChecks).omit
 
 export type InsertCoverageCheck = z.infer<typeof insertCoverageCheckSchema>;
 export type CoverageCheck = typeof coverageChecks.$inferSelect;
+
+// Modem Enquiries Table
+export const modemEnquiries = pgTable("modem_enquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  product: text("product").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  message: text("message"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertModemEnquirySchema = createInsertSchema(modemEnquiries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertModemEnquiry = z.infer<typeof insertModemEnquirySchema>;
+export type ModemEnquiry = typeof modemEnquiries.$inferSelect;
