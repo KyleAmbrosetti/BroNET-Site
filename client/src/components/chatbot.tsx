@@ -51,14 +51,16 @@ export function ChatBot() {
     }
   }, [isOpen, isMinimized]);
 
-  // Increment unread count for new assistant messages when minimized/closed
+  // Track last message count to increment unread badge only on new complete messages
+  const prevMessageCountRef = useRef(0);
+  
   useEffect(() => {
-    if ((isMinimized || !isOpen) && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === "assistant" && lastMessage.content) {
-        setUnreadCount(prev => prev + 1);
-      }
+    if ((isMinimized || !isOpen) && messages.length > prevMessageCountRef.current) {
+      const newMessages = messages.slice(prevMessageCountRef.current);
+      const newAssistantMessages = newMessages.filter(m => m.role === "assistant" && m.content);
+      setUnreadCount(prev => prev + newAssistantMessages.length);
     }
+    prevMessageCountRef.current = messages.length;
   }, [messages, isMinimized, isOpen]);
 
   const handleOpen = () => {
@@ -239,13 +241,20 @@ Never ask for or accept passwords, credit card numbers, or other sensitive infor
     } catch (error: any) {
       console.error("Chat error:", error);
       setError(error.message || "Connection error");
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I'm having trouble connecting right now. Please try again in a moment, or submit a support ticket for assistance.",
-        },
-      ]);
+      // Remove the empty placeholder message and replace with error message
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        if (newMessages[newMessages.length - 1]?.role === "assistant" && !newMessages[newMessages.length - 1]?.content) {
+          newMessages.pop(); // Remove empty placeholder
+        }
+        return [
+          ...newMessages,
+          {
+            role: "assistant",
+            content: "Sorry, I'm having trouble connecting right now. Please try again in a moment, or submit a support ticket for assistance.",
+          },
+        ];
+      });
     } finally {
       setIsLoading(false);
     }
