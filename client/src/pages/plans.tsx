@@ -1,6 +1,7 @@
 import { PlanCard } from "@/components/plan-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X } from "lucide-react";
+import { Check, X, Radio } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Plans() {
   const plans = [
@@ -9,6 +10,13 @@ export default function Plans() {
     { name: "NBN 250", speed: 250, upload: 25, price: 109, typical: "245 Mbps" },
     { name: "NBN 1000", speed: 1000, upload: 50, price: 129, typical: "850 Mbps" },
     { name: "NBN 2000", speed: 2000, upload: 500, price: 155, typical: "1800 Mbps", badge: "New" },
+  ];
+
+  const fixedWirelessPlans = [
+    { name: "Fixed Wireless 25", speed: 25, upload: 5, price: 59, typical: "25 Mbps" },
+    { name: "Fixed Wireless 50", speed: 50, upload: 10, price: 69, typical: "47 Mbps", popular: true },
+    { name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typical: "70 Mbps" },
+    { name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89, typical: "90 Mbps", badge: "New" },
   ];
 
   return (
@@ -21,8 +29,37 @@ export default function Plans() {
         </p>
       </div>
 
+      {/* Fibre/Cable Plans */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-2 text-center">NBN Fibre & Cable Plans</h2>
+        <p className="text-muted-foreground text-center mb-8">For FTTP, FTTC, FTTB, FTTN & HFC connections</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-24">
         {plans.map((plan) => (
+          <PlanCard
+            key={plan.name}
+            name={plan.name}
+            speed={plan.speed}
+            upload={plan.upload}
+            price={plan.price}
+            typicalSpeed={plan.typical}
+            isPopular={plan.popular}
+          />
+        ))}
+      </div>
+
+      {/* Fixed Wireless Plans */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <Radio className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-center">NBN Fixed Wireless Plans</h2>
+        </div>
+        <p className="text-muted-foreground text-center mb-8">For regional and rural areas with NBN Fixed Wireless coverage</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+        {fixedWirelessPlans.map((plan) => (
           <PlanCard
             key={plan.name}
             name={plan.name}
