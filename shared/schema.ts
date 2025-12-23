@@ -1,18 +1,172 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users Table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  planId: text("plan_id"),
+  isAdmin: integer("is_admin").notNull().default(0),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  joinedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Support Tickets Table
+export const tickets = pgTable("tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("open"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTicketSchema = createInsertSchema(tickets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTicket = z.infer<typeof insertTicketSchema>;
+export type Ticket = typeof tickets.$inferSelect;
+
+// Ticket Replies Table
+export const ticketReplies = pgTable("ticket_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  message: text("message").notNull(),
+  isStaff: integer("is_staff").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTicketReplySchema = createInsertSchema(ticketReplies).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTicketReply = z.infer<typeof insertTicketReplySchema>;
+export type TicketReply = typeof ticketReplies.$inferSelect;
+
+// Network Incidents Table
+export const incidents = pgTable("incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  severity: text("severity").notNull(),
+  status: text("status").notNull().default("investigating"),
+  affectedAreas: text("affected_areas"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const insertIncidentSchema = createInsertSchema(incidents).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
+export type InsertIncident = z.infer<typeof insertIncidentSchema>;
+export type Incident = typeof incidents.$inferSelect;
+
+// Contact Messages Table
+export const contactMessages = pgTable("contact_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
+
+// Address Cache Table (for Nominatim results)
+export const addressCache = pgTable("address_cache", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  inputAddress: text("input_address").notNull(),
+  normalizedAddress: text("normalized_address").notNull(),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  postcode: text("postcode"),
+  suburb: text("suburb"),
+  state: text("state"),
+  rawResponse: text("raw_response"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAddressCacheSchema = createInsertSchema(addressCache).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAddressCache = z.infer<typeof insertAddressCacheSchema>;
+export type AddressCache = typeof addressCache.$inferSelect;
+
+// NBN Availability Dataset Table (admin-managed)
+export const nbnDataset = pgTable("nbn_dataset", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  addressHash: text("address_hash"),
+  locid: text("locid"),
+  normalizedAddress: text("normalized_address"),
+  postcode: text("postcode"),
+  technology: text("technology").notNull(),
+  maxTier: text("max_tier").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertNbnDatasetSchema = createInsertSchema(nbnDataset).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNbnDataset = z.infer<typeof insertNbnDatasetSchema>;
+export type NbnDataset = typeof nbnDataset.$inferSelect;
+
+// Coverage Check History Table
+export const coverageChecks = pgTable("coverage_checks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  inputAddress: text("input_address").notNull(),
+  normalizedAddress: text("normalized_address").notNull(),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  postcode: text("postcode"),
+  technology: text("technology"),
+  maxTier: text("max_tier"),
+  available: integer("available"),
+  source: text("source").notNull(), // 'wholesale_api' | 'dataset' | 'address_only'
+  rawResponse: text("raw_response"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCoverageCheckSchema = createInsertSchema(coverageChecks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCoverageCheck = z.infer<typeof insertCoverageCheckSchema>;
+export type CoverageCheck = typeof coverageChecks.$inferSelect;
