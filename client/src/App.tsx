@@ -19,6 +19,7 @@ import Terms from "@/pages/terms";
 import Cis from "@/pages/cis";
 import Modems from "@/pages/modems";
 import Nbn2000 from "@/pages/nbn-2000";
+import ComingSoon from "@/pages/coming-soon";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/coverage" component={Coverage} />
         <Route path="/modems" component={Modems} />
         <Route path="/nbn-2000" component={Nbn2000} />
+        <Route path="/coming-soon" component={ComingSoon} />
         <Route path="/support" component={Support} />
         <Route path="/auth" component={Auth} />
         <Route path="/dashboard" component={Dashboard} />
