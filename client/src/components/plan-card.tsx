@@ -13,9 +13,10 @@ interface PlanProps {
   isPopular?: boolean;
   priceId?: string;
   onSignup?: (priceId: string, planName: string) => Promise<void>;
+  disabled?: boolean;
 }
 
-export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup }: PlanProps) {
+export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup, disabled }: PlanProps) {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleSignup = async () => {
@@ -81,7 +82,17 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
         </ul>
       </CardContent>
       <CardFooter>
-        {priceId && onSignup ? (
+        {disabled ? (
+          <Button 
+            className="w-full" 
+            size="lg" 
+            disabled
+            variant="secondary"
+            data-testid={`button-unavailable-${name.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            Not Available
+          </Button>
+        ) : priceId && onSignup ? (
           <Button 
             className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
             size="lg" 
@@ -99,8 +110,13 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
             )}
           </Button>
         ) : (
-          <Button className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} size="lg" asChild>
-            <Link href="/coverage">Check Availability</Link>
+          <Button 
+            className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
+            size="lg" 
+            variant="outline"
+            data-testid={`button-check-${name.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            Check Address First
           </Button>
         )}
       </CardFooter>
