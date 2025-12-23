@@ -8,7 +8,7 @@ export default function Plans() {
     { name: "NBN 100", speed: 100, upload: 20, price: 89, typical: "98 Mbps", popular: true },
     { name: "NBN 250", speed: 250, upload: 25, price: 109, typical: "245 Mbps" },
     { name: "NBN 1000", speed: 1000, upload: 50, price: 129, typical: "850 Mbps" },
-    { name: "NBN 2000", speed: 2000, upload: 500, price: 299, typical: "1800 Mbps", badge: "New" },
+    { name: "NBN 2000", speed: 2000, upload: 500, price: 155, typical: "1800 Mbps", badge: "New" },
   ];
 
   return (
