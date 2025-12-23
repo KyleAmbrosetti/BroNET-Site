@@ -17,6 +17,7 @@ import Admin from "@/pages/admin";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import Cis from "@/pages/cis";
+import Modems from "@/pages/modems";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/plans" component={Plans} />
         <Route path="/coverage" component={Coverage} />
+        <Route path="/modems" component={Modems} />
         <Route path="/support" component={Support} />
         <Route path="/auth" component={Auth} />
         <Route path="/dashboard" component={Dashboard} />

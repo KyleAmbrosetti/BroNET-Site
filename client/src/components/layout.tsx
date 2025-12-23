@@ -42,6 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/plans">Plans</NavLink>
             <NavLink href="/coverage">Coverage</NavLink>
+            <NavLink href="/modems">Modems</NavLink>
             <NavLink href="/support">Support</NavLink>
             {user?.isAdmin && <NavLink href="/admin">Admin</NavLink>}
           </nav>
@@ -94,6 +95,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Link href="/" className="text-lg font-medium">Home</Link>
                     <Link href="/plans" className="text-lg font-medium">Plans</Link>
                     <Link href="/coverage" className="text-lg font-medium">Coverage</Link>
+                    <Link href="/modems" className="text-lg font-medium">Modems</Link>
                     <Link href="/support" className="text-lg font-medium">Support</Link>
                     {user ? (
                       <>
@@ -133,6 +135,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <li><Link href="/plans">NBN 100</Link></li>
                   <li><Link href="/plans">NBN 250</Link></li>
                   <li><Link href="/plans">NBN 1000</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold mb-4">Products</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/modems">Modems & Routers</Link></li>
+                  <li><Link href="/coverage">Check Coverage</Link></li>
                 </ul>
               </div>
               <div>
