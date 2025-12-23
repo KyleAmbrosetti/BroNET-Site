@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Search, MapPin, CheckCircle2, AlertCircle, Info, History, Database, Cloud } from "lucide-react";
+import { Search, MapPin, CheckCircle2, AlertCircle, Info, History, Database, Cloud, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -40,12 +40,25 @@ type CoverageCheck = {
   createdAt: string;
 };
 
+type AddressSuggestion = {
+  displayName: string;
+  address: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+};
+
 export default function Coverage() {
   const [address, setAddress] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<CoverageResult | null>(null);
   const [status, setStatus] = useState<CoverageStatus | null>(null);
   const [history, setHistory] = useState<CoverageCheck[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useUser();
 
@@ -56,6 +69,44 @@ export default function Coverage() {
       loadHistory();
     }
   }, [user]);
+
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const response = await fetch(`/api/coverage/suggest?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      setSuggestions(data.suggestions || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }, []);
+
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(value);
+    }, 300);
+  };
+
+  const selectSuggestion = (suggestion: AddressSuggestion) => {
+    setAddress(suggestion.address);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
+  };
 
   const loadStatus = async () => {
     const { data } = await api.getCoverageStatus();
@@ -155,15 +206,46 @@ export default function Coverage() {
             <div className="space-y-2">
               <Label htmlFor="address">Enter your address</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                {isLoadingSuggestions && (
+                  <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin z-10" />
+                )}
                 <Input
+                  ref={inputRef}
                   id="address"
-                  placeholder="e.g. 42 Wallaby Way, Sydney NSW 2000"
+                  placeholder="Start typing an Australian address..."
                   className="pl-10 h-12 text-lg"
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={(e) => handleAddressChange(e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  autoComplete="off"
                   data-testid="input-address"
                 />
+                
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors border-b last:border-b-0 flex items-start gap-3"
+                        onClick={() => selectSuggestion(suggestion)}
+                        data-testid={`suggestion-${index}`}
+                      >
+                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{suggestion.address}</div>
+                          {suggestion.suburb && (
+                            <div className="text-xs text-muted-foreground">
+                              {[suggestion.suburb, suggestion.state, suggestion.postcode].filter(Boolean).join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

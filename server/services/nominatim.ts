@@ -50,6 +50,72 @@ async function callNominatim(inputAddress: string): Promise<any> {
   return await response.json();
 }
 
+export interface AddressSuggestion {
+  displayName: string;
+  address: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+}
+
+export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
+  try {
+    if (!query || query.trim().length < 3) {
+      return [];
+    }
+
+    // Rate limiting
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < RATE_LIMIT_MS) {
+      await delay(RATE_LIMIT_MS - timeSinceLastRequest);
+    }
+    lastRequestTime = Date.now();
+
+    // Call Nominatim with multiple results for suggestions
+    const url = `https://nominatim.openstreetmap.org/search?` +
+      `q=${encodeURIComponent(query + ' Australia')}` +
+      `&format=json` +
+      `&addressdetails=1` +
+      `&limit=5` +
+      `&countrycodes=au`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'BroNET-ISP/1.0 (https://bronet.example.com; support@bronet.example.com)',
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const results = await response.json();
+    
+    return results.map((result: any) => {
+      const addr = result.address || {};
+      const parts = [
+        addr.house_number,
+        addr.road,
+        addr.suburb || addr.city || addr.town,
+        addr.state,
+        addr.postcode,
+      ].filter(Boolean);
+      
+      return {
+        displayName: result.display_name,
+        address: parts.join(', '),
+        suburb: addr.suburb || addr.city || addr.town,
+        state: addr.state,
+        postcode: addr.postcode,
+      };
+    });
+  } catch (error) {
+    console.error('Address search error:', error);
+    return [];
+  }
+}
+
 export async function validateAddress(inputAddress: string): Promise<AddressValidationResult> {
   try {
     const normalizedInput = inputAddress.toLowerCase().trim();

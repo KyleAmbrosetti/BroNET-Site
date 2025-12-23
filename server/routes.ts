@@ -321,6 +321,23 @@ export async function registerRoutes(
 
   // ============ COVERAGE CHECK ROUTES ============
   
+  // Address autocomplete suggestions
+  app.get("/api/coverage/suggest", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 3) {
+        return res.json({ suggestions: [] });
+      }
+      
+      const { searchAddresses } = await import("./services/nominatim");
+      const suggestions = await searchAddresses(query);
+      res.json({ suggestions });
+    } catch (error: any) {
+      console.error('Address suggestion error:', error);
+      res.json({ suggestions: [] });
+    }
+  });
+  
   // Get coverage system status
   app.get("/api/coverage/status", async (_req, res) => {
     try {
