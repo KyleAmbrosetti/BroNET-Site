@@ -117,4 +117,12 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   }),
+
+  // Chat
+  getChatConfigStatus: () => apiFetch('/chat/config-status'),
+
+  exportChatToTicket: (conversationId: number, subject: string) => apiFetch('/chat/export-ticket', {
+    method: 'POST',
+    body: JSON.stringify({ conversationId, subject }),
+  }),
 };
