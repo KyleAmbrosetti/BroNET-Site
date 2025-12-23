@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
-import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot } from "lucide-react";
+import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot, Inbox, Mail, Headphones, Router } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
@@ -36,6 +36,38 @@ type NbnDatasetRecord = {
   createdAt: string;
 };
 
+type ModemEnquiry = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  product: string;
+  quantity: number;
+  message: string | null;
+  status: string;
+  createdAt: string;
+};
+
+type ContactMessage = {
+  id: string;
+  userId: string | null;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: string;
+};
+
+type Ticket = {
+  id: string;
+  userId: string;
+  subject: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export default function Admin() {
   const { user } = useUser();
   const [, setLocation] = useLocation();
@@ -56,6 +88,12 @@ export default function Admin() {
   // Chat Config State
   const [chatConfig, setChatConfig] = useState<any>(null);
   const [isLoadingChatConfig, setIsLoadingChatConfig] = useState(false);
+
+  // Enquiries State
+  const [modemEnquiries, setModemEnquiries] = useState<ModemEnquiry[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -81,6 +119,7 @@ export default function Admin() {
 
     loadDataset();
     loadChatConfig();
+    loadEnquiries();
   }, [user, setLocation]);
 
   const loadDataset = async () => {
@@ -99,6 +138,24 @@ export default function Admin() {
       setChatConfig(data);
     }
     setIsLoadingChatConfig(false);
+  };
+
+  const loadEnquiries = async () => {
+    setIsLoadingEnquiries(true);
+    try {
+      const [modemRes, messagesRes, ticketsRes] = await Promise.all([
+        api.getAllModemEnquiries(),
+        api.getAllContactMessages(),
+        api.getAllTickets()
+      ]);
+      
+      if (modemRes.data) setModemEnquiries(modemRes.data.enquiries || []);
+      if (messagesRes.data) setContactMessages(messagesRes.data.messages || []);
+      if (ticketsRes.data) setAllTickets(ticketsRes.data.tickets || []);
+    } catch (error) {
+      console.error("Error loading enquiries:", error);
+    }
+    setIsLoadingEnquiries(false);
   };
 
   const handleCreate = async () => {
@@ -222,9 +279,13 @@ export default function Admin() {
       <h1 className="text-3xl font-bold mb-8" data-testid="text-admin-title">Admin Console</h1>
       
       <Tabs defaultValue="incidents" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="incidents" data-testid="tab-incidents">Network Incidents</TabsTrigger>
           <TabsTrigger value="dataset" data-testid="tab-dataset">NBN Dataset</TabsTrigger>
+          <TabsTrigger value="enquiries" data-testid="tab-enquiries">
+            <Inbox className="h-4 w-4 mr-2" />
+            Enquiries
+          </TabsTrigger>
           <TabsTrigger value="chatconfig" data-testid="tab-chatconfig">
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat Config
@@ -475,6 +536,120 @@ export default function Admin() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="enquiries" className="mt-6">
+          {isLoadingEnquiries ? (
+            <p className="text-muted-foreground text-center py-8">Loading enquiries...</p>
+          ) : (
+            <div className="grid gap-6">
+              {/* Modem Enquiries */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Router className="h-5 w-5" />
+                    Modem Enquiries
+                    <Badge variant="secondary" className="ml-auto">{modemEnquiries.length}</Badge>
+                  </CardTitle>
+                  <CardDescription>Router and modem purchase enquiries from customers</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {modemEnquiries.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No modem enquiries yet</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                      {modemEnquiries.map((enquiry) => (
+                        <div key={enquiry.id} className="border rounded-lg p-4 space-y-2" data-testid={`enquiry-modem-${enquiry.id}`}>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-medium">{enquiry.name}</p>
+                              <p className="text-sm text-muted-foreground">{enquiry.email}</p>
+                              {enquiry.phone && <p className="text-sm text-muted-foreground">{enquiry.phone}</p>}
+                            </div>
+                            <Badge variant={enquiry.status === 'pending' ? 'outline' : 'default'}>{enquiry.status}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">{enquiry.product}</span>
+                            <span className="text-muted-foreground">x{enquiry.quantity}</span>
+                          </div>
+                          {enquiry.message && <p className="text-sm text-muted-foreground">{enquiry.message}</p>}
+                          <p className="text-xs text-muted-foreground">{format(new Date(enquiry.createdAt), 'PP p')}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Contact Messages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Contact Messages
+                    <Badge variant="secondary" className="ml-auto">{contactMessages.length}</Badge>
+                  </CardTitle>
+                  <CardDescription>Messages from the contact form</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {contactMessages.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No contact messages yet</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                      {contactMessages.map((msg) => (
+                        <div key={msg.id} className="border rounded-lg p-4 space-y-2" data-testid={`enquiry-contact-${msg.id}`}>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-medium">{msg.name}</p>
+                              <p className="text-sm text-muted-foreground">{msg.email}</p>
+                            </div>
+                            <Badge variant={msg.status === 'pending' ? 'outline' : 'default'}>{msg.status}</Badge>
+                          </div>
+                          <p className="font-medium text-sm">{msg.subject}</p>
+                          <p className="text-sm text-muted-foreground">{msg.message}</p>
+                          <p className="text-xs text-muted-foreground">{format(new Date(msg.createdAt), 'PP p')}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Support Tickets */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Headphones className="h-5 w-5" />
+                    Support Tickets
+                    <Badge variant="secondary" className="ml-auto">{allTickets.length}</Badge>
+                  </CardTitle>
+                  <CardDescription>All customer support tickets</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {allTickets.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No support tickets yet</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                      {allTickets.map((ticket) => (
+                        <div key={ticket.id} className="border rounded-lg p-4 space-y-2" data-testid={`enquiry-ticket-${ticket.id}`}>
+                          <div className="flex items-start justify-between">
+                            <p className="font-medium">{ticket.subject}</p>
+                            <Badge variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'in_progress' ? 'default' : 'outline'}>
+                              {ticket.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Created: {format(new Date(ticket.createdAt), 'PP p')}
+                            {ticket.updatedAt !== ticket.createdAt && ` • Updated: ${format(new Date(ticket.updatedAt), 'PP p')}`}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="chatconfig" className="mt-6">
