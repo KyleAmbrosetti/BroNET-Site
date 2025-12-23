@@ -165,7 +165,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-              <p>&copy; 2025 BroNET Pty Ltd. ABN 12 345 678 901.</p>
+              <p>&copy; 2025 BroNET Pty Ltd. ABN 43 150 753 265.</p>
             </div>
           </div>
         </footer>
