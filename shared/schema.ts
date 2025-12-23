@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   planId: text("plan_id"),
   serviceAddress: text("service_address"),
   isAdmin: integer("is_admin").notNull().default(0),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 

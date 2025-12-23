@@ -1,7 +1,8 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Wifi } from "lucide-react";
+import { Check, Wifi, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { useState } from "react";
 
 interface PlanProps {
   name: string;
@@ -10,9 +11,22 @@ interface PlanProps {
   price: number;
   typicalSpeed: string;
   isPopular?: boolean;
+  priceId?: string;
+  onSignup?: (priceId: string, planName: string) => Promise<void>;
 }
 
-export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular }: PlanProps) {
+export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup }: PlanProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleSignup = async () => {
+    if (!priceId || !onSignup) return;
+    setIsLoading(true);
+    try {
+      await onSignup(priceId, name);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Card className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isPopular ? 'border-primary shadow-lg scale-105 z-10' : 'border-border'}`}>
       {isPopular && (
@@ -67,9 +81,28 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular }
         </ul>
       </CardContent>
       <CardFooter>
-        <Button className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} size="lg" asChild>
-          <Link href="/coverage">Check Availability</Link>
-        </Button>
+        {priceId && onSignup ? (
+          <Button 
+            className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
+            size="lg" 
+            onClick={handleSignup}
+            disabled={isLoading}
+            data-testid={`button-signup-${name.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Sign Up Now'
+            )}
+          </Button>
+        ) : (
+          <Button className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} size="lg" asChild>
+            <Link href="/coverage">Check Availability</Link>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
