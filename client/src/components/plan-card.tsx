@@ -12,18 +12,19 @@ interface PlanProps {
   typicalSpeed: string;
   isPopular?: boolean;
   priceId?: string;
-  onSignup?: (priceId: string, planName: string) => Promise<void>;
+  onSignup?: () => Promise<void>;
   disabled?: boolean;
+  showSignup?: boolean;
 }
 
-export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup, disabled }: PlanProps) {
+export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup, disabled, showSignup }: PlanProps) {
   const [isLoading, setIsLoading] = useState(false);
   
-  const handleSignup = async () => {
-    if (!priceId || !onSignup) return;
+  const handleSignupClick = async () => {
+    if (!onSignup) return;
     setIsLoading(true);
     try {
-      await onSignup(priceId, name);
+      await onSignup();
     } finally {
       setIsLoading(false);
     }
@@ -92,11 +93,11 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
           >
             Not Available
           </Button>
-        ) : priceId && onSignup ? (
+        ) : showSignup ? (
           <Button 
             className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
             size="lg" 
-            onClick={handleSignup}
+            onClick={handleSignupClick}
             disabled={isLoading}
             data-testid={`button-signup-${name.toLowerCase().replace(/\s+/g, '-')}`}
           >
