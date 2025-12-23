@@ -2,8 +2,26 @@ import { PlanCard } from "@/components/plan-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, X, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { useUser } from "@/hooks/use-user";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+
+type StripeProduct = {
+  id: string;
+  name: string;
+  description: string;
+  metadata: any;
+  prices: { id: string; unit_amount: number; currency: string; }[];
+};
 
 export default function Plans() {
+  const [stripeProducts, setStripeProducts] = useState<StripeProduct[]>([]);
+  const { user } = useUser();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
   const plans = [
     { name: "NBN 50", speed: 50, upload: 20, price: 69, typical: "50 Mbps" },
     { name: "NBN 100", speed: 100, upload: 20, price: 89, typical: "98 Mbps", popular: true },
@@ -18,6 +36,46 @@ export default function Plans() {
     { name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typical: "70 Mbps" },
     { name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89, typical: "90 Mbps", badge: "New" },
   ];
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data } = await api.getStripeProducts();
+      if (data?.products) {
+        setStripeProducts(data.products);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const getPriceId = (planName: string) => {
+    const product = stripeProducts.find(p => p.name === planName);
+    return product?.prices?.[0]?.id;
+  };
+
+  const handleSignup = async (priceId: string, planName: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in or create an account to sign up for a plan.",
+      });
+      setLocation("/auth");
+      return;
+    }
+
+    const { data, error } = await api.createCheckoutSession(priceId, planName);
+    if (error) {
+      toast({
+        title: "Checkout Error",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  };
 
   return (
     <div className="container py-16 px-4 md:px-6">
@@ -45,6 +103,8 @@ export default function Plans() {
             price={plan.price}
             typicalSpeed={plan.typical}
             isPopular={plan.popular}
+            priceId={getPriceId(plan.name)}
+            onSignup={handleSignup}
           />
         ))}
       </div>
@@ -68,6 +128,8 @@ export default function Plans() {
             price={plan.price}
             typicalSpeed={plan.typical}
             isPopular={plan.popular}
+            priceId={getPriceId(plan.name)}
+            onSignup={handleSignup}
           />
         ))}
       </div>

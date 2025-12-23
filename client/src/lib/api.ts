@@ -147,4 +147,18 @@ export const api = {
   }),
 
   getBillingHistory: () => apiFetch('/billing'),
+
+  // Stripe
+  getStripeProducts: () => apiFetch('/stripe/products'),
+  
+  getStripeConfig: () => apiFetch('/stripe/config'),
+  
+  createCheckoutSession: (priceId: string, planName: string) => apiFetch('/stripe/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ priceId, planName }),
+  }),
+  
+  createBillingPortal: () => apiFetch('/stripe/portal', {
+    method: 'POST',
+  }),
 };
