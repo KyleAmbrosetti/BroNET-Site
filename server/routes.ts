@@ -788,9 +788,10 @@ export async function registerRoutes(
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ['card'],
+        payment_method_types: ['card', 'au_becs_debit'],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
+        currency: 'aud',
         success_url: `${baseUrl}/dashboard?checkout=success&plan=${encodeURIComponent(planName || '')}`,
         cancel_url: `${baseUrl}/plans?checkout=cancelled`,
         metadata: { userId: user.id, planName }
