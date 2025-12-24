@@ -1,8 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Wifi, Loader2 } from "lucide-react";
+import { Check, Wifi } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
 
 interface PlanProps {
   name: string;
@@ -12,7 +11,6 @@ interface PlanProps {
   typicalSpeed: string;
   isPopular?: boolean;
   priceId?: string;
-  onSignup?: () => Promise<void>;
   disabled?: boolean;
   showSignup?: boolean;
 }
@@ -40,20 +38,9 @@ function getSpeedPercentage(speed: number): number {
   return Math.min((speed / maxSpeed) * 100, 100);
 }
 
-export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, priceId, onSignup, disabled, showSignup }: PlanProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, disabled, showSignup }: PlanProps) {
   const downloadTime = getDownloadTime(speed);
   const speedPercentage = getSpeedPercentage(speed);
-  
-  const handleSignupClick = async () => {
-    if (!onSignup) return;
-    setIsLoading(true);
-    try {
-      await onSignup();
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
     <Card className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isPopular ? 'border-primary shadow-lg scale-105 z-10' : 'border-border'}`}>
       {isPopular && (
@@ -137,27 +124,24 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
           <Button 
             className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
             size="lg" 
-            onClick={handleSignupClick}
-            disabled={isLoading}
+            asChild
             data-testid={`button-signup-${name.toLowerCase().replace(/\s+/g, '-')}`}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              'Sign Up Now'
-            )}
+            <Link href={`/signup?plan=${encodeURIComponent(name)}`}>
+              Sign Up Now
+            </Link>
           </Button>
         ) : (
           <Button 
             className="w-full" 
             size="lg" 
             variant="outline"
+            asChild
             data-testid={`button-check-${name.toLowerCase().replace(/\s+/g, '-')}`}
           >
-            Check Address First
+            <Link href="/signup">
+              Check Address First
+            </Link>
           </Button>
         )}
       </CardFooter>
