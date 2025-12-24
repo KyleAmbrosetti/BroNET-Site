@@ -13,10 +13,10 @@ import { api } from "@/lib/api";
 import { 
   MapPin, CheckCircle2, Loader2, ArrowRight, ArrowLeft, 
   Wifi, Cable, User, CreditCard, FileText, Phone, Mail,
-  Calendar, Building2, Zap
+  Calendar, Building2, Zap, Lock, Eye, EyeOff
 } from "lucide-react";
 
-type Step = "address" | "qualification" | "details" | "plan" | "payment" | "confirmation";
+type Step = "address" | "qualification" | "details" | "plan" | "account" | "payment" | "confirmation";
 
 type CoverageResult = {
   normalizedAddress: string;
@@ -59,6 +59,7 @@ const STEPS: { id: Step; label: string; icon: any }[] = [
   { id: "qualification", label: "Qualification", icon: FileText },
   { id: "details", label: "Your Details", icon: User },
   { id: "plan", label: "Select Plan", icon: Zap },
+  { id: "account", label: "Account", icon: User },
   { id: "payment", label: "Payment", icon: CreditCard },
   { id: "confirmation", label: "Confirmation", icon: CheckCircle2 },
 ];
@@ -67,7 +68,7 @@ export default function SignupWizard() {
   const [currentStep, setCurrentStep] = useState<Step>("address");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, login, signup } = useUser();
 
   const [address, setAddress] = useState("");
   const [isCheckingCoverage, setIsCheckingCoverage] = useState(false);
@@ -86,6 +87,13 @@ export default function SignupWizard() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
+  
+  // Account step state
+  const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -215,10 +223,60 @@ export default function SignupWizard() {
     setSelectedPlan({ ...plan, priceId });
   };
 
+  const handleAccountSubmit = async () => {
+    if (authMode === "signup") {
+      if (!password || !confirmPassword) {
+        toast({ title: "Please enter a password", variant: "destructive" });
+        return;
+      }
+      if (password.length < 8) {
+        toast({ title: "Password too short", description: "Password must be at least 8 characters", variant: "destructive" });
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast({ title: "Passwords don't match", variant: "destructive" });
+        return;
+      }
+
+      const nameParts = contactName.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      setIsCreatingAccount(true);
+      try {
+        await signup({
+          email: contactEmail,
+          password,
+          firstName,
+          lastName,
+        });
+        setCurrentStep("payment");
+      } catch (err: any) {
+        // Error already shown by useUser hook
+      } finally {
+        setIsCreatingAccount(false);
+      }
+    } else {
+      if (!password) {
+        toast({ title: "Please enter your password", variant: "destructive" });
+        return;
+      }
+
+      setIsCreatingAccount(true);
+      try {
+        await login(contactEmail, password);
+        setCurrentStep("payment");
+      } catch (err: any) {
+        // Error already shown by useUser hook
+      } finally {
+        setIsCreatingAccount(false);
+      }
+    }
+  };
+
   const handlePayment = async () => {
     if (!user) {
-      toast({ title: "Please log in first", description: "You need an account to continue" });
-      setLocation("/auth");
+      setCurrentStep("account");
       return;
     }
 
@@ -579,17 +637,130 @@ export default function SignupWizard() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
             <Button 
-              onClick={() => setCurrentStep("payment")} 
+              onClick={() => setCurrentStep(user ? "payment" : "account")} 
               disabled={!selectedPlan}
               data-testid="button-continue-payment"
             >
-              Continue to Payment <ArrowRight className="ml-2 h-4 w-4" />
+              {user ? "Continue to Payment" : "Create Account"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </CardContent>
       </Card>
     );
   };
+
+  const renderAccountStep = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="h-5 w-5" />
+          {authMode === "signup" ? "Create Your Account" : "Log In to Your Account"}
+        </CardTitle>
+        <CardDescription>
+          {authMode === "signup" 
+            ? "Create an account to complete your order and manage your service"
+            : "Log in with your existing account to continue"
+          }
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex gap-2 p-1 bg-muted rounded-lg">
+          <Button
+            variant={authMode === "signup" ? "default" : "ghost"}
+            className="flex-1"
+            onClick={() => setAuthMode("signup")}
+            data-testid="button-tab-signup"
+          >
+            New Account
+          </Button>
+          <Button
+            variant={authMode === "login" ? "default" : "ghost"}
+            className="flex-1"
+            onClick={() => setAuthMode("login")}
+            data-testid="button-tab-login"
+          >
+            Existing Account
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <Label>Email</Label>
+            <Input 
+              value={contactEmail} 
+              onChange={(e) => setContactEmail(e.target.value)}
+              type="email"
+              placeholder="your@email.com"
+              data-testid="input-account-email"
+            />
+          </div>
+
+          <div>
+            <Label>Password</Label>
+            <div className="relative">
+              <Input 
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={authMode === "signup" ? "Create a password (min 8 characters)" : "Enter your password"}
+                data-testid="input-account-password"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {authMode === "signup" && (
+            <div>
+              <Label>Confirm Password</Label>
+              <Input 
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                data-testid="input-account-confirm-password"
+              />
+            </div>
+          )}
+
+          {authMode === "signup" && (
+            <Alert>
+              <User className="h-4 w-4" />
+              <AlertTitle>Account Details</AlertTitle>
+              <AlertDescription>
+                Your account will be created with:<br />
+                <strong>Name:</strong> {contactName}<br />
+                <strong>Email:</strong> {contactEmail}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => setCurrentStep("plan")} data-testid="button-back-plan-from-account">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Button 
+            onClick={handleAccountSubmit}
+            disabled={isCreatingAccount}
+            className="bg-gradient-brand"
+            data-testid="button-create-account"
+          >
+            {isCreatingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {authMode === "signup" ? "Create Account & Continue" : "Log In & Continue"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   const renderPaymentStep = () => (
     <Card>
@@ -655,22 +826,13 @@ export default function SignupWizard() {
           </ol>
         </div>
 
-        {!user && (
-          <Alert variant="destructive">
-            <AlertTitle>Account Required</AlertTitle>
-            <AlertDescription>
-              Please <a href="/auth" className="underline font-semibold">log in or create an account</a> to continue with payment.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setCurrentStep("plan")} data-testid="button-back-plan">
+          <Button variant="outline" onClick={() => setCurrentStep("account")} data-testid="button-back-account">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button 
             onClick={handlePayment} 
-            disabled={isSubmitting || !user}
+            disabled={isSubmitting}
             className="bg-gradient-brand"
             size="lg"
             data-testid="button-pay-now"
@@ -733,6 +895,7 @@ export default function SignupWizard() {
       case "qualification": return renderQualificationStep();
       case "details": return renderDetailsStep();
       case "plan": return renderPlanStep();
+      case "account": return renderAccountStep();
       case "payment": return renderPaymentStep();
       case "confirmation": return renderConfirmationStep();
       default: return renderAddressStep();
