@@ -6,19 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
-import { useUser } from "@/hooks/use-user";
-import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-
-type StripeProduct = {
-  id: string;
-  name: string;
-  description: string;
-  metadata: any;
-  prices: { id: string; unit_amount: number; currency: string; }[];
-};
 
 type CoverageResult = {
   normalizedAddress: string;
@@ -32,13 +22,10 @@ type CoverageResult = {
 };
 
 export default function Plans() {
-  const [stripeProducts, setStripeProducts] = useState<StripeProduct[]>([]);
   const [address, setAddress] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [coverageResult, setCoverageResult] = useState<CoverageResult | null>(null);
   const [coverageVerified, setCoverageVerified] = useState(false);
-  const { user } = useUser();
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const plans = [
@@ -55,21 +42,6 @@ export default function Plans() {
     { name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typical: "70 Mbps" },
     { name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89, typical: "90 Mbps", badge: "New" },
   ];
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const { data } = await api.getStripeProducts();
-      if (data?.products) {
-        setStripeProducts(data.products);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  const getPriceId = (planName: string) => {
-    const product = stripeProducts.find(p => p.name === planName);
-    return product?.prices?.[0]?.id;
-  };
 
   const handleCheckAvailability = async () => {
     if (!address || address.trim().length < 5) {
@@ -117,40 +89,6 @@ export default function Plans() {
         description: "Unable to check coverage. Please try again.",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleSignup = async (priceId: string | undefined, planName: string) => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in or create an account to sign up for a plan.",
-      });
-      setLocation("/auth");
-      return;
-    }
-
-    if (!priceId) {
-      toast({
-        title: "Loading...",
-        description: "Please wait a moment and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { data, error } = await api.createCheckoutSession(priceId, planName);
-    if (error) {
-      toast({
-        title: "Checkout Error",
-        description: error,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (data?.url) {
-      window.location.href = data.url;
     }
   };
 
@@ -283,7 +221,6 @@ export default function Plans() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-24">
         {plans.map((plan) => {
           const available = isPlanAvailable(plan.speed, false);
-          const priceId = getPriceId(plan.name);
           return (
             <PlanCard
               key={plan.name}
@@ -293,8 +230,6 @@ export default function Plans() {
               price={plan.price}
               typicalSpeed={plan.typical}
               isPopular={plan.popular}
-              priceId={priceId}
-              onSignup={available ? () => handleSignup(priceId, plan.name) : undefined}
               disabled={coverageVerified && !available}
               showSignup={available}
             />
@@ -314,7 +249,6 @@ export default function Plans() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
         {fixedWirelessPlans.map((plan) => {
           const available = isPlanAvailable(plan.speed, true);
-          const priceId = getPriceId(plan.name);
           return (
             <PlanCard
               key={plan.name}
@@ -324,8 +258,6 @@ export default function Plans() {
               price={plan.price}
               typicalSpeed={plan.typical}
               isPopular={plan.popular}
-              priceId={priceId}
-              onSignup={available ? () => handleSignup(priceId, plan.name) : undefined}
               disabled={coverageVerified && !available}
               showSignup={available}
             />
