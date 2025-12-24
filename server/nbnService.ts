@@ -1,6 +1,8 @@
+import * as crypto from "crypto";
 import { db } from "./db";
 import { serviceQualifications, serviceOrders, orderStatusHistory } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { getSuperloopClient, SuperloopClient } from "./superloopClient";
 
 export interface ServiceQualificationResult {
   locId: string;
@@ -109,9 +111,18 @@ function getBandwidthProfile(technology: string, maxDownload: number, maxUpload:
 
 export class NbnService {
   private useRealApi: boolean = false;
+  private useSuperloop: boolean = false;
+  private superloopClient: SuperloopClient | null = null;
   
   constructor() {
     this.useRealApi = !!process.env.NBN_RSP_API_KEY;
+    
+    const superloop = getSuperloopClient();
+    if (superloop.isConfigured()) {
+      this.useSuperloop = true;
+      this.superloopClient = superloop;
+      console.log("Superloop Connect API configured - using real NBN integration");
+    }
   }
 
   async performServiceQualification(
@@ -122,10 +133,83 @@ export class NbnService {
     state?: string,
     userId?: string
   ): Promise<ServiceQualificationResult> {
+    if (this.useSuperloop && this.superloopClient) {
+      return this.superloopServiceQualification(address, technology, postcode, suburb, state, userId);
+    }
     if (this.useRealApi) {
       return this.realServiceQualification(address, technology, postcode, suburb, state, userId);
     }
     return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId);
+  }
+
+  private async superloopServiceQualification(
+    address: string,
+    technology: string,
+    postcode?: string,
+    suburb?: string,
+    state?: string,
+    userId?: string
+  ): Promise<ServiceQualificationResult> {
+    if (!this.superloopClient) {
+      throw new Error("Superloop client not configured");
+    }
+
+    try {
+      const locations = await this.superloopClient.searchLocation(address);
+      
+      if (!locations || locations.length === 0) {
+        throw new Error("No locations found for address");
+      }
+
+      const location = locations[0];
+      const qualification = await this.superloopClient.qualifyLocation(location.id);
+
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + 30);
+
+      const result: ServiceQualificationResult = {
+        locId: qualification.locId || location.locId,
+        csaId: location.id,
+        address: location.address,
+        postcode: location.postcode || postcode,
+        suburb: location.suburb || suburb,
+        state: location.state || state,
+        technology: qualification.technologyType || location.technologyType,
+        maxDownload: qualification.maxDownload,
+        maxUpload: qualification.maxUpload,
+        bandwidthProfile: `TC${qualification.serviceClass}/${qualification.maxDownload}/${qualification.maxUpload}`,
+        serviceClass: qualification.serviceClass,
+        newDevelopment: false,
+        sqReference: qualification.qualificationSearchId,
+        validUntil,
+        available: qualification.available,
+      };
+
+      await db.insert(serviceQualifications).values({
+        userId: userId || null,
+        locId: result.locId,
+        csaId: result.csaId,
+        address: result.address,
+        postcode: result.postcode,
+        suburb: result.suburb,
+        state: result.state,
+        technology: result.technology,
+        maxDownload: result.maxDownload,
+        maxUpload: result.maxUpload,
+        bandwidthProfile: result.bandwidthProfile,
+        serviceClass: result.serviceClass,
+        newDevelopment: result.newDevelopment ? 1 : 0,
+        sqReference: result.sqReference,
+        validUntil: result.validUntil,
+        rawResponse: JSON.stringify({ superloop: true, qualification, location, superloopLocationId: location.id }),
+      });
+
+      return result;
+    } catch (error: any) {
+      console.error("Superloop qualification error:", error);
+      console.log("Falling back to simulated qualification");
+      return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId);
+    }
   }
 
   private async simulatedServiceQualification(
@@ -211,11 +295,14 @@ export class NbnService {
     contactPhone: string;
     preferredDate?: Date;
     stripeSessionId?: string;
+    sqReference?: string;
   }): Promise<{ orderId: string; orderReference: string; result: OrderSubmissionResult }> {
     const orderReference = generateOrderReference();
     
     let submissionResult: OrderSubmissionResult;
-    if (this.useRealApi) {
+    if (this.useSuperloop && this.superloopClient) {
+      submissionResult = await this.superloopSubmitOrder(params);
+    } else if (this.useRealApi) {
       submissionResult = await this.realSubmitOrder(params);
     } else {
       submissionResult = await this.simulatedSubmitOrder(params);
@@ -278,6 +365,54 @@ export class NbnService {
       estimatedConnectionDate: estimatedDate,
       message: "Order submitted successfully. You will receive confirmation via email.",
     };
+  }
+
+  private async superloopSubmitOrder(params: any): Promise<OrderSubmissionResult> {
+    if (!this.superloopClient) {
+      throw new Error("Superloop client not configured");
+    }
+
+    try {
+      const remoteOrderId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2)}`;
+      
+      const superloopLocationId = params.csaId || params.superloopLocationId || "";
+      
+      const orderResponse = await this.superloopClient.createOrder({
+        sourceType: "nbn",
+        planName: params.planName,
+        term: 1,
+        trafficClass: "tc4",
+        qualificationSearchId: params.sqReference || "",
+        locationId: superloopLocationId,
+        remoteOrderId,
+        productType: "Access Only",
+        restorationSla: "Standard",
+        contactName: params.contactName,
+        contactPhone: params.contactPhone.replace(/\s/g, ""),
+        contactEmail: params.contactEmail,
+        aggregationMethod: "L2TP",
+        ntdInstallation: "nbn-tech",
+        customerReference: `BRO-${params.userId.substring(0, 8)}`,
+      });
+
+      const estimatedDate = new Date();
+      estimatedDate.setDate(estimatedDate.getDate() + 7);
+
+      return {
+        success: true,
+        nbnOrderId: `SL-${orderResponse.id}`,
+        avcId: orderResponse.avcId || undefined,
+        cvcId: undefined,
+        estimatedConnectionDate: estimatedDate,
+        message: `Order submitted via Superloop Connect. Reference: ${orderResponse.id}`,
+      };
+    } catch (error: any) {
+      console.error("Superloop order submission error:", error);
+      return {
+        success: false,
+        message: `Order submission failed: ${error.message}`,
+      };
+    }
   }
 
   private async realSubmitOrder(params: any): Promise<OrderSubmissionResult> {

@@ -305,6 +305,8 @@ export default function SignupWizard() {
             uploadSpeed: selectedPlan.upload,
             serviceAddress: qualification?.address || coverageResult?.normalizedAddress || address,
             locId: qualification?.locId,
+            csaId: qualification?.csaId,
+            sqReference: qualification?.sqReference,
             technology: qualification?.technology || coverageResult?.technology,
             contactName,
             contactEmail,

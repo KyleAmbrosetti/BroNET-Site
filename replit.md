@@ -114,13 +114,37 @@ The application includes a complete NBN service order system:
 pending → submitted → in_progress → provisioning → active
 
 **NBN Service Abstraction** (`server/nbnService.ts`):
-- Currently uses simulated responses
-- Designed for easy swap to real NBN B2B APIs when RSP agreement obtained
-- Set `NBN_RSP_API_KEY` environment variable to enable real API mode
+- Currently uses simulated responses by default
+- Supports Superloop Connect API integration for real NBN wholesale operations
+- Set Superloop credentials to enable real API mode
+
+### Superloop Connect API Integration
+The application integrates with Superloop's Connect API for wholesale NBN operations:
+- **Client**: `server/superloopClient.ts` - OAuth 2.0 JWT authentication, API methods
+- **Capabilities**: Location search, service qualification, order creation, appointment booking
+
+**Priority Order for NBN Operations:**
+1. Superloop Connect API (if configured)
+2. Legacy NBN RSP API (if configured)
+3. Simulated responses (default)
+
+### Multi-Step Signup Wizard Flow
+1. Address - Enter and verify service address
+2. Qualification - NBN service qualification
+3. Details - Contact information
+4. Plan - Select internet plan
+5. Account - Create account or login (inline)
+6. Payment - Stripe checkout with card or BECS direct debit
+7. Confirmation - Order reference and NBN identifiers
 
 ### Environment Variables Required
 - `DATABASE_URL` - PostgreSQL connection string
 - `SESSION_SECRET` - Secret key for session encryption (defaults to development value)
 - `RAPIDAPI_NBN_KEY` - RapidAPI key for NBN address lookup (nbnco-address-check API)
 - `STRIPE_SECRET_KEY` - Stripe secret key for payment processing
-- `NBN_RSP_API_KEY` - (Optional) NBN RSP API key for real B2B integration
+- `NBN_RSP_API_KEY` - (Optional) Legacy NBN RSP API key
+
+### Superloop Connect Credentials (Optional)
+- `SUPERLOOP_CLIENT_ID` - Superloop API client ID
+- `SUPERLOOP_PRIVATE_KEY` - RSA private key for JWT signing (PEM format)
+- `SUPERLOOP_USE_SANDBOX` - Set to 'true' for sandbox environment
