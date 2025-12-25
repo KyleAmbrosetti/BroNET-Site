@@ -115,18 +115,26 @@ pending → submitted → in_progress → provisioning → active
 
 **NBN Service Abstraction** (`server/nbnService.ts`):
 - Currently uses simulated responses by default
-- Supports Superloop Connect API integration for real NBN wholesale operations
-- Set Superloop credentials to enable real API mode
+- Supports multiple wholesale provider integrations
+- Automatic fallback to simulated mode on API errors
 
-### Superloop Connect API Integration
-The application integrates with Superloop's Connect API for wholesale NBN operations:
-- **Client**: `server/superloopClient.ts` - OAuth 2.0 JWT authentication, API methods
+### Aussie Broadband Nitrogen Integration (Primary)
+The application integrates with Aussie Broadband's Nitrogen platform for wholesale NBN operations:
+- **Client**: `server/nitrogenClient.ts` - REST API with token authentication
+- **Capabilities**: Location search, service qualification, order creation, appointment management
+- **Webhooks**: `/api/webhooks/nitrogen` endpoint for async order status updates
+- **Features**: Auto/manual appointment booking, infrastructure upgrades, service configuration
+
+### Superloop Connect API Integration (Secondary)
+The application also supports Superloop's Connect API:
+- **Client**: `server/superloopClient.ts` - OAuth 2.0 JWT authentication
 - **Capabilities**: Location search, service qualification, order creation, appointment booking
 
 **Priority Order for NBN Operations:**
-1. Superloop Connect API (if configured)
-2. Legacy NBN RSP API (if configured)
-3. Simulated responses (default)
+1. Aussie Broadband Nitrogen (if configured)
+2. Superloop Connect API (if configured)
+3. Legacy NBN RSP API (if configured)
+4. Simulated responses (default)
 
 ### Multi-Step Signup Wizard Flow
 1. Address - Enter and verify service address
@@ -143,6 +151,13 @@ The application integrates with Superloop's Connect API for wholesale NBN operat
 - `RAPIDAPI_NBN_KEY` - RapidAPI key for NBN address lookup (nbnco-address-check API)
 - `STRIPE_SECRET_KEY` - Stripe secret key for payment processing
 - `NBN_RSP_API_KEY` - (Optional) Legacy NBN RSP API key
+
+### Aussie Broadband Nitrogen Credentials (Optional)
+- `NITROGEN_API_KEY` - Nitrogen API key from Aussie Broadband partner portal
+- `NITROGEN_API_SECRET` - Nitrogen API secret
+- `NITROGEN_TENANT_ID` - Your tenant ID in the Nitrogen platform
+- `NITROGEN_USE_SANDBOX` - Set to 'true' for sandbox environment
+- `NITROGEN_WEBHOOK_SECRET` - Secret for verifying webhook signatures
 
 ### Superloop Connect Credentials (Optional)
 - `SUPERLOOP_CLIENT_ID` - Superloop API client ID

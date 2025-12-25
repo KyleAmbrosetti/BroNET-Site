@@ -3,6 +3,7 @@ import { db } from "./db";
 import { serviceQualifications, serviceOrders, orderStatusHistory } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { getSuperloopClient, SuperloopClient } from "./superloopClient";
+import { nitrogenClient, NitrogenClient } from "./nitrogenClient";
 
 export interface ServiceQualificationResult {
   locId: string;
@@ -112,16 +113,22 @@ function getBandwidthProfile(technology: string, maxDownload: number, maxUpload:
 export class NbnService {
   private useRealApi: boolean = false;
   private useSuperloop: boolean = false;
+  private useNitrogen: boolean = false;
   private superloopClient: SuperloopClient | null = null;
   
   constructor() {
     this.useRealApi = !!process.env.NBN_RSP_API_KEY;
     
-    const superloop = getSuperloopClient();
-    if (superloop.isConfigured()) {
-      this.useSuperloop = true;
-      this.superloopClient = superloop;
-      console.log("Superloop Connect API configured - using real NBN integration");
+    if (nitrogenClient.isConfigured()) {
+      this.useNitrogen = true;
+      console.log("Nitrogen API configured - using Aussie Broadband NBN integration");
+    } else {
+      const superloop = getSuperloopClient();
+      if (superloop.isConfigured()) {
+        this.useSuperloop = true;
+        this.superloopClient = superloop;
+        console.log("Superloop Connect API configured - using real NBN integration");
+      }
     }
   }
 
@@ -133,6 +140,9 @@ export class NbnService {
     state?: string,
     userId?: string
   ): Promise<ServiceQualificationResult> {
+    if (this.useNitrogen) {
+      return this.nitrogenServiceQualification(address, technology, postcode, suburb, state, userId);
+    }
     if (this.useSuperloop && this.superloopClient) {
       return this.superloopServiceQualification(address, technology, postcode, suburb, state, userId);
     }
@@ -140,6 +150,75 @@ export class NbnService {
       return this.realServiceQualification(address, technology, postcode, suburb, state, userId);
     }
     return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId);
+  }
+
+  private async nitrogenServiceQualification(
+    address: string,
+    technology: string,
+    postcode?: string,
+    suburb?: string,
+    state?: string,
+    userId?: string
+  ): Promise<ServiceQualificationResult> {
+    try {
+      const locations = await nitrogenClient.searchLocation(address);
+      
+      if (!locations || locations.length === 0) {
+        throw new Error("No locations found for address");
+      }
+
+      const location = locations[0];
+      const qualification = await nitrogenClient.performServiceQualification(location.id);
+
+      const serviceClass = typeof qualification.serviceClass === 'string' 
+        ? parseInt(qualification.serviceClass) || 4 
+        : qualification.serviceClass || 4;
+      const maxDownload = qualification.maxDownload || getTechnologySpecs(qualification.technologyType || technology).maxDownload;
+      const maxUpload = qualification.maxUpload || getTechnologySpecs(qualification.technologyType || technology).maxUpload;
+
+      const result: ServiceQualificationResult = {
+        locId: qualification.locId || location.locId || location.id,
+        csaId: location.id,
+        address: qualification.address || location.address,
+        postcode: qualification.postcode || location.postcode || postcode,
+        suburb: qualification.suburb || location.suburb || suburb,
+        state: qualification.state || location.state || state,
+        technology: qualification.technologyType || technology || 'FTTP',
+        maxDownload,
+        maxUpload,
+        bandwidthProfile: `TC${serviceClass}/${maxDownload}/${maxUpload}`,
+        serviceClass,
+        newDevelopment: false,
+        sqReference: qualification.id,
+        validUntil: qualification.expiresAt,
+        available: qualification.available !== false,
+      };
+
+      await db.insert(serviceQualifications).values({
+        userId: userId || null,
+        locId: result.locId,
+        csaId: result.csaId,
+        address: result.address,
+        postcode: result.postcode,
+        suburb: result.suburb,
+        state: result.state,
+        technology: result.technology,
+        maxDownload: result.maxDownload,
+        maxUpload: result.maxUpload,
+        bandwidthProfile: result.bandwidthProfile,
+        serviceClass: result.serviceClass,
+        newDevelopment: result.newDevelopment ? 1 : 0,
+        sqReference: result.sqReference,
+        validUntil: result.validUntil,
+        rawResponse: JSON.stringify({ nitrogen: true, qualification, location, nitrogenLocationId: location.id }),
+      });
+
+      return result;
+    } catch (error: any) {
+      console.error("Nitrogen qualification error:", error);
+      console.log("Falling back to simulated qualification");
+      return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId);
+    }
   }
 
   private async superloopServiceQualification(
@@ -289,6 +368,7 @@ export class NbnService {
     uploadSpeed: number;
     serviceAddress: string;
     locId?: string;
+    csaId?: string;
     technology?: string;
     contactName: string;
     contactEmail: string;
@@ -299,13 +379,26 @@ export class NbnService {
   }): Promise<{ orderId: string; orderReference: string; result: OrderSubmissionResult }> {
     const orderReference = generateOrderReference();
     
+    let csaId = params.csaId;
+    if (!csaId && params.qualificationId) {
+      const [qualification] = await db.select().from(serviceQualifications)
+        .where(eq(serviceQualifications.id, params.qualificationId));
+      if (qualification) {
+        csaId = qualification.csaId || undefined;
+      }
+    }
+    
+    const enrichedParams = { ...params, csaId };
+    
     let submissionResult: OrderSubmissionResult;
-    if (this.useSuperloop && this.superloopClient) {
-      submissionResult = await this.superloopSubmitOrder(params);
+    if (this.useNitrogen) {
+      submissionResult = await this.nitrogenSubmitOrder(enrichedParams);
+    } else if (this.useSuperloop && this.superloopClient) {
+      submissionResult = await this.superloopSubmitOrder(enrichedParams);
     } else if (this.useRealApi) {
-      submissionResult = await this.realSubmitOrder(params);
+      submissionResult = await this.realSubmitOrder(enrichedParams);
     } else {
-      submissionResult = await this.simulatedSubmitOrder(params);
+      submissionResult = await this.simulatedSubmitOrder(enrichedParams);
     }
 
     const estimatedDate = submissionResult.estimatedConnectionDate || new Date();
@@ -314,26 +407,26 @@ export class NbnService {
     }
 
     const [order] = await db.insert(serviceOrders).values({
-      userId: params.userId,
-      qualificationId: params.qualificationId,
+      userId: enrichedParams.userId,
+      qualificationId: enrichedParams.qualificationId,
       orderReference,
       nbnOrderId: submissionResult.nbnOrderId,
       avcId: submissionResult.avcId,
       cvcId: submissionResult.cvcId,
-      planId: params.planId,
-      planName: params.planName,
-      downloadSpeed: params.downloadSpeed,
-      uploadSpeed: params.uploadSpeed,
-      serviceAddress: params.serviceAddress,
-      locId: params.locId,
-      technology: params.technology,
+      planId: enrichedParams.planId,
+      planName: enrichedParams.planName,
+      downloadSpeed: enrichedParams.downloadSpeed,
+      uploadSpeed: enrichedParams.uploadSpeed,
+      serviceAddress: enrichedParams.serviceAddress,
+      locId: enrichedParams.csaId || enrichedParams.locId,
+      technology: enrichedParams.technology,
       status: submissionResult.success ? "submitted" : "failed",
-      contactName: params.contactName,
-      contactEmail: params.contactEmail,
-      contactPhone: params.contactPhone,
-      preferredDate: params.preferredDate,
+      contactName: enrichedParams.contactName,
+      contactEmail: enrichedParams.contactEmail,
+      contactPhone: enrichedParams.contactPhone,
+      preferredDate: enrichedParams.preferredDate,
       estimatedConnectionDate: estimatedDate,
-      stripeSessionId: params.stripeSessionId,
+      stripeSessionId: enrichedParams.stripeSessionId,
       notes: submissionResult.message,
     }).returning();
 
@@ -349,6 +442,67 @@ export class NbnService {
       orderReference,
       result: submissionResult,
     };
+  }
+
+  private async nitrogenSubmitOrder(params: any): Promise<OrderSubmissionResult> {
+    try {
+      const customerReference = `BRO-${params.userId.substring(0, 8)}-${Date.now().toString(36)}`;
+      
+      const nitrogenLocationId = params.csaId || "";
+      
+      if (!nitrogenLocationId) {
+        throw new Error("Nitrogen location ID not found in qualification data");
+      }
+
+      const products = await nitrogenClient.getProductCatalog();
+      const matchingProduct = products.find(p => 
+        p.downloadSpeed === params.downloadSpeed && p.uploadSpeed === params.uploadSpeed
+      ) || products.find(p => p.downloadSpeed >= params.downloadSpeed);
+
+      if (!matchingProduct) {
+        throw new Error("No matching product offer found for selected plan");
+      }
+
+      const orderResponse = await nitrogenClient.createOrder({
+        sourceType: 'NBN',
+        customerReference,
+        qualificationSearchId: params.sqReference || "",
+        locationId: nitrogenLocationId,
+        term: 1,
+        trafficClass: 'tc4',
+        productType: 'Access Only',
+        productOffer: {
+          id: matchingProduct.id,
+          components: [
+            { type: 'restoration_sla', option: 'standard' },
+          ],
+        },
+        ntdInstallation: 'no-action',
+        serviceConfiguration: {
+          dslStabilityProfile: 'standard',
+          layer3Options: {
+            authMethod: 'ipoe',
+            applyShapingRestriction: false,
+            unblockPorts: false,
+          },
+        },
+      });
+
+      const estimatedDate = new Date();
+      estimatedDate.setDate(estimatedDate.getDate() + 7);
+
+      return {
+        success: true,
+        nbnOrderId: orderResponse.id,
+        avcId: orderResponse.avcId,
+        estimatedConnectionDate: estimatedDate,
+        message: "Order submitted to Nitrogen. You will receive status updates via email.",
+      };
+    } catch (error: any) {
+      console.error("Nitrogen order submission error:", error);
+      console.log("Falling back to simulated order");
+      return this.simulatedSubmitOrder(params);
+    }
   }
 
   private async simulatedSubmitOrder(params: any): Promise<OrderSubmissionResult> {
@@ -481,6 +635,29 @@ export class NbnService {
 
   async getOrderHistory(orderId: string) {
     return db.select().from(orderStatusHistory).where(eq(orderStatusHistory.orderId, orderId));
+  }
+
+  async getOrderByNbnOrderId(nbnOrderId: string) {
+    const [order] = await db.select().from(serviceOrders).where(eq(serviceOrders.nbnOrderId, nbnOrderId));
+    return order || null;
+  }
+
+  async updateOrderByNbnOrderId(nbnOrderId: string, status: string, message?: string, updatedBy: string = "system"): Promise<boolean> {
+    const order = await this.getOrderByNbnOrderId(nbnOrderId);
+    if (!order) return false;
+
+    await db.update(serviceOrders)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(serviceOrders.id, order.id));
+
+    await db.insert(orderStatusHistory).values({
+      orderId: order.id,
+      status,
+      message,
+      updatedBy,
+    });
+
+    return true;
   }
 }
 

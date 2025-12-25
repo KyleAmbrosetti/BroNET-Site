@@ -83,6 +83,69 @@ app.post(
   }
 );
 
+// Nitrogen webhook - must be BEFORE express.json() to get raw body for signature verification
+app.post(
+  '/api/webhooks/nitrogen',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    try {
+      const { nitrogenClient } = await import('./nitrogenClient');
+      const { nbnService } = await import('./nbnService');
+      
+      const signature = req.headers['x-nitrogen-signature'] as string;
+      const payload = Buffer.isBuffer(req.body) ? req.body.toString() : String(req.body);
+      
+      if (signature && !nitrogenClient.verifyWebhookSignature(payload, signature)) {
+        console.warn("Invalid Nitrogen webhook signature");
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+
+      const event = nitrogenClient.parseWebhookEvent(payload);
+      console.log(`Nitrogen webhook: ${event.eventType} for ${event.resourceType}/${event.resourceId}`);
+
+      const updateByNbnId = async (status: string, message: string) => {
+        const updated = await nbnService.updateOrderByNbnOrderId(event.resourceId, status, message, 'nitrogen');
+        if (!updated) {
+          console.warn(`No order found with nbnOrderId: ${event.resourceId}`);
+        }
+        return updated;
+      };
+
+      switch (event.eventType) {
+        case 'order.completed.event':
+          await updateByNbnId('active', 'Service connected successfully');
+          break;
+        
+        case 'order.accepted.event':
+          await updateByNbnId('in_progress', 'Order accepted by NBN');
+          break;
+
+        case 'order.rejected.event':
+        case 'order.failed.event':
+          await updateByNbnId('failed', event.data?.reason || 'Order rejected');
+          break;
+
+        case 'order.cancelled.event':
+          await updateByNbnId('cancelled', event.data?.reason || 'Order cancelled');
+          break;
+
+        case 'order.appointment-required.event':
+        case 'order.appointment-reschedule-required.event':
+          await updateByNbnId('pending', 'Appointment required - please contact support');
+          break;
+
+        default:
+          console.log(`Unhandled Nitrogen event: ${event.eventType}`);
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error("Nitrogen webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  }
+);
+
 app.use(
   express.json({
     verify: (req, _res, buf) => {

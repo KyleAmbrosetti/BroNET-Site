@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -993,6 +993,8 @@ export async function registerRoutes(
       res.status(500).json({ message: error.message || "Failed to activate service" });
     }
   });
+
+  // Note: Nitrogen webhook is registered in index.ts before express.json() middleware
 
   return httpServer;
 }
