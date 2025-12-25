@@ -122,14 +122,13 @@ export function PlanCard({ name, speed, upload, price, typicalSpeed, isPopular, 
           </Button>
         ) : showSignup ? (
           <Button 
-            className={`w-full ${isPopular ? 'bg-gradient-brand border-0' : ''}`} 
+            className="w-full" 
             size="lg" 
-            asChild
-            data-testid={`button-signup-${name.toLowerCase().replace(/\s+/g, '-')}`}
+            disabled
+            variant="secondary"
+            data-testid={`button-coming-soon-${name.toLowerCase().replace(/\s+/g, '-')}`}
           >
-            <Link href={`/signup?plan=${encodeURIComponent(name)}`}>
-              Sign Up Now
-            </Link>
+            Coming Soon
           </Button>
         ) : (
           <Button 

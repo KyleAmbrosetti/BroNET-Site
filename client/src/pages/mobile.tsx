@@ -110,8 +110,8 @@ function PlanCard({ plan }: { plan: MobilePlan }) {
         </ul>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" variant={plan.popular ? "default" : "outline"} data-testid={`button-select-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
-          Get Started
+        <Button className="w-full" variant="secondary" disabled data-testid={`button-coming-soon-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
+          Coming Soon
         </Button>
       </CardFooter>
     </Card>
@@ -299,8 +299,8 @@ export default function Mobile() {
             Most transfers complete within 2-4 hours.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-gradient-brand" data-testid="button-get-started">
-              Get Started
+            <Button size="lg" variant="secondary" disabled data-testid="button-coming-soon">
+              Coming Soon
             </Button>
             <Button size="lg" variant="outline" asChild data-testid="button-contact-us">
               <Link href="/support">Contact Us</Link>
