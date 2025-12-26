@@ -1,7 +1,7 @@
 import { PlanCard } from "@/components/plan-card";
 import { AddressSearch } from "@/components/address-search";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, Radio, MapPin, CheckCircle2, Wifi, Cable, Zap, Shield } from "lucide-react";
+import { Check, X, Radio, MapPin, CheckCircle2, Cable, Zap, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -35,8 +35,7 @@ export default function Plans() {
       price: 69, 
       typical: "50 Mbps",
       typicalUpload: "17",
-      tier: 'basic' as const,
-      freeModem: false
+      tier: 'basic' as const
     },
     { 
       name: "NBN 100", 
@@ -46,8 +45,7 @@ export default function Plans() {
       typical: "98 Mbps",
       typicalUpload: "18",
       tier: 'power' as const,
-      popular: true,
-      freeModem: true
+      popular: true
     },
     { 
       name: "NBN 250", 
@@ -56,8 +54,7 @@ export default function Plans() {
       price: 109, 
       typical: "245 Mbps",
       typicalUpload: "23",
-      tier: 'power' as const,
-      freeModem: true
+      tier: 'power' as const
     },
     { 
       name: "NBN 1000", 
@@ -66,8 +63,7 @@ export default function Plans() {
       price: 129, 
       typical: "850 Mbps",
       typicalUpload: "45",
-      tier: 'ultra' as const,
-      freeModem: true
+      tier: 'ultra' as const
     },
     { 
       name: "NBN 2000", 
@@ -77,8 +73,7 @@ export default function Plans() {
       typical: "1800 Mbps",
       typicalUpload: "170",
       tier: 'ultra' as const,
-      badge: "New",
-      freeModem: true
+      badge: "New"
     },
   ];
 
@@ -89,8 +84,7 @@ export default function Plans() {
       upload: 5, 
       price: 59, 
       typical: "25 Mbps",
-      tier: 'basic' as const,
-      freeModem: false
+      tier: 'basic' as const
     },
     { 
       name: "Fixed Wireless 50", 
@@ -99,8 +93,7 @@ export default function Plans() {
       price: 69, 
       typical: "47 Mbps",
       tier: 'basic' as const,
-      popular: true,
-      freeModem: false
+      popular: true
     },
     { 
       name: "Fixed Wireless 75", 
@@ -108,8 +101,7 @@ export default function Plans() {
       upload: 10, 
       price: 79, 
       typical: "70 Mbps",
-      tier: 'power' as const,
-      freeModem: true
+      tier: 'power' as const
     },
     { 
       name: "Fixed Wireless Plus", 
@@ -118,8 +110,7 @@ export default function Plans() {
       price: 89, 
       typical: "90 Mbps",
       tier: 'power' as const,
-      badge: "New",
-      freeModem: true
+      badge: "New"
     },
   ];
 
@@ -233,10 +224,6 @@ export default function Plans() {
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 text-sm">
-              <Wifi className="h-4 w-4 text-primary" />
-              <span>Free modem on eligible plans*</span>
-            </div>
-            <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 text-sm">
               <Zap className="h-4 w-4 text-primary" />
               <span>Unlimited data</span>
             </div>
@@ -326,16 +313,12 @@ export default function Plans() {
                 badge={plan.badge}
                 disabled={coverageVerified && !available}
                 showSignup={available}
-                freeModem={plan.freeModem}
                 address={coverageResult?.normalizedAddress}
               />
             );
           })}
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mb-16">
-          *Free modem when you stay connected for 36 months. T&Cs apply.
-        </p>
 
         {/* Fixed Wireless Plans */}
         <div className="mb-8">
@@ -363,7 +346,6 @@ export default function Plans() {
                 badge={plan.badge}
                 disabled={coverageVerified && !available}
                 showSignup={available}
-                freeModem={plan.freeModem}
                 address={coverageResult?.normalizedAddress}
               />
             );
@@ -414,13 +396,6 @@ export default function Plans() {
                   <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Free Modem*</TableCell>
-                  <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
-                  <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                </TableRow>
-                <TableRow>
                   <TableCell className="font-medium">4K Streaming</TableCell>
                   <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
                   <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
@@ -437,9 +412,6 @@ export default function Plans() {
               </TableBody>
             </Table>
           </div>
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            *Free modem when you stay connected for 36 months.
-          </p>
         </div>
       </div>
     </div>

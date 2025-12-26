@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Wifi, Zap, Clock, ArrowRight } from "lucide-react";
+import { Check, Zap, Clock, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
 interface PlanProps {
@@ -18,7 +18,6 @@ interface PlanProps {
   priceId?: string;
   disabled?: boolean;
   showSignup?: boolean;
-  freeModem?: boolean;
   address?: string;
 }
 
@@ -84,7 +83,6 @@ export function PlanCard({
   badge,
   disabled, 
   showSignup,
-  freeModem,
   address
 }: PlanProps) {
   const downloadTime = getDownloadTime(speed);
@@ -201,21 +199,12 @@ export function PlanCard({
               </div>
               <span>No Lock-in Contract</span>
             </li>
-            {freeModem !== false && speed >= 100 ? (
-              <li className="flex items-center gap-2">
-                <div className="rounded-full bg-blue-100 p-0.5 dark:bg-blue-900/30">
-                  <Wifi className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="font-medium text-primary">Free modem option*</span>
-              </li>
-            ) : (
-              <li className="flex items-center gap-2">
-                <div className="rounded-full bg-slate-100 p-0.5 dark:bg-slate-900/30">
-                  <Wifi className="h-3 w-3 text-slate-600 dark:text-slate-400" />
-                </div>
-                <span className="text-muted-foreground">BYO modem or add ours</span>
-              </li>
-            )}
+            <li className="flex items-center gap-2">
+              <div className="rounded-full bg-green-100 p-0.5 dark:bg-green-900/30">
+                <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+              </div>
+              <span>BYO or add eero WiFi</span>
+            </li>
           </ul>
         </div>
       </CardContent>
@@ -258,11 +247,6 @@ export function PlanCard({
         )}
       </CardFooter>
       
-      {freeModem !== false && speed >= 100 && (
-        <p className="text-[10px] text-muted-foreground text-center pb-3 px-3">
-          *When you stay connected for 36 months
-        </p>
-      )}
     </Card>
   );
 }
