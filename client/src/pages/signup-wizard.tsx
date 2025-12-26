@@ -7,17 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AddressSearch } from "@/components/address-search";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
 import { api } from "@/lib/api";
 import { 
   MapPin, CheckCircle2, Loader2, ArrowRight, ArrowLeft, 
-  Wifi, Cable, User, CreditCard, FileText, Phone, Mail,
-  Calendar, Building2, Zap, Lock, Eye, EyeOff
+  Wifi, Cable, User, CreditCard, Phone, Mail,
+  Calendar, Zap, Lock, Eye, EyeOff, Router, ChevronDown, ChevronUp,
+  Tag, FileText, Info, Check, Package
 } from "lucide-react";
 
-type Step = "address" | "qualification" | "details" | "plan" | "account" | "payment" | "confirmation";
+type Step = "plan" | "details" | "account" | "payment";
 
 type CoverageResult = {
   normalizedAddress: string;
@@ -52,49 +55,119 @@ type Plan = {
   speed: number;
   upload: number;
   price: number;
+  typicalEvening?: number;
   priceId?: string;
 };
 
-const STEPS: { id: Step; label: string; icon: any }[] = [
-  { id: "address", label: "Address", icon: MapPin },
-  { id: "qualification", label: "Qualification", icon: FileText },
-  { id: "details", label: "Your Details", icon: User },
-  { id: "plan", label: "Select Plan", icon: Zap },
-  { id: "account", label: "Account", icon: User },
-  { id: "payment", label: "Payment", icon: CreditCard },
-  { id: "confirmation", label: "Confirmation", icon: CheckCircle2 },
+type RouterOption = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  commitment?: number;
+  image?: string;
+};
+
+const ROUTER_OPTIONS: RouterOption[] = [
+  { id: "free", name: "Free BroNET Router", description: "Pre-configured dual-band WiFi router", price: 0, commitment: 24 },
+  { id: "premium", name: "Premium WiFi 6 Router", description: "High-performance mesh-ready router", price: 0, commitment: 36 },
+  { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
+];
+
+const STEPS: { id: Step; label: string; number: number }[] = [
+  { id: "plan", label: "Plan", number: 1 },
+  { id: "details", label: "Connect", number: 2 },
+  { id: "account", label: "Account", number: 3 },
+  { id: "payment", label: "Payment", number: 4 },
 ];
 
 export default function SignupWizard() {
-  const [currentStep, setCurrentStep] = useState<Step>("address");
+  const [currentStep, setCurrentStep] = useState<Step>("plan");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user, login, signup } = useUser();
 
+  // Address & Coverage
   const [address, setAddress] = useState("");
   const [isCheckingCoverage, setIsCheckingCoverage] = useState(false);
   const [coverageResult, setCoverageResult] = useState<CoverageResult | null>(null);
-  
   const [qualification, setQualification] = useState<QualificationResult | null>(null);
   const [isQualifying, setIsQualifying] = useState(false);
   
+  // Plan selection
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [stripeProducts, setStripeProducts] = useState<any[]>([]);
+  
+  // Router selection
+  const [selectedRouter, setSelectedRouter] = useState<string>("free");
+  
+  // Promo code
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  
+  // Contact details
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
   
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [stripeProducts, setStripeProducts] = useState<any[]>([]);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderResult, setOrderResult] = useState<any>(null);
-  
-  // Account step state
+  // Account
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  
+  // Order
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderResult, setOrderResult] = useState<any>(null);
+  
+  // Mobile order summary
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
+
+  // Reset mobile summary when step changes
+  useEffect(() => {
+    setShowMobileSummary(false);
+  }, [currentStep]);
+
+  // Validate we can be on current step (defensive guard)
+  useEffect(() => {
+    if (currentStep === "details" && (!selectedPlan || !coverageResult)) {
+      setCurrentStep("plan");
+    }
+    if (currentStep === "account" && (!selectedPlan || !coverageResult || !contactName || !contactEmail || !contactPhone)) {
+      setCurrentStep("plan");
+    }
+    if (currentStep === "payment" && (!selectedPlan || !coverageResult)) {
+      setCurrentStep("plan");
+    }
+  }, [currentStep, selectedPlan, coverageResult, contactName, contactEmail, contactPhone]);
+
+  // Parse URL parameters for pre-selected plan
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planParam = params.get('plan');
+    const speedParam = params.get('speed');
+    const priceParam = params.get('price');
+    const addressParam = params.get('address');
+    
+    if (addressParam) {
+      setAddress(addressParam);
+      // Auto-check coverage for pre-filled address
+      handleCheckCoverage(addressParam);
+    }
+    
+    if (planParam && speedParam && priceParam) {
+      setSelectedPlan({
+        id: planParam.toLowerCase().replace(/\s+/g, ''),
+        name: planParam,
+        speed: parseInt(speedParam),
+        upload: parseInt(speedParam) >= 1000 ? 50 : 20,
+        price: parseFloat(priceParam),
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -116,15 +189,16 @@ export default function SignupWizard() {
   const getStepIndex = (step: Step) => STEPS.findIndex(s => s.id === step);
   const currentStepIndex = getStepIndex(currentStep);
 
-  const handleCheckCoverage = async () => {
-    if (!address.trim()) {
+  const handleCheckCoverage = async (addressToCheck?: string) => {
+    const addr = addressToCheck || address;
+    if (!addr.trim()) {
       toast({ title: "Please enter an address", variant: "destructive" });
       return;
     }
 
     setIsCheckingCoverage(true);
     try {
-      const { data, error } = await api.checkCoverage(address);
+      const { data, error } = await api.checkCoverage(addr);
       if (error || !data?.success) {
         toast({ title: "Check failed", description: error || "Unable to verify address", variant: "destructive" });
         return;
@@ -132,9 +206,8 @@ export default function SignupWizard() {
 
       if (data.result) {
         setCoverageResult(data.result);
-        if (data.result.available !== false) {
-          toast({ title: "NBN Available!", description: `Technology: ${data.result.technology}` });
-        }
+        // Auto-qualify the service
+        await handleQualification(data.result);
       }
     } catch (err) {
       toast({ title: "Error", description: "Failed to check coverage", variant: "destructive" });
@@ -143,36 +216,80 @@ export default function SignupWizard() {
     }
   };
 
-  const handleQualification = async () => {
-    if (!coverageResult) return;
-
+  const handleQualification = async (coverage: CoverageResult) => {
     setIsQualifying(true);
     try {
       const response = await fetch("/api/orders/qualify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          address: coverageResult.normalizedAddress,
-          technology: coverageResult.technology,
-          postcode: coverageResult.postcode,
-          suburb: coverageResult.suburb,
-          state: coverageResult.state,
+          address: coverage.normalizedAddress,
+          technology: coverage.technology,
+          postcode: coverage.postcode,
+          suburb: coverage.suburb,
+          state: coverage.state,
         }),
       });
 
       const data = await response.json();
       if (data.success && data.qualification) {
         setQualification(data.qualification);
-        setCurrentStep("details");
-        toast({ title: "Service Qualified", description: `LOC ID: ${data.qualification.locId}` });
-      } else {
-        toast({ title: "Qualification failed", description: data.message, variant: "destructive" });
       }
     } catch (err) {
-      toast({ title: "Error", description: "Service qualification failed", variant: "destructive" });
+      console.error("Qualification failed:", err);
     } finally {
       setIsQualifying(false);
     }
+  };
+
+  const getAvailablePlans = (): Plan[] => {
+    const maxSpeed = qualification?.maxDownload || 2000;
+    const isWireless = qualification?.technology?.toLowerCase().includes("wireless") || 
+                       coverageResult?.technology?.toLowerCase().includes("wireless");
+
+    if (isWireless) {
+      return [
+        { id: "fw25", name: "Fixed Wireless 25", speed: 25, upload: 5, price: 59, typicalEvening: 22 },
+        { id: "fw50", name: "Fixed Wireless 50", speed: 50, upload: 10, price: 69, typicalEvening: 45 },
+        { id: "fw75", name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typicalEvening: 68 },
+        { id: "fwplus", name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89, typicalEvening: 90 },
+      ].filter(p => p.speed <= maxSpeed);
+    }
+
+    return [
+      { id: "nbn50", name: "NBN 50", speed: 50, upload: 20, price: 69, typicalEvening: 45 },
+      { id: "nbn100", name: "NBN 100", speed: 100, upload: 20, price: 89, typicalEvening: 90 },
+      { id: "nbn250", name: "NBN 250", speed: 250, upload: 25, price: 109, typicalEvening: 215 },
+      { id: "nbn1000", name: "NBN 1000", speed: 1000, upload: 50, price: 129, typicalEvening: 850 },
+      { id: "nbn2000", name: "NBN 2000", speed: 2000, upload: 500, price: 155, typicalEvening: 1700 },
+    ].filter(p => p.speed <= maxSpeed);
+  };
+
+  const getPriceId = (planName: string) => {
+    const product = stripeProducts.find(p => p.name === planName);
+    return product?.prices?.[0]?.id;
+  };
+
+  const handlePlanSelect = (plan: Plan) => {
+    const priceId = getPriceId(plan.name);
+    setSelectedPlan({ ...plan, priceId });
+  };
+
+  const handleApplyPromo = () => {
+    if (promoCode.toLowerCase() === "bronet10") {
+      setPromoApplied(true);
+      setPromoDiscount(10);
+      toast({ title: "Promo code applied!", description: "$10/month discount applied" });
+    } else {
+      toast({ title: "Invalid code", description: "Please check your promo code", variant: "destructive" });
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoApplied(false);
+    setPromoDiscount(0);
+    setPromoCode("");
+    toast({ title: "Promo code removed" });
   };
 
   const handleDetailsSubmit = () => {
@@ -187,41 +304,11 @@ export default function SignupWizard() {
       return;
     }
 
-    setCurrentStep("plan");
-  };
-
-  const getAvailablePlans = (): Plan[] => {
-    if (!qualification) return [];
-
-    const isWireless = qualification.technology.toLowerCase().includes("wireless");
-    const maxSpeed = qualification.maxDownload;
-
-    if (isWireless) {
-      return [
-        { id: "fw25", name: "Fixed Wireless 25", speed: 25, upload: 5, price: 59 },
-        { id: "fw50", name: "Fixed Wireless 50", speed: 50, upload: 10, price: 69 },
-        { id: "fw75", name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79 },
-        { id: "fwplus", name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89 },
-      ].filter(p => p.speed <= maxSpeed);
+    if (user) {
+      setCurrentStep("payment");
+    } else {
+      setCurrentStep("account");
     }
-
-    return [
-      { id: "nbn50", name: "NBN 50", speed: 50, upload: 20, price: 69 },
-      { id: "nbn100", name: "NBN 100", speed: 100, upload: 20, price: 89 },
-      { id: "nbn250", name: "NBN 250", speed: 250, upload: 25, price: 109 },
-      { id: "nbn1000", name: "NBN 1000", speed: 1000, upload: 50, price: 129 },
-      { id: "nbn2000", name: "NBN 2000", speed: 2000, upload: 500, price: 155 },
-    ].filter(p => p.speed <= maxSpeed);
-  };
-
-  const getPriceId = (planName: string) => {
-    const product = stripeProducts.find(p => p.name === planName);
-    return product?.prices?.[0]?.id;
-  };
-
-  const handlePlanSelect = (plan: Plan) => {
-    const priceId = getPriceId(plan.name);
-    setSelectedPlan({ ...plan, priceId });
   };
 
   const handleAccountSubmit = async () => {
@@ -295,7 +382,7 @@ export default function SignupWizard() {
       }
       
       if (data?.url) {
-        const orderResponse = await fetch("/api/orders", {
+        await fetch("/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -313,13 +400,10 @@ export default function SignupWizard() {
             contactEmail,
             contactPhone,
             preferredDate: preferredDate || undefined,
+            routerOption: selectedRouter,
+            promoCode: promoApplied ? promoCode : undefined,
           }),
         });
-
-        const orderData = await orderResponse.json();
-        if (orderData.success) {
-          setOrderResult(orderData);
-        }
 
         window.location.href = data.url;
       }
@@ -330,30 +414,41 @@ export default function SignupWizard() {
     }
   };
 
+  const getMonthlyTotal = () => {
+    if (!selectedPlan) return 0;
+    return selectedPlan.price - promoDiscount;
+  };
+
+  const getSelectedRouterDetails = () => {
+    return ROUTER_OPTIONS.find(r => r.id === selectedRouter);
+  };
+
+  // Step Progress Indicator
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
+    <div className="flex items-center justify-between mb-8 px-2">
       {STEPS.map((step, index) => {
         const isActive = index === currentStepIndex;
         const isCompleted = index < currentStepIndex;
-        const Icon = step.icon;
 
         return (
-          <div key={step.id} className="flex items-center">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-              isCompleted ? "bg-primary border-primary text-primary-foreground" :
-              isActive ? "border-primary text-primary" :
-              "border-muted text-muted-foreground"
-            }`}>
-              {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+          <div key={step.id} className="flex items-center flex-1">
+            <div className="flex flex-col items-center">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all ${
+                isCompleted ? "bg-green-500 text-white" :
+                isActive ? "bg-primary text-primary-foreground" :
+                "bg-muted text-muted-foreground"
+              }`}>
+                {isCompleted ? <Check className="w-5 h-5" /> : step.number}
+              </div>
+              <span className={`mt-2 text-xs font-medium text-center ${
+                isActive ? "text-primary" : "text-muted-foreground"
+              }`}>
+                {step.label}
+              </span>
             </div>
-            <span className={`hidden sm:block ml-2 text-sm font-medium ${
-              isActive ? "text-primary" : "text-muted-foreground"
-            }`}>
-              {step.label}
-            </span>
             {index < STEPS.length - 1 && (
-              <div className={`w-8 sm:w-16 h-0.5 mx-2 ${
-                isCompleted ? "bg-primary" : "bg-muted"
+              <div className={`flex-1 h-0.5 mx-2 ${
+                isCompleted ? "bg-green-500" : "bg-muted"
               }`} />
             )}
           </div>
@@ -362,125 +457,376 @@ export default function SignupWizard() {
     </div>
   );
 
-  const renderAddressStep = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Check Your Address
-        </CardTitle>
-        <CardDescription>
-          Enter your service address to check NBN availability and technology type
-        </CardDescription>
+  // Order Summary Sidebar (Desktop)
+  const renderOrderSummary = () => (
+    <Card className="sticky top-24 border-2">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg">Your order summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <AddressSearch
-          value={address}
-          onChange={setAddress}
-          onSearch={handleCheckCoverage}
-          isSearching={isCheckingCoverage}
-          placeholder="Start typing your address (e.g., 123 Main St, Sydney NSW 2000)"
-          buttonText="Check Address"
-        />
-
-        {coverageResult && (
-          <Alert className={coverageResult.available !== false ? "border-green-500" : "border-destructive"}>
-            <div className="flex items-start gap-3">
-              {coverageResult.technology?.toLowerCase().includes("wireless") ? 
-                <Wifi className="h-5 w-5 text-primary" /> : 
-                <Cable className="h-5 w-5 text-primary" />
-              }
-              <div className="flex-1">
-                <AlertTitle>{coverageResult.available !== false ? "NBN Available!" : "Limited Availability"}</AlertTitle>
-                <AlertDescription className="mt-2 space-y-1">
-                  <p><strong>Address:</strong> {coverageResult.normalizedAddress}</p>
-                  <p><strong>Technology:</strong> {coverageResult.technology}</p>
-                  <p><strong>Max Speed:</strong> {coverageResult.maxTier}</p>
-                  {coverageResult.suburb && <p><strong>Suburb:</strong> {coverageResult.suburb}, {coverageResult.state}</p>}
-                </AlertDescription>
-              </div>
+        {/* Plan */}
+        {selectedPlan ? (
+          <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded">
+              <Wifi className="h-5 w-5 text-primary" />
             </div>
-          </Alert>
-        )}
-
-        {coverageResult?.available !== false && coverageResult && (
-          <div className="flex justify-end">
-            <Button onClick={() => setCurrentStep("qualification")} data-testid="button-continue-qualification">
-              Continue to Qualification <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const renderQualificationStep = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Service Qualification
-        </CardTitle>
-        <CardDescription>
-          We'll verify your service eligibility and generate your unique NBN identifiers
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-          <p><strong>Address:</strong> {coverageResult?.normalizedAddress}</p>
-          <p><strong>Technology:</strong> {coverageResult?.technology}</p>
-          <p><strong>Max Speed:</strong> {coverageResult?.maxTier}</p>
-        </div>
-
-        {!qualification ? (
-          <div className="text-center py-6">
-            <p className="text-muted-foreground mb-4">
-              Click below to perform a formal service qualification. This will:
-            </p>
-            <ul className="text-sm text-muted-foreground text-left max-w-md mx-auto space-y-2 mb-6">
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Generate your unique LOC ID (Location ID)</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Confirm available bandwidth profiles</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Verify service class and technology</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Create SQ (Service Qualification) reference</li>
-            </ul>
-            <Button onClick={handleQualification} disabled={isQualifying} size="lg" data-testid="button-qualify">
-              {isQualifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Perform Service Qualification
-            </Button>
+            <div className="flex-1">
+              <div className="font-semibold">{selectedPlan.name}</div>
+              <div className="text-sm text-muted-foreground">
+                {selectedPlan.speed}/{selectedPlan.upload} Mbps
+              </div>
+              {selectedPlan.typicalEvening && (
+                <div className="text-xs text-muted-foreground">
+                  Typical evening: {selectedPlan.typicalEvening} Mbps
+                </div>
+              )}
+            </div>
+            <div className="text-right">
+              <div className="font-bold">${selectedPlan.price}</div>
+              <div className="text-xs text-muted-foreground">/mth</div>
+            </div>
           </div>
         ) : (
-          <Alert className="border-green-500">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-            <AlertTitle>Service Qualified Successfully</AlertTitle>
-            <AlertDescription className="mt-2">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><strong>LOC ID:</strong> {qualification.locId}</div>
-                <div><strong>CSA ID:</strong> {qualification.csaId}</div>
-                <div><strong>Technology:</strong> {qualification.technology}</div>
-                <div><strong>Service Class:</strong> {qualification.serviceClass}</div>
-                <div><strong>Max Download:</strong> {qualification.maxDownload} Mbps</div>
-                <div><strong>Max Upload:</strong> {qualification.maxUpload} Mbps</div>
-                <div><strong>Bandwidth Profile:</strong> {qualification.bandwidthProfile}</div>
-                <div><strong>SQ Reference:</strong> {qualification.sqReference}</div>
-              </div>
-            </AlertDescription>
-          </Alert>
+          <div className="p-3 bg-muted/50 rounded-lg text-center text-muted-foreground">
+            <Wifi className="h-6 w-6 mx-auto mb-2 opacity-50" />
+            <div className="text-sm">No plan selected</div>
+          </div>
         )}
 
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setCurrentStep("address")} data-testid="button-back-address">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
-          {qualification && (
-            <Button onClick={() => setCurrentStep("details")} data-testid="button-continue-details">
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+        {/* Router */}
+        {selectedRouter && selectedRouter !== "byo" && (
+          <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+            <Router className="h-5 w-5 text-muted-foreground" />
+            <div className="flex-1">
+              <div className="text-sm font-medium">{getSelectedRouterDetails()?.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {getSelectedRouterDetails()?.commitment ? `${getSelectedRouterDetails()?.commitment}-month commitment` : "No commitment"}
+              </div>
+            </div>
+            <div className="text-sm font-medium text-green-600">FREE</div>
+          </div>
+        )}
+
+        {/* Address */}
+        {coverageResult && (
+          <div className="flex items-start gap-3 p-3 border rounded-lg">
+            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div className="flex-1">
+              <div className="text-sm">{coverageResult.normalizedAddress}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="text-xs">
+                  {coverageResult.technology}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Separator />
+
+        {/* Promo Code */}
+        <div>
+          <Label className="text-sm mb-2 block">Promo code</Label>
+          {promoApplied ? (
+            <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                <Tag className="h-4 w-4" />
+                <span className="text-sm font-medium">{promoCode}</span>
+                <span className="text-xs">(-${promoDiscount}/mth)</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleRemovePromo}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                data-testid="button-remove-promo"
+              >
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter code"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="text-sm"
+                data-testid="input-promo-code"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleApplyPromo}
+                disabled={!promoCode}
+                data-testid="button-apply-promo"
+              >
+                Apply
+              </Button>
+            </div>
           )}
         </div>
+
+        <Separator />
+
+        {/* Totals */}
+        <div className="space-y-2">
+          {promoApplied && selectedPlan && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Promo discount</span>
+              <span>-${promoDiscount}/mth</span>
+            </div>
+          )}
+          <div className="flex justify-between font-semibold text-lg">
+            <span>Total monthly cost</span>
+            <span>${getMonthlyTotal()}/mth</span>
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Total min cost</span>
+            <span>${getMonthlyTotal()}</span>
+          </div>
+        </div>
+
+        {/* NBN Identifiers */}
+        {qualification && (
+          <>
+            <Separator />
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">LOC ID</span>
+                <span className="font-mono">{qualification.locId}</span>
+              </div>
+              {qualification.csaId && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">CSA ID</span>
+                  <span className="font-mono">{qualification.csaId}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">SQ Reference</span>
+                <span className="font-mono">{qualification.sqReference}</span>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
 
+  // Mobile Order Summary (Collapsible)
+  const renderMobileOrderSummary = () => (
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg z-50">
+      <Collapsible open={showMobileSummary} onOpenChange={setShowMobileSummary}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              <span className="font-medium">Order summary</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-lg">${getMonthlyTotal()}/mth</span>
+              {showMobileSummary ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+            </div>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="px-4 pb-4 space-y-3 max-h-64 overflow-y-auto">
+            {selectedPlan && (
+              <div className="flex justify-between items-center py-2 border-t">
+                <div>
+                  <div className="font-medium">{selectedPlan.name}</div>
+                  <div className="text-xs text-muted-foreground">{selectedPlan.speed} Mbps</div>
+                </div>
+                <div className="font-bold">${selectedPlan.price}/mth</div>
+              </div>
+            )}
+            {promoApplied && (
+              <div className="flex justify-between text-green-600 text-sm">
+                <span>Promo discount</span>
+                <span>-${promoDiscount}/mth</span>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+
+  // Step 1: Plan Selection
+  const renderPlanStep = () => {
+    const availablePlans = getAvailablePlans();
+
+    return (
+      <div className="space-y-6">
+        {/* Address Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Service Address
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AddressSearch
+              value={address}
+              onChange={setAddress}
+              onSearch={() => handleCheckCoverage()}
+              isSearching={isCheckingCoverage || isQualifying}
+              placeholder="Enter your street address..."
+              buttonText={isCheckingCoverage ? "Checking..." : "Check Address"}
+              inputId="service-address"
+            />
+            
+            {coverageResult && (
+              <div className="mt-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-green-800 dark:text-green-300">
+                      NBN Available at this address
+                    </div>
+                    <div className="text-sm text-green-700 dark:text-green-400 mt-1">
+                      {coverageResult.technology} • Max speed: {coverageResult.maxTier}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Plan Selection */}
+        {coverageResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Choose Your Plan
+              </CardTitle>
+              <CardDescription>
+                All plans include unlimited data with no lock-in contracts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                {availablePlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-primary/50 ${
+                      selectedPlan?.id === plan.id 
+                        ? "border-primary bg-primary/5" 
+                        : "border-muted"
+                    }`}
+                    onClick={() => handlePlanSelect(plan)}
+                    data-testid={`plan-option-${plan.id}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          selectedPlan?.id === plan.id 
+                            ? "border-primary bg-primary" 
+                            : "border-muted-foreground"
+                        }`}>
+                          {selectedPlan?.id === plan.id && (
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-bold text-lg">{plan.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {plan.speed} Mbps / {plan.upload} Mbps upload
+                          </div>
+                          {plan.typicalEvening && (
+                            <div className="text-xs text-muted-foreground">
+                              Typical evening speed: {plan.typicalEvening} Mbps
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">${plan.price}</div>
+                        <div className="text-sm text-muted-foreground">/mth</div>
+                      </div>
+                    </div>
+                    {plan.speed >= 1000 && (
+                      <Badge className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500">
+                        Ultrafast
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Router Selection */}
+        {selectedPlan && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Router className="h-5 w-5" />
+                Router Options
+              </CardTitle>
+              <CardDescription>
+                Get a free router with your plan or bring your own
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={selectedRouter} onValueChange={setSelectedRouter}>
+                <div className="grid gap-3">
+                  {ROUTER_OPTIONS.map((router) => (
+                    <div
+                      key={router.id}
+                      className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                        selectedRouter === router.id 
+                          ? "border-primary bg-primary/5" 
+                          : "border-muted hover:border-primary/30"
+                      }`}
+                      onClick={() => setSelectedRouter(router.id)}
+                    >
+                      <RadioGroupItem value={router.id} id={router.id} />
+                      <div className="flex-1">
+                        <Label htmlFor={router.id} className="font-medium cursor-pointer">
+                          {router.name}
+                        </Label>
+                        <div className="text-sm text-muted-foreground">{router.description}</div>
+                        {router.commitment && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {router.commitment}-month commitment required
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-600">
+                          {router.price === 0 ? "FREE" : `$${router.price}`}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Continue Button */}
+        <div className="flex justify-end">
+          <Button 
+            size="lg" 
+            onClick={() => setCurrentStep("details")}
+            disabled={!selectedPlan || !coverageResult}
+            className="bg-gradient-brand"
+            data-testid="button-continue-details"
+          >
+            Continue to Your Details
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Step 2: Details
   const renderDetailsStep = () => (
     <Card>
       <CardHeader>
@@ -492,7 +838,7 @@ export default function SignupWizard() {
           Enter your contact information for the service installation
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="contactName">Full Name *</Label>
@@ -539,7 +885,7 @@ export default function SignupWizard() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="preferredDate">Preferred Connection Date (Optional)</Label>
+            <Label htmlFor="preferredDate">Preferred Connection Date</Label>
             <div className="relative">
               <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -557,107 +903,38 @@ export default function SignupWizard() {
 
         <Separator />
 
-        <div className="bg-muted/50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Building2 className="h-4 w-4" />
-            <strong>Service Address</strong>
-          </div>
-          <p className="text-sm text-muted-foreground">{qualification?.address || coverageResult?.normalizedAddress}</p>
-        </div>
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Service Address</AlertTitle>
+          <AlertDescription>
+            {coverageResult?.normalizedAddress || address}
+          </AlertDescription>
+        </Alert>
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setCurrentStep("qualification")} data-testid="button-back-qualification">
+          <Button variant="outline" onClick={() => setCurrentStep("plan")} data-testid="button-back-plan">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button onClick={handleDetailsSubmit} data-testid="button-continue-plan">
-            Continue to Plan Selection <ArrowRight className="ml-2 h-4 w-4" />
+          <Button onClick={handleDetailsSubmit} className="bg-gradient-brand" data-testid="button-continue-account">
+            Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 
-  const renderPlanStep = () => {
-    const availablePlans = getAvailablePlans();
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Select Your Plan
-          </CardTitle>
-          <CardDescription>
-            Choose a plan that suits your needs. All plans include unlimited data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availablePlans.map((plan) => (
-              <Card 
-                key={plan.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
-                  selectedPlan?.id === plan.id ? "border-primary ring-2 ring-primary" : ""
-                }`}
-                onClick={() => handlePlanSelect(plan)}
-                data-testid={`card-plan-${plan.id}`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold">{plan.name}</h3>
-                    {selectedPlan?.id === plan.id && (
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
-                  <div className="text-3xl font-bold text-primary mb-1">
-                    ${plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {plan.speed} Mbps down / {plan.upload} Mbps up
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {selectedPlan && (
-            <Alert>
-              <Zap className="h-4 w-4" />
-              <AlertTitle>Selected: {selectedPlan.name}</AlertTitle>
-              <AlertDescription>
-                ${selectedPlan.price}/month - {selectedPlan.speed} Mbps download, {selectedPlan.upload} Mbps upload
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setCurrentStep("details")} data-testid="button-back-details">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-            <Button 
-              onClick={() => setCurrentStep(user ? "payment" : "account")} 
-              disabled={!selectedPlan}
-              data-testid="button-continue-payment"
-            >
-              {user ? "Continue to Payment" : "Create Account"} <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
+  // Step 3: Account
   const renderAccountStep = () => (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lock className="h-5 w-5" />
-          {authMode === "signup" ? "Create Your Account" : "Log In to Your Account"}
+          {authMode === "signup" ? "Create Your Account" : "Log In"}
         </CardTitle>
         <CardDescription>
           {authMode === "signup" 
-            ? "Create an account to complete your order and manage your service"
-            : "Log in with your existing account to continue"
+            ? "Create an account to manage your service"
+            : "Log in with your existing account"
           }
         </CardDescription>
       </CardHeader>
@@ -727,22 +1004,10 @@ export default function SignupWizard() {
               />
             </div>
           )}
-
-          {authMode === "signup" && (
-            <Alert>
-              <User className="h-4 w-4" />
-              <AlertTitle>Account Details</AlertTitle>
-              <AlertDescription>
-                Your account will be created with:<br />
-                <strong>Name:</strong> {contactName}<br />
-                <strong>Email:</strong> {contactEmail}
-              </AlertDescription>
-            </Alert>
-          )}
         </div>
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setCurrentStep("plan")} data-testid="button-back-plan-from-account">
+          <Button variant="outline" onClick={() => setCurrentStep("details")} data-testid="button-back-details">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button 
@@ -752,7 +1017,7 @@ export default function SignupWizard() {
             data-testid="button-create-account"
           >
             {isCreatingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            {authMode === "signup" ? "Create Account & Continue" : "Log In & Continue"}
+            {authMode === "signup" ? "Create Account" : "Log In"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -760,72 +1025,88 @@ export default function SignupWizard() {
     </Card>
   );
 
+  // Step 4: Payment
   const renderPaymentStep = () => (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Order Summary & Payment
+          Review & Pay
         </CardTitle>
         <CardDescription>
           Review your order and proceed to secure payment
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+        {/* Order Summary */}
+        <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+          <div className="flex justify-between items-center">
             <div>
-              <h3 className="font-bold">{selectedPlan?.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedPlan?.speed} Mbps download / {selectedPlan?.upload} Mbps upload
-              </p>
+              <div className="font-bold text-lg">{selectedPlan?.name}</div>
+              <div className="text-sm text-muted-foreground">
+                {selectedPlan?.speed} Mbps / {selectedPlan?.upload} Mbps upload
+              </div>
             </div>
-            <div className="text-2xl font-bold">${selectedPlan?.price}/mo</div>
+            <div className="text-2xl font-bold">${selectedPlan?.price}/mth</div>
           </div>
+          
+          {promoApplied && (
+            <div className="flex justify-between text-green-600">
+              <span>Promo discount (6 months)</span>
+              <span>-${promoDiscount}/mth</span>
+            </div>
+          )}
+          
+          <Separator />
+          
+          <div className="flex justify-between font-bold text-lg">
+            <span>Monthly Total</span>
+            <span>${getMonthlyTotal()}/mth</span>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <strong>Service Address:</strong>
-              <p className="text-muted-foreground">{qualification?.address || coverageResult?.normalizedAddress}</p>
-            </div>
-            <div>
-              <strong>Technology:</strong>
-              <p className="text-muted-foreground">{qualification?.technology || coverageResult?.technology}</p>
-            </div>
-            <div>
-              <strong>LOC ID:</strong>
-              <p className="text-muted-foreground">{qualification?.locId || "Pending"}</p>
-            </div>
-            <div>
-              <strong>SQ Reference:</strong>
-              <p className="text-muted-foreground">{qualification?.sqReference || "Pending"}</p>
-            </div>
-            <div>
-              <strong>Contact:</strong>
-              <p className="text-muted-foreground">{contactName}</p>
-            </div>
-            <div>
-              <strong>Phone:</strong>
-              <p className="text-muted-foreground">{contactPhone}</p>
-            </div>
+        {/* Service Details */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div className="text-muted-foreground">Service Address</div>
+            <div className="font-medium">{coverageResult?.normalizedAddress}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground">Technology</div>
+            <div className="font-medium">{qualification?.technology || coverageResult?.technology}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground">Contact</div>
+            <div className="font-medium">{contactName}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground">Phone</div>
+            <div className="font-medium">{contactPhone}</div>
           </div>
         </div>
 
         <Separator />
 
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-          <h4 className="font-semibold mb-2">What happens next?</h4>
-          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>Complete secure payment via Stripe</li>
-            <li>Receive order confirmation email</li>
-            <li>NBN connection provisioned (5-7 business days)</li>
-            <li>AVC ID assigned when service is active</li>
-            <li>Welcome pack with modem instructions sent</li>
-          </ol>
-        </div>
+        {/* What happens next */}
+        <Alert>
+          <FileText className="h-4 w-4" />
+          <AlertTitle>What happens next?</AlertTitle>
+          <AlertDescription>
+            <ol className="list-decimal list-inside text-sm space-y-1 mt-2">
+              <li>Complete secure payment via Stripe</li>
+              <li>Receive order confirmation email</li>
+              <li>NBN connection provisioned (5-7 business days)</li>
+              <li>Router shipped to your address</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setCurrentStep("account")} data-testid="button-back-account">
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentStep(user ? "details" : "account")} 
+            data-testid="button-back-from-payment"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button 
@@ -836,51 +1117,7 @@ export default function SignupWizard() {
             data-testid="button-pay-now"
           >
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Pay ${selectedPlan?.price}/mo Now
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderConfirmationStep = () => (
-    <Card>
-      <CardHeader className="text-center">
-        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
-        </div>
-        <CardTitle>Order Submitted Successfully!</CardTitle>
-        <CardDescription>
-          Your NBN service order has been submitted
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {orderResult && (
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div><strong>Order Reference:</strong></div>
-              <div>{orderResult.orderReference}</div>
-              <div><strong>NBN Order ID:</strong></div>
-              <div>{orderResult.nbnOrderId || "Processing"}</div>
-              <div><strong>AVC ID:</strong></div>
-              <div>{orderResult.avcId || "Assigned upon activation"}</div>
-              <div><strong>Estimated Connection:</strong></div>
-              <div>{orderResult.estimatedConnectionDate ? new Date(orderResult.estimatedConnectionDate).toLocaleDateString() : "5-7 business days"}</div>
-            </div>
-          </div>
-        )}
-
-        <Alert>
-          <Mail className="h-4 w-4" />
-          <AlertTitle>Check Your Email</AlertTitle>
-          <AlertDescription>
-            We've sent a confirmation to {contactEmail} with your order details and next steps.
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex justify-center">
-          <Button onClick={() => setLocation("/dashboard")} data-testid="button-go-dashboard">
-            Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+            Pay ${getMonthlyTotal()}/mth Now
           </Button>
         </div>
       </CardContent>
@@ -889,26 +1126,47 @@ export default function SignupWizard() {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case "address": return renderAddressStep();
-      case "qualification": return renderQualificationStep();
-      case "details": return renderDetailsStep();
       case "plan": return renderPlanStep();
+      case "details": return renderDetailsStep();
       case "account": return renderAccountStep();
       case "payment": return renderPaymentStep();
-      case "confirmation": return renderConfirmationStep();
-      default: return renderAddressStep();
+      default: return renderPlanStep();
     }
   };
 
   return (
-    <div className="container py-8 px-4 md:px-6 max-w-4xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Sign Up for BroNET</h1>
-        <p className="text-muted-foreground">Complete the steps below to get connected to fast NBN internet</p>
+    <div className="min-h-screen bg-muted/30 pb-24 lg:pb-8">
+      {/* Header */}
+      <div className="bg-background border-b sticky top-0 z-40">
+        <div className="container py-4 px-4 md:px-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">Sign Up for BroNET</h1>
+            <a href="tel:1800123456" className="text-sm text-muted-foreground hover:text-foreground">
+              <Phone className="inline h-4 w-4 mr-1" />
+              1800 123 456
+            </a>
+          </div>
+        </div>
       </div>
 
-      {renderStepIndicator()}
-      {renderCurrentStep()}
+      <div className="container py-6 px-4 md:px-6">
+        {renderStepIndicator()}
+        
+        <div className="grid lg:grid-cols-[1fr,380px] gap-6">
+          {/* Main Content */}
+          <div>
+            {renderCurrentStep()}
+          </div>
+
+          {/* Order Summary Sidebar (Desktop) */}
+          <div className="hidden lg:block">
+            {renderOrderSummary()}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Order Summary */}
+      {renderMobileOrderSummary()}
     </div>
   );
 }
