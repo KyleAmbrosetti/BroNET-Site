@@ -218,8 +218,9 @@ export async function sendNotifyMeConfirmation(toEmail: string): Promise<boolean
     });
     
     return true;
-  } catch (error) {
-    console.error('Failed to send confirmation email:', error);
+  } catch (error: any) {
+    console.error('Failed to send confirmation email:', error?.message || error);
+    console.error('Full error:', JSON.stringify(error, null, 2));
     return false;
   }
 }
