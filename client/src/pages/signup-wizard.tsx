@@ -70,7 +70,6 @@ type RouterOption = {
 
 const ROUTER_OPTIONS: RouterOption[] = [
   { id: "eero", name: "eero WiFi Router", description: "Whole-home mesh WiFi system", price: 149, commitment: 24 },
-  { id: "premium", name: "Premium WiFi 6 Router", description: "High-performance mesh-ready router", price: 0, commitment: 36 },
   { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
 ];
 
