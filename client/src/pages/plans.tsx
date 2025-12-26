@@ -30,33 +30,20 @@ export default function Plans() {
 
   const plans = [
     { 
-      name: "Basic 25", 
-      speed: 25, 
-      upload: 10, 
-      price: 59, 
-      promoPrice: 45,
-      typical: "25 Mbps",
-      typicalUpload: "8.5",
-      tier: 'basic' as const,
-      freeModem: false
-    },
-    { 
-      name: "Family 50", 
+      name: "NBN 50", 
       speed: 50, 
       upload: 20, 
       price: 69, 
-      promoPrice: 55,
       typical: "50 Mbps",
       typicalUpload: "17",
       tier: 'basic' as const,
       freeModem: false
     },
     { 
-      name: "Family Max", 
+      name: "NBN 100", 
       speed: 100, 
       upload: 20, 
-      price: 79, 
-      promoPrice: 65,
+      price: 89, 
       typical: "98 Mbps",
       typicalUpload: "18",
       tier: 'power' as const,
@@ -64,34 +51,31 @@ export default function Plans() {
       freeModem: true
     },
     { 
-      name: "Creator", 
+      name: "NBN 250", 
       speed: 250, 
       upload: 25, 
-      price: 99, 
-      promoPrice: 79,
+      price: 109, 
       typical: "245 Mbps",
       typicalUpload: "23",
       tier: 'power' as const,
       freeModem: true
     },
     { 
-      name: "Lightspeed", 
+      name: "NBN 1000", 
       speed: 1000, 
       upload: 50, 
-      price: 119, 
-      promoPrice: 95,
-      typical: "860 Mbps",
+      price: 129, 
+      typical: "850 Mbps",
       typicalUpload: "45",
       tier: 'ultra' as const,
       freeModem: true
     },
     { 
-      name: "Hyperspeed", 
+      name: "NBN 2000", 
       speed: 2000, 
       upload: 200, 
-      price: 159, 
-      promoPrice: 139,
-      typical: "1700 Mbps",
+      price: 155, 
+      typical: "1800 Mbps",
       typicalUpload: "170",
       tier: 'ultra' as const,
       badge: "New",
@@ -101,42 +85,38 @@ export default function Plans() {
 
   const fixedWirelessPlans = [
     { 
-      name: "Wireless 25", 
+      name: "Fixed Wireless 25", 
       speed: 25, 
       upload: 5, 
-      price: 55, 
-      promoPrice: 45,
+      price: 59, 
       typical: "25 Mbps",
       tier: 'basic' as const,
       freeModem: false
     },
     { 
-      name: "Wireless 50", 
+      name: "Fixed Wireless 50", 
       speed: 50, 
       upload: 10, 
-      price: 65, 
-      promoPrice: 55,
+      price: 69, 
       typical: "47 Mbps",
       tier: 'basic' as const,
       popular: true,
       freeModem: false
     },
     { 
-      name: "Wireless 75", 
+      name: "Fixed Wireless 75", 
       speed: 75, 
       upload: 10, 
-      price: 75, 
-      promoPrice: 65,
+      price: 79, 
       typical: "70 Mbps",
       tier: 'power' as const,
       freeModem: true
     },
     { 
-      name: "Wireless Plus", 
+      name: "Fixed Wireless Plus", 
       speed: 100, 
       upload: 20, 
-      price: 85, 
-      promoPrice: 75,
+      price: 89, 
       typical: "90 Mbps",
       tier: 'power' as const,
       badge: "New",
@@ -227,13 +207,10 @@ export default function Plans() {
           <Badge variant="secondary" className="mb-4">No lock-in contracts</Badge>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
             High-speed NBN plans from just{" "}
-            <span className="text-primary">$45/mth</span>^
+            <span className="text-primary">$69/mth</span>
           </h1>
-          <p className="text-lg text-muted-foreground mb-2">
+          <p className="text-lg text-muted-foreground mb-8">
             Unlimited NBN plans with no lock-in contracts for fast streaming, downloads, and online gaming.
-          </p>
-          <p className="text-sm text-muted-foreground mb-8">
-            ^New customers only. Discount applies for the first 6 months. T&Cs apply.
           </p>
           
           {/* Check Availability Section */}
@@ -420,32 +397,32 @@ export default function Plans() {
               <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="font-semibold">Feature</TableHead>
-                  <TableHead className="font-semibold text-center">Basic 25</TableHead>
-                  <TableHead className="font-semibold text-center">Family 50</TableHead>
-                  <TableHead className="font-semibold text-center">Family Max</TableHead>
-                  <TableHead className="font-semibold text-center">Lightspeed</TableHead>
+                  <TableHead className="font-semibold text-center">NBN 50</TableHead>
+                  <TableHead className="font-semibold text-center">NBN 100</TableHead>
+                  <TableHead className="font-semibold text-center">NBN 250</TableHead>
+                  <TableHead className="font-semibold text-center">NBN 1000</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
                   <TableCell className="font-medium">Price/month</TableCell>
-                  <TableCell className="text-center">$45 → $59</TableCell>
-                  <TableCell className="text-center">$55 → $69</TableCell>
-                  <TableCell className="text-center">$65 → $79</TableCell>
-                  <TableCell className="text-center">$95 → $119</TableCell>
+                  <TableCell className="text-center">$69</TableCell>
+                  <TableCell className="text-center">$89</TableCell>
+                  <TableCell className="text-center">$109</TableCell>
+                  <TableCell className="text-center">$129</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Download Speed</TableCell>
-                  <TableCell className="text-center">25 Mbps</TableCell>
                   <TableCell className="text-center">50 Mbps</TableCell>
                   <TableCell className="text-center">100 Mbps</TableCell>
+                  <TableCell className="text-center">250 Mbps</TableCell>
                   <TableCell className="text-center">1000 Mbps</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Upload Speed</TableCell>
-                  <TableCell className="text-center">10 Mbps</TableCell>
                   <TableCell className="text-center">20 Mbps</TableCell>
                   <TableCell className="text-center">20 Mbps</TableCell>
+                  <TableCell className="text-center">25 Mbps</TableCell>
                   <TableCell className="text-center">50 Mbps</TableCell>
                 </TableRow>
                 <TableRow>
@@ -480,7 +457,7 @@ export default function Plans() {
             </Table>
           </div>
           <p className="text-center text-xs text-muted-foreground mt-4">
-            *Free modem when you stay connected for 36 months. Pricing shown is promotional (first 6 months) → ongoing.
+            *Free modem when you stay connected for 36 months.
           </p>
         </div>
       </div>
