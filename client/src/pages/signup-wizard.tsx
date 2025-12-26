@@ -69,7 +69,7 @@ type RouterOption = {
 };
 
 const ROUTER_OPTIONS: RouterOption[] = [
-  { id: "free", name: "Free BroNET Router", description: "Pre-configured dual-band WiFi router", price: 0, commitment: 24 },
+  { id: "eero", name: "eero WiFi Router", description: "Whole-home mesh WiFi system", price: 149, commitment: 24 },
   { id: "premium", name: "Premium WiFi 6 Router", description: "High-performance mesh-ready router", price: 0, commitment: 36 },
   { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
 ];
@@ -99,7 +99,7 @@ export default function SignupWizard() {
   const [stripeProducts, setStripeProducts] = useState<any[]>([]);
   
   // Router selection
-  const [selectedRouter, setSelectedRouter] = useState<string>("free");
+  const [selectedRouter, setSelectedRouter] = useState<string>("byo");
   
   // Promo code
   const [promoCode, setPromoCode] = useState("");
@@ -768,7 +768,7 @@ export default function SignupWizard() {
                 Router Options
               </CardTitle>
               <CardDescription>
-                Get a free router with your plan or bring your own
+                Add an eero mesh system or bring your own router
               </CardDescription>
             </CardHeader>
             <CardContent>
