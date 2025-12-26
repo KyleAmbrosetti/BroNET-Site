@@ -170,14 +170,27 @@ The client supports high-speed plans (>1000 Mbps) with Gen 2 NTD upgrades:
 3. Legacy NBN RSP API (if configured)
 4. Simulated responses (default)
 
-### Multi-Step Signup Wizard Flow
-1. Address - Enter and verify service address
-2. Qualification - NBN service qualification
-3. Details - Contact information
-4. Plan - Select internet plan
-5. Account - Create account or login (inline)
-6. Payment - Stripe checkout with card or BECS direct debit
-7. Confirmation - Order reference and NBN identifiers
+### Multi-Step Signup Wizard Flow (Superloop-inspired)
+The signup wizard uses a modern 4-step flow with two-column layout:
+
+**Steps:**
+1. Plan - Combined address verification + plan selection + router selection
+2. Connect - Contact details (name, email, phone, preferred date)
+3. Account - Create new account or login to existing
+4. Payment - Order review and Stripe checkout
+
+**UI Features:**
+- Two-column layout: Main content left, sticky order summary sidebar right
+- Order summary shows: selected plan, router option, address, technology, promo code field, totals
+- Radio-button style plan cards with typical evening speeds
+- Router options: Free BroNET Router (24mo), Premium WiFi 6 (36mo), BYO
+- Promo code support with apply/remove functionality
+- Mobile-responsive with collapsible bottom sheet for order summary
+- Defensive guards prevent navigation without required selections
+
+**Reusable Components:**
+- `AddressSearch` component with autocomplete, keyboard navigation, and debounced API calls
+- Used across plans page, signup wizard, and coverage page
 
 ### Environment Variables Required
 - `DATABASE_URL` - PostgreSQL connection string
