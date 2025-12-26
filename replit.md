@@ -153,6 +153,7 @@ The client supports high-speed plans (>1000 Mbps) with Gen 2 NTD upgrades:
 
 **Methods Available**:
 - `searchLocation(address)` / `searchLocationStructured(request)` - Find NBN locations
+- `searchLocationEnhanced(address)` - Enhanced search returning parsed address components (suburb, state, postcode)
 - `qualifyLocation(locationId)` - Get service qualification with Gen 2 NTD data
 - `createOrder(order)` - Create service order with ntdOption, transfer fields
 - `getOrder(orderId)` / `listOrders(status)` - Order management

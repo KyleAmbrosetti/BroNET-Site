@@ -234,7 +234,8 @@ export class NbnService {
     }
 
     try {
-      const locations = await this.superloopClient.searchLocation(address);
+      // Use enhanced search to get parsed address components
+      const locations = await this.superloopClient.searchLocationEnhanced(address);
       
       if (!locations || locations.length === 0) {
         throw new Error("No locations found for address");
@@ -246,14 +247,15 @@ export class NbnService {
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + 30);
 
+      // Use qualification data as primary source, with location data as fallback
       const result: ServiceQualificationResult = {
-        locId: qualification.locId || location.locId,
+        locId: qualification.locId || location.id,
         csaId: location.id,
-        address: location.address,
+        address: location.address || address,
         postcode: location.postcode || postcode,
         suburb: location.suburb || suburb,
         state: location.state || state,
-        technology: qualification.technologyType || location.technologyType,
+        technology: qualification.technologyType || technology,
         maxDownload: qualification.maxDownload,
         maxUpload: qualification.maxUpload,
         bandwidthProfile: `TC${qualification.serviceClass}/${qualification.maxDownload}/${qualification.maxUpload}`,

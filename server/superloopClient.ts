@@ -31,6 +31,18 @@ export interface LocationSearchResult {
   description: string;
 }
 
+// Enhanced location result with parsed address components
+export interface EnhancedLocationResult {
+  id: string;
+  description: string;
+  address: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+  locId?: string;
+  technologyType?: string;
+}
+
 // Fee and Charge Types
 export interface MoneyAmount {
   amount: string;
@@ -494,10 +506,62 @@ export class SuperloopClient {
     };
   }
 
+  // Parse description into address components
+  // Format: "123 MAIN ST, SUBURB NSW 2000" or "UNIT 1, 123 MAIN ST, SUBURB NSW 2000"
+  private parseDescription(description: string): { address: string; suburb?: string; state?: string; postcode?: string } {
+    const parts = description.split(',').map(p => p.trim());
+    const address = description;
+    
+    // Last part usually contains suburb, state, postcode
+    const lastPart = parts[parts.length - 1] || '';
+    const match = lastPart.match(/^(.+?)\s+([A-Z]{2,3})\s+(\d{4})$/i);
+    
+    if (match) {
+      return {
+        address,
+        suburb: match[1].trim(),
+        state: match[2].toUpperCase(),
+        postcode: match[3]
+      };
+    }
+    
+    // Try to extract state and postcode from last part
+    const statePostcodeMatch = lastPart.match(/([A-Z]{2,3})\s*(\d{4})/i);
+    if (statePostcodeMatch) {
+      const suburb = parts.length > 1 ? parts[parts.length - 2] : undefined;
+      return {
+        address,
+        suburb,
+        state: statePostcodeMatch[1].toUpperCase(),
+        postcode: statePostcodeMatch[2]
+      };
+    }
+    
+    return { address };
+  }
+
   // Location search with simple address string (legacy compatibility)
   async searchLocation(address: string): Promise<LocationSearchResult[]> {
     const parsed = this.parseAddress(address);
     return this.searchLocationStructured(parsed);
+  }
+
+  // Location search with enhanced results including parsed address components
+  async searchLocationEnhanced(address: string): Promise<EnhancedLocationResult[]> {
+    const parsed = this.parseAddress(address);
+    const results = await this.searchLocationStructured(parsed);
+    
+    return results.map(result => {
+      const parsedDesc = this.parseDescription(result.description);
+      return {
+        id: result.id,
+        description: result.description,
+        address: result.description,
+        suburb: parsedDesc.suburb,
+        state: parsedDesc.state,
+        postcode: parsedDesc.postcode,
+      };
+    });
   }
 
   // Location search with structured address (recommended)
