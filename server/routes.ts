@@ -701,11 +701,17 @@ export async function registerRoutes(
       // Send confirmation email to subscriber and admin notification
       const { sendNotifyMeConfirmation, sendAdminNotification } = await import("./emailService");
       
-      // Send emails in parallel (don't await - let them send in background)
-      Promise.all([
-        sendNotifyMeConfirmation(email),
-        sendAdminNotification(email, signupSource)
-      ]).catch(err => console.error("Email sending error:", err));
+      // Send emails and log results
+      console.log(`[Email] Attempting to send emails to ${email}...`);
+      try {
+        const [confirmResult, adminResult] = await Promise.all([
+          sendNotifyMeConfirmation(email),
+          sendAdminNotification(email, signupSource)
+        ]);
+        console.log(`[Email] Results - Confirmation: ${confirmResult}, Admin: ${adminResult}`);
+      } catch (emailErr) {
+        console.error("[Email] Sending error:", emailErr);
+      }
 
       res.status(201).json({ message: "You're on the list!", success: true });
     } catch (error: any) {
