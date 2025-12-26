@@ -692,10 +692,20 @@ export async function registerRoutes(
         return res.json({ message: "You're already on the list!", alreadySubscribed: true });
       }
 
+      const signupSource = source || "coming-soon";
       await storage.createEmailSignup({
         email,
-        source: source || "coming-soon",
+        source: signupSource,
       });
+
+      // Send confirmation email to subscriber and admin notification
+      const { sendNotifyMeConfirmation, sendAdminNotification } = await import("./emailService");
+      
+      // Send emails in parallel (don't await - let them send in background)
+      Promise.all([
+        sendNotifyMeConfirmation(email),
+        sendAdminNotification(email, signupSource)
+      ]).catch(err => console.error("Email sending error:", err));
 
       res.status(201).json({ message: "You're on the list!", success: true });
     } catch (error: any) {
