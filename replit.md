@@ -126,9 +126,43 @@ The application integrates with Aussie Broadband's Nitrogen platform for wholesa
 - **Features**: Auto/manual appointment booking, infrastructure upgrades, service configuration
 
 ### Superloop Connect API Integration (Secondary)
-The application also supports Superloop's Connect API:
-- **Client**: `server/superloopClient.ts` - OAuth 2.0 JWT authentication
-- **Capabilities**: Location search, service qualification, order creation, appointment booking
+The application integrates with Superloop's Connect API (API Version 8) for wholesale NBN operations:
+- **Client**: `server/superloopClient.ts` - OAuth 2.0 JWT assertion authentication
+- **Documentation**: https://connect-api-doc.superloop.com/
+
+**Core Capabilities**:
+- Location search with structured address parsing (streetNumber, streetName, streetType, suburb, state)
+- Service qualification with full NBN data
+- Order creation with comprehensive options
+- Appointment management
+- Service management (plan changes, cancellations, modulation)
+
+**September 2025 Updates - Generation 2 NTD Support**:
+The client supports high-speed plans (>1000 Mbps) with Gen 2 NTD upgrades:
+- `generationTwoNtds` - Array of available NTD upgrade options
+- `firstOrAdditionalNtdPlans` - Plans available when ordering first/additional NTD
+- `generationOneNtdPlans` - Plans for existing Gen 1 NTDs (speed capped at 1000 Mbps)
+- `generationTwoNtdPlans` - All plans available for Gen 2 NTDs
+- `infrastructures[].remainingDownstreamBandwidth` - FTTP capacity checking
+- Two-step process for high-speed plans: Order ≤1000 Mbps, then plan change to >1000 Mbps
+
+**API Request/Response Pattern**:
+- POST to `/request` endpoint returns 201 with Location header
+- Poll Location URL until 200 (202 = in progress)
+- Supports asynchronous operations for complex workflows
+
+**Methods Available**:
+- `searchLocation(address)` / `searchLocationStructured(request)` - Find NBN locations
+- `qualifyLocation(locationId)` - Get service qualification with Gen 2 NTD data
+- `createOrder(order)` - Create service order with ntdOption, transfer fields
+- `getOrder(orderId)` / `listOrders(status)` - Order management
+- `getService(serviceId)` / `listServices()` - Service information
+- `getPlanChangeOptions(serviceId)` - Get available plan changes with NTD upgrade options
+- `changePlan(request)` - Request plan change with optional NTD upgrade
+- `qualifyAvc(avcId)` - AVC qualification for transfer orders
+- `modulateService(serviceId, action)` - Pause/resume service
+- `requestAppointmentSlots(orderId, dateFrom)` / `bookAppointment()` - Appointments
+- `cancelService(serviceId)` / `cancelOrder(orderId)` - Cancellations
 
 **Priority Order for NBN Operations:**
 1. Aussie Broadband Nitrogen (if configured)
