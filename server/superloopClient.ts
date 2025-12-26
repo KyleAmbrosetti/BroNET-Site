@@ -436,8 +436,13 @@ export class SuperloopClient {
   private async pollForResult<T>(location: string, maxAttempts: number = 30): Promise<T> {
     const token = await this.getAccessToken();
     
+    // Handle both absolute and relative URLs from Location header
+    const url = location.startsWith('http') 
+      ? location 
+      : `${this.config.baseUrl}${location.startsWith('/') ? '' : '/'}${location}`;
+    
     for (let i = 0; i < maxAttempts; i++) {
-      const response = await fetch(`${this.config.baseUrl}${location}`, {
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'X-API-VERSION': '8'
