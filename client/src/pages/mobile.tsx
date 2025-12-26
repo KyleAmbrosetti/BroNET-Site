@@ -140,9 +140,6 @@ export default function Mobile() {
               <Button size="lg" className="bg-gradient-brand" data-testid="button-view-plans">
                 View Plans
               </Button>
-              <Button size="lg" variant="outline" asChild data-testid="button-bring-number">
-                <Link href="/coverage">Bring Your Number</Link>
-              </Button>
             </div>
           </div>
         </div>
