@@ -1,9 +1,8 @@
 import { PlanCard } from "@/components/plan-card";
+import { AddressSearch } from "@/components/address-search";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, Radio, MapPin, Loader2, CheckCircle2, Wifi, Cable, Zap, Shield, Clock } from "lucide-react";
+import { Check, X, Radio, MapPin, CheckCircle2, Wifi, Cable, Zap, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
@@ -220,32 +219,14 @@ export default function Plans() {
                 <MapPin className="h-5 w-5 text-primary" />
                 <h3 className="font-semibold text-lg">Check your address for available NBN plans</h3>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  placeholder="Enter your street address..."
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCheckAvailability()}
-                  className="flex-1 h-12 text-base"
-                  disabled={isChecking}
-                  data-testid="input-check-address"
-                />
-                <Button 
-                  onClick={handleCheckAvailability}
-                  className="bg-gradient-brand border-0 h-12 px-8"
-                  disabled={isChecking}
-                  data-testid="button-check-availability"
-                >
-                  {isChecking ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    'Check Address'
-                  )}
-                </Button>
-              </div>
+              <AddressSearch
+                value={address}
+                onChange={setAddress}
+                onSearch={handleCheckAvailability}
+                isSearching={isChecking}
+                buttonText="Check Availability"
+                placeholder="Start typing your address..."
+              />
             </CardContent>
           </Card>
 
