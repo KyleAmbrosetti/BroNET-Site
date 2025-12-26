@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AddressSearch } from "@/components/address-search";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
 import { api } from "@/lib/api";
@@ -373,19 +374,14 @@ export default function SignupWizard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Input
-            placeholder="Enter your full address (e.g., 123 Main St, Sydney NSW 2000)"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="flex-1"
-            data-testid="input-address"
-          />
-          <Button onClick={handleCheckCoverage} disabled={isCheckingCoverage} data-testid="button-check-address">
-            {isCheckingCoverage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Check Address
-          </Button>
-        </div>
+        <AddressSearch
+          value={address}
+          onChange={setAddress}
+          onSearch={handleCheckCoverage}
+          isSearching={isCheckingCoverage}
+          placeholder="Start typing your address (e.g., 123 Main St, Sydney NSW 2000)"
+          buttonText="Check Address"
+        />
 
         {coverageResult && (
           <Alert className={coverageResult.available !== false ? "border-green-500" : "border-destructive"}>
