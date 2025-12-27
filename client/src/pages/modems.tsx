@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Home, Building2, Check, AlertCircle } from "lucide-react";
+import { Zap, Home, Building2, Check, ArrowRight } from "lucide-react";
 import eero7Image from "@assets/eero_7_1766481389429.jpg";
 import eeroPro7Image from "@assets/eero_pro_7_1766472837873.jpg";
 import eeroMax7Image from "@assets/eero-max-7_bc8e_1766481757902.jpg";
@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "wouter";
 
 const products = [
   {
@@ -45,11 +45,9 @@ const products = [
       "Covers up to 200 sqm",
       "Supports NBN 1000 plans",
       "Easy mesh expansion",
-      "Built-in security",
-      "Works with Alexa",
     ],
     ideal: "Small to medium homes (2-4 bedrooms)",
-    maxSpeed: "NBN 1000 (Home Fast)",
+    maxSpeed: "NBN 1000",
     badge: "Popular",
     badgeVariant: "default" as const,
     image: eero7Image,
@@ -63,16 +61,14 @@ const products = [
     description: "For power users and large homes. Maximum performance with support for NBN's fastest plans.",
     features: [
       "Wi-Fi 7 (802.11be)",
-      "Tri-band (2.4GHz, 5GHz, 6GHz)",
       "Up to 4.3 Gbps speeds",
       "Covers up to 300 sqm",
       "Supports NBN 2000 plans",
       "2.5 GbE ethernet port",
       "Advanced mesh networking",
-      "Premium support included",
     ],
     ideal: "Large homes & power users (4+ bedrooms)",
-    maxSpeed: "NBN 2000 (Home Ultrafast)",
+    maxSpeed: "NBN 2000",
     badge: "Best Performance",
     badgeVariant: "secondary" as const,
     image: eeroPro7Image,
@@ -83,19 +79,17 @@ const products = [
     subtitle: "Ultimate quad-band Wi-Fi 7 mesh router",
     price: "$820",
     priceNote: "Starting from",
-    description: "The ultimate mesh router for demanding users. Quad-band Wi-Fi 7 with 10 GbE support for maximum performance.",
+    description: "The ultimate mesh router for demanding users. Quad-band Wi-Fi 7 with 10 GbE support.",
     features: [
       "Wi-Fi 7 (802.11be)",
-      "Quad-band (2.4GHz, dual 5GHz, 6GHz)",
+      "Quad-band technology",
       "Up to 11 Gbps aggregate speeds",
       "Covers up to 400 sqm",
-      "Supports NBN 2000+ plans",
-      "10 GbE + 2.5 GbE ethernet ports",
+      "10 GbE + 2.5 GbE ethernet",
       "Thread border router built-in",
-      "Priority support included",
     ],
     ideal: "Ultra-large homes & enthusiasts",
-    maxSpeed: "NBN 2000 (Home Ultrafast)",
+    maxSpeed: "NBN 2000+",
     badge: "Ultimate",
     badgeVariant: "destructive" as const,
     image: eeroMax7Image,
@@ -166,88 +160,89 @@ export default function ModemsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container py-12 px-4 max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 font-heading">
-            Premium Mesh Routers
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Upgrade your home network with eero Wi-Fi 7 mesh routers. Perfect for NBN plans up to 2000 Mbps.
-          </p>
+    <div className="min-h-screen">
+      {/* Hero Section - Superloop Style */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+              Fast hardware for<br />fast internet<span className="text-primary">_</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Our plans come with a free modem when you stay connected for 36 months. 
+              Choose from the Amazon eero range for whole-home Wi-Fi coverage.
+            </p>
+            <Button size="lg" className="bg-gradient-brand" asChild>
+              <Link href="/plans">
+                View Plans
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
+      </section>
 
-        <Alert className="mb-8 border-blue-500/50 bg-blue-500/10">
-          <AlertCircle className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-sm">
-            <strong>Note:</strong> eero is a third-party product. Availability and pricing may change. 
-            Contact us for current stock and delivery information.
-          </AlertDescription>
-        </Alert>
-
-        <div className="grid md:grid-cols-2 gap-8 mb-16 [&>*:last-child:nth-child(odd)]:md:col-span-2 [&>*:last-child:nth-child(odd)]:md:max-w-[calc(50%-1rem)] [&>*:last-child:nth-child(odd)]:md:mx-auto">
+      <div className="container px-4 md:px-6 pb-16">
+        {/* Product Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
           {products.map((product) => (
-            <Card key={product.id} className="relative" data-testid={`card-product-${product.id}`}>
+            <Card key={product.id} className="relative flex flex-col" data-testid={`card-product-${product.id}`}>
               {product.badge && (
                 <Badge 
                   variant={product.badgeVariant} 
-                  className="absolute top-4 right-4"
+                  className="absolute top-4 right-4 z-10"
                   data-testid={`badge-${product.id}`}
                 >
                   {product.badge}
                 </Badge>
               )}
               
-              <CardHeader>
-                <div className="h-48 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className={`h-full w-full object-cover ${product.id === 'eero-max-7' ? 'object-[center_60%]' : 'object-center'}`}
-                    data-testid={`image-${product.id}`}
-                  />
-                </div>
-                <CardTitle className="text-2xl font-heading" data-testid={`title-${product.id}`}>
+              <div className="h-48 bg-muted rounded-t-lg overflow-hidden">
+                <img 
+                  src={product.image} 
+                  alt={product.name}
+                  className={`h-full w-full object-cover ${product.id === 'eero-max-7' ? 'object-[center_60%]' : 'object-center'}`}
+                  data-testid={`image-${product.id}`}
+                />
+              </div>
+
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl" data-testid={`title-${product.id}`}>
                   {product.name}
                 </CardTitle>
                 <CardDescription data-testid={`subtitle-${product.id}`}>
                   {product.subtitle}
                 </CardDescription>
-                <div className="pt-2">
+              </CardHeader>
+
+              <CardContent className="flex-1 space-y-4">
+                <div>
                   <span className="text-3xl font-bold" data-testid={`price-${product.id}`}>
                     {product.price}
                   </span>
                   <span className="text-sm text-muted-foreground ml-2">{product.priceNote}</span>
                 </div>
-              </CardHeader>
 
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground" data-testid={`description-${product.id}`}>
+                <p className="text-sm text-muted-foreground" data-testid={`description-${product.id}`}>
                   {product.description}
                 </p>
 
-                <div className="space-y-2">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" />
-                    Key Features
-                  </h4>
-                  <ul className="space-y-1 text-sm">
-                    {product.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2" data-testid={`feature-${product.id}-${idx}`}>
-                        <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <ul className="space-y-1 text-sm">
+                  {product.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2" data-testid={`feature-${product.id}-${idx}`}>
+                      <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
 
-                <div className="pt-4 space-y-2 border-t">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Home className="h-4 w-4 text-muted-foreground" />
+                <div className="pt-4 space-y-1 border-t text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Home className="h-4 w-4" />
                     <span data-testid={`ideal-${product.id}`}>{product.ideal}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
                     <span data-testid={`speed-${product.id}`}>Compatible with {product.maxSpeed}</span>
                   </div>
                 </div>
@@ -256,7 +251,6 @@ export default function ModemsPage() {
               <CardFooter>
                 <Button 
                   className="w-full" 
-                  size="lg"
                   onClick={() => handleEnquire(product.id)}
                   data-testid={`button-enquire-${product.id}`}
                 >
@@ -267,10 +261,9 @@ export default function ModemsPage() {
           ))}
         </div>
 
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-center font-heading">
-            Compare Models
-          </h2>
+        {/* Comparison Table */}
+        <section className="mb-16">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">Compare Models</h2>
           <Card>
             <Table>
               <TableHeader>
@@ -284,100 +277,95 @@ export default function ModemsPage() {
               <TableBody>
                 <TableRow>
                   <TableCell className="font-medium">Wi-Fi Standard</TableCell>
-                  <TableCell className="text-center" data-testid="compare-wifi-eero-7">Wi-Fi 7</TableCell>
-                  <TableCell className="text-center" data-testid="compare-wifi-eero-pro-7">Wi-Fi 7</TableCell>
-                  <TableCell className="text-center" data-testid="compare-wifi-eero-max-7">Wi-Fi 7</TableCell>
+                  <TableCell className="text-center">Wi-Fi 7</TableCell>
+                  <TableCell className="text-center">Wi-Fi 7</TableCell>
+                  <TableCell className="text-center">Wi-Fi 7</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Bands</TableCell>
-                  <TableCell className="text-center" data-testid="compare-bands-eero-7">Tri-band</TableCell>
-                  <TableCell className="text-center" data-testid="compare-bands-eero-pro-7">Tri-band</TableCell>
-                  <TableCell className="text-center" data-testid="compare-bands-eero-max-7">Quad-band</TableCell>
+                  <TableCell className="text-center">Tri-band</TableCell>
+                  <TableCell className="text-center">Tri-band</TableCell>
+                  <TableCell className="text-center">Quad-band</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Maximum Speed</TableCell>
-                  <TableCell className="text-center" data-testid="compare-maxspeed-eero-7">2.1 Gbps</TableCell>
-                  <TableCell className="text-center" data-testid="compare-maxspeed-eero-pro-7">4.3 Gbps</TableCell>
-                  <TableCell className="text-center" data-testid="compare-maxspeed-eero-max-7">11 Gbps</TableCell>
+                  <TableCell className="text-center">2.1 Gbps</TableCell>
+                  <TableCell className="text-center">4.3 Gbps</TableCell>
+                  <TableCell className="text-center">11 Gbps</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Coverage Area</TableCell>
-                  <TableCell className="text-center" data-testid="compare-coverage-eero-7">Up to 200 sqm</TableCell>
-                  <TableCell className="text-center" data-testid="compare-coverage-eero-pro-7">Up to 300 sqm</TableCell>
-                  <TableCell className="text-center" data-testid="compare-coverage-eero-max-7">Up to 400 sqm</TableCell>
+                  <TableCell className="text-center">Up to 200 sqm</TableCell>
+                  <TableCell className="text-center">Up to 300 sqm</TableCell>
+                  <TableCell className="text-center">Up to 400 sqm</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">NBN Plan Support</TableCell>
-                  <TableCell className="text-center" data-testid="compare-nbn-eero-7">Up to NBN 1000</TableCell>
-                  <TableCell className="text-center" data-testid="compare-nbn-eero-pro-7">Up to NBN 2000</TableCell>
-                  <TableCell className="text-center" data-testid="compare-nbn-eero-max-7">NBN 2000+</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Ethernet Ports</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ethernet-eero-7">Dual GbE</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ethernet-eero-pro-7">2.5 GbE + GbE</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ethernet-eero-max-7">10 GbE + 2.5 GbE</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Ideal For</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ideal-eero-7">2-4 bedrooms</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ideal-eero-pro-7">4+ bedrooms</TableCell>
-                  <TableCell className="text-center" data-testid="compare-ideal-eero-max-7">Enthusiasts</TableCell>
+                  <TableCell className="text-center">Up to NBN 1000</TableCell>
+                  <TableCell className="text-center">Up to NBN 2000</TableCell>
+                  <TableCell className="text-center">NBN 2000+</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Starting Price</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-7">$199</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-pro-7">$299</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-max-7">$820</TableCell>
+                  <TableCell className="text-center font-bold">$199</TableCell>
+                  <TableCell className="text-center font-bold">$299</TableCell>
+                  <TableCell className="text-center font-bold">$820</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </Card>
-        </div>
+        </section>
 
-        <Card className="bg-muted/50">
-          <CardHeader>
-            <CardTitle className="font-heading">Why Choose eero with BroNET?</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-3">
-              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+        {/* Why Choose Section */}
+        <section className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">Why choose eero with BroNET?</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="flex gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <h4 className="font-semibold">Optimized for NBN</h4>
+                <h3 className="font-semibold mb-1">Optimized for NBN</h3>
                 <p className="text-sm text-muted-foreground">
                   Tested and verified to work perfectly with BroNET's NBN plans
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Check className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <h4 className="font-semibold">Easy Setup</h4>
+                <h3 className="font-semibold mb-1">Easy Setup</h3>
                 <p className="text-sm text-muted-foreground">
                   Simple mobile app setup gets you online in minutes
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Home className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <h4 className="font-semibold">Expandable Coverage</h4>
+                <h3 className="font-semibold mb-1">Expandable Coverage</h3>
                 <p className="text-sm text-muted-foreground">
                   Add more units anytime to extend your mesh network
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex gap-4">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <h4 className="font-semibold">Automatic Updates</h4>
+                <h3 className="font-semibold mb-1">Automatic Updates</h3>
                 <p className="text-sm text-muted-foreground">
                   Firmware updates automatically to keep your network secure
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
 
       <Dialog open={showEnquiryDialog} onOpenChange={setShowEnquiryDialog}>
@@ -388,8 +376,7 @@ export default function ModemsPage() {
             </DialogTitle>
             <DialogDescription data-testid="dialog-description">
               {selectedProduct && products.find(p => p.id === selectedProduct)?.name}
-              {" - "}
-              Fill in your details and we'll get back to you soon.
+              {" - "}Fill in your details and we'll get back to you soon.
             </DialogDescription>
           </DialogHeader>
 

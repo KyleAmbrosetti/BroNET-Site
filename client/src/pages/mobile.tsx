@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, Smartphone, Phone, MessageSquare, Globe, Zap, Shield, Users, Wifi } from "lucide-react";
+import { Check, X, Phone, MessageSquare, Globe, Zap, Shield, Users, Wifi, ArrowRight } from "lucide-react";
 
 type MobilePlan = {
   name: string;
@@ -63,7 +63,7 @@ const simOnlyPlans: MobilePlan[] = [
 
 function PlanCard({ plan }: { plan: MobilePlan }) {
   return (
-    <Card className={`relative flex flex-col ${plan.popular ? "border-primary shadow-lg scale-105" : ""}`} data-testid={`card-mobile-plan-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Card className={`relative flex flex-col ${plan.popular ? "border-primary shadow-lg" : ""}`} data-testid={`card-mobile-plan-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}>
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
@@ -101,7 +101,7 @@ function PlanCard({ plan }: { plan: MobilePlan }) {
           </div>
         </div>
         <ul className="text-sm text-left space-y-1">
-          {plan.features.map((feature, i) => (
+          {plan.features.slice(0, 4).map((feature, i) => (
             <li key={i} className="flex items-start gap-2">
               <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
               <span>{feature}</span>
@@ -121,72 +121,65 @@ function PlanCard({ plan }: { plan: MobilePlan }) {
 export default function Mobile() {
   return (
     <div className="min-h-screen">
-      <section className="relative py-20 bg-gradient-to-br from-primary/10 via-background to-purple-500/10 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="container px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <Badge className="mb-4" variant="outline">
-              <Smartphone className="h-3 w-3 mr-1" />
-              SIM Only Plans
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Stay Connected with <span className="text-primary">BroNET Mobile</span>
+      {/* Hero Section - Superloop Style */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <Badge className="mb-4" variant="outline">Coming Soon</Badge>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+              No lock-in<br />mobile plans<span className="text-primary">_</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Australia's fastest 5G network. No lock-in contracts. Bring your own device and save.
               Bundle with your NBN for extra savings.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-gradient-brand" data-testid="button-view-plans">
-                View Plans
-              </Button>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-muted/30">
+      {/* Features Row */}
+      <section className="py-8 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="flex flex-col items-center text-center p-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                 <Zap className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold">5G Network</h3>
-              <p className="text-sm text-muted-foreground">Ultra-fast speeds nationwide</p>
+              <p className="text-sm text-muted-foreground">Ultra-fast speeds</p>
             </div>
             <div className="flex flex-col items-center text-center p-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold">No Lock-in</h3>
               <p className="text-sm text-muted-foreground">Cancel anytime</p>
             </div>
             <div className="flex flex-col items-center text-center p-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold">Data Sharing</h3>
-              <p className="text-sm text-muted-foreground">Share data with family</p>
+              <p className="text-sm text-muted-foreground">Share with family</p>
             </div>
             <div className="flex flex-col items-center text-center p-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                 <Wifi className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold">NBN Bundle</h3>
-              <p className="text-sm text-muted-foreground">Save $10/mo when bundled</p>
+              <p className="text-sm text-muted-foreground">Save $10/mo</p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Plans Section */}
       <section className="py-16">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Choose Your Mobile Plan</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Choose Your Mobile Plan</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Bring your own device and enjoy our competitive SIM-only plans. 
-              No contracts, no hassle - just great value.
+              Bring your own device and enjoy our competitive SIM-only plans. No contracts, no hassle.
             </p>
           </div>
 
@@ -198,11 +191,12 @@ export default function Mobile() {
         </div>
       </section>
 
+      {/* Comparison Table */}
       <section className="py-16 bg-muted/30">
         <div className="container px-4 md:px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">Plan Comparison</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Plan Comparison</h2>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-w-5xl mx-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -226,19 +220,7 @@ export default function Mobile() {
                   ))}
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Calls & SMS</TableCell>
-                  {simOnlyPlans.map(plan => (
-                    <TableCell key={plan.name} className="text-center">Unlimited</TableCell>
-                  ))}
-                </TableRow>
-                <TableRow>
                   <TableCell className="font-medium">5G Access</TableCell>
-                  {simOnlyPlans.map(plan => (
-                    <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                  ))}
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Data Banking</TableCell>
                   {simOnlyPlans.map(plan => (
                     <TableCell key={plan.name} className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
                   ))}
@@ -248,13 +230,13 @@ export default function Mobile() {
                   {simOnlyPlans.map((plan, i) => (
                     <TableCell key={plan.name} className="text-center">
                       {i === 0 ? <X className="h-5 w-5 text-muted-foreground mx-auto" /> : 
-                       i === 1 ? "10 countries" :
-                       i === 2 ? "20 countries" : "35 countries"}
+                       i === 1 ? "10" :
+                       i === 2 ? "20" : "35"}
                     </TableCell>
                   ))}
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Roaming Included</TableCell>
+                  <TableCell className="font-medium">Roaming</TableCell>
                   {simOnlyPlans.map((plan, i) => (
                     <TableCell key={plan.name} className="text-center">
                       {i >= 3 ? <Check className="h-5 w-5 text-green-500 mx-auto" /> : <X className="h-5 w-5 text-muted-foreground mx-auto" />}
@@ -267,42 +249,27 @@ export default function Mobile() {
         </div>
       </section>
 
+      {/* Bundle CTA */}
       <section className="py-16">
         <div className="container px-4 md:px-6">
-          <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20">
+          <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 max-w-4xl mx-auto">
             <CardContent className="p-8 md:p-12">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <h3 className="text-2xl font-bold mb-2">Bundle & Save</h3>
                   <p className="text-muted-foreground max-w-xl">
-                    Already have BroNET broadband? Add a mobile plan and save $10/month on your mobile bill. 
-                    The more lines you add, the more you save!
+                    Already have BroNET broadband? Add a mobile plan and save $10/month on your mobile bill.
                   </p>
                 </div>
-                <Button size="lg" className="bg-gradient-brand shrink-0" asChild data-testid="button-bundle-save">
-                  <Link href="/plans">View NBN Plans</Link>
+                <Button size="lg" className="shrink-0" asChild data-testid="button-bundle-save">
+                  <Link href="/plans">
+                    View NBN Plans
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
-        </div>
-      </section>
-
-      <section className="py-16 bg-muted/30">
-        <div className="container px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Switch?</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Switching to BroNET Mobile is easy. Keep your existing number and we'll handle the rest. 
-            Most transfers complete within 2-4 hours.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" variant="secondary" disabled data-testid="button-coming-soon">
-              Coming Soon
-            </Button>
-            <Button size="lg" variant="outline" asChild data-testid="button-contact-us">
-              <Link href="/support">Contact Us</Link>
-            </Button>
-          </div>
         </div>
       </section>
     </div>

@@ -1,13 +1,14 @@
 import { PlanCard } from "@/components/plan-card";
 import { AddressSearch } from "@/components/address-search";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, Radio, MapPin, CheckCircle2, Cable, Zap, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, X, MapPin, CheckCircle2, Cable, Zap, Lock, Wifi } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 type CoverageResult = {
   normalizedAddress: string;
@@ -173,12 +174,6 @@ export default function Plans() {
   };
 
   const isFixedWireless = coverageResult?.technology?.toLowerCase().includes('wireless');
-  const isFibre = coverageResult?.technology && !isFixedWireless;
-
-  const getTechnologyIcon = () => {
-    if (isFixedWireless) return <Wifi className="h-5 w-5" />;
-    return <Cable className="h-5 w-5" />;
-  };
 
   const getMaxSpeedForTechnology = () => {
     if (!coverageResult?.maxTier) return null;
@@ -200,49 +195,53 @@ export default function Plans() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-b from-primary/5 via-background to-background py-16 px-4 md:px-6">
-        <div className="container mx-auto text-center max-w-4xl">
-          <Badge variant="secondary" className="mb-4">No lock-in contracts</Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-            High-speed NBN plans from just{" "}
-            <span className="text-primary">$69/mth</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            Unlimited NBN plans with no lock-in contracts for fast streaming, downloads, and online gaming.
-          </p>
-          
-          {/* Check Availability Section */}
-          <Card className="max-w-2xl mx-auto bg-card/80 backdrop-blur border-primary/20 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <MapPin className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">Check your address for available NBN plans</h3>
+      {/* Hero Section - Superloop Style */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+              No lock-in<br />nbn plans<span className="text-primary">_</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Super speedy nbn with unlimited data. Plans from just $69/mth with no lock-in contracts.
+            </p>
+            
+            {/* Feature Pills */}
+            <div className="flex flex-wrap justify-center gap-3 mb-10">
+              <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
+                <Zap className="h-4 w-4 text-primary" />
+                <span>Unlimited data</span>
               </div>
-              <AddressSearch
-                value={address}
-                onChange={setAddress}
-                onSearch={handleCheckAvailability}
-                isSearching={isChecking}
-                buttonText="Check Availability"
-                placeholder="Start typing your address..."
-              />
-            </CardContent>
-          </Card>
+              <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
+                <Lock className="h-4 w-4 text-primary" />
+                <span>No lock-in contract</span>
+              </div>
+              <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
+                <Wifi className="h-4 w-4 text-primary" />
+                <span>Free modem on 36mo</span>
+              </div>
+            </div>
 
-          {/* Feature Pills */}
-          <div className="flex flex-wrap justify-center gap-4 mt-8">
-            <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 text-sm">
-              <Zap className="h-4 w-4 text-primary" />
-              <span>Unlimited data</span>
-            </div>
-            <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 text-sm">
-              <Shield className="h-4 w-4 text-primary" />
-              <span>No lock-in contract</span>
-            </div>
+            {/* Address Check */}
+            <Card className="max-w-2xl mx-auto border-2">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">Check your address</h3>
+                </div>
+                <AddressSearch
+                  value={address}
+                  onChange={setAddress}
+                  onSearch={handleCheckAvailability}
+                  isSearching={isChecking}
+                  buttonText="Check Availability"
+                  placeholder="Enter your address..."
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="container py-8 px-4 md:px-6">
         {/* Coverage Result */}
@@ -261,7 +260,6 @@ export default function Plans() {
                   {coverageResult.technology && (
                     <p className="text-sm flex items-center gap-2">
                       <span className="font-medium">Technology:</span> 
-                      {getTechnologyIcon()}
                       <Badge variant="secondary">{coverageResult.technology}</Badge>
                     </p>
                   )}
@@ -272,7 +270,7 @@ export default function Plans() {
                   )}
                   {coverageVerified && (
                     <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-3">
-                      Great! Choose your plan below and click "Sign Up Now" to get started.
+                      Select your plan below to get started.
                     </p>
                   )}
                 </div>
@@ -281,25 +279,13 @@ export default function Plans() {
           </div>
         )}
 
-        {/* Info message when not verified */}
-        {!coverageVerified && !coverageResult && (
-          <div className="max-w-2xl mx-auto mb-8">
-            <p className="text-center text-muted-foreground text-sm">
-              Enter your address above to check availability and unlock the "Sign Up Now" button.
-            </p>
-          </div>
-        )}
-
         {/* Fibre/Cable Plans Section */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Cable className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl md:text-3xl font-bold text-center">Choose the right NBN plan for you</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-center">Home nbn plans</h2>
           </div>
-          <p className="text-muted-foreground text-center mb-2">
-            All BroNET NBN plans come with unlimited data. Choose the plan that suits you best.
-          </p>
-          <p className="text-muted-foreground text-center text-sm mb-8">
+          <p className="text-muted-foreground text-center mb-8">
             For FTTP, FTTC, FTTB, FTTN & HFC connections
           </p>
         </div>
@@ -315,7 +301,6 @@ export default function Plans() {
                     speed={plan.speed}
                     upload={plan.upload}
                     price={plan.price}
-                    promoPrice={plan.promoPrice}
                     typicalSpeed={plan.typical}
                     typicalUpload={plan.typicalUpload}
                     isPopular={plan.popular}
@@ -331,14 +316,13 @@ export default function Plans() {
           </div>
         </div>
 
-
         {/* Fixed Wireless Plans */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Radio className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl md:text-3xl font-bold text-center">NBN Fixed Wireless Plans</h2>
+            <Wifi className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl md:text-3xl font-bold text-center">Fixed Wireless plans</h2>
           </div>
-          <p className="text-muted-foreground text-center mb-8">For regional and rural areas with NBN Fixed Wireless coverage</p>
+          <p className="text-muted-foreground text-center mb-8">For regional and rural areas</p>
         </div>
 
         <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4 pt-2">
@@ -352,7 +336,6 @@ export default function Plans() {
                     speed={plan.speed}
                     upload={plan.upload}
                     price={plan.price}
-                    promoPrice={plan.promoPrice}
                     typicalSpeed={plan.typical}
                     isPopular={plan.popular}
                     tier={plan.tier}
@@ -367,67 +350,48 @@ export default function Plans() {
           </div>
         </div>
 
-        {/* Plan Comparison Table */}
-        <div className="max-w-5xl mx-auto mt-16">
-          <h2 className="text-2xl font-bold mb-8 text-center">Plan Comparison</h2>
-          <div className="rounded-xl border overflow-hidden overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="font-semibold">Feature</TableHead>
-                  <TableHead className="font-semibold text-center">NBN 50</TableHead>
-                  <TableHead className="font-semibold text-center">NBN 100</TableHead>
-                  <TableHead className="font-semibold text-center">NBN 250</TableHead>
-                  <TableHead className="font-semibold text-center">NBN 1000</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Price/month</TableCell>
-                  <TableCell className="text-center">$69</TableCell>
-                  <TableCell className="text-center">$89</TableCell>
-                  <TableCell className="text-center">$109</TableCell>
-                  <TableCell className="text-center">$129</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Download Speed</TableCell>
-                  <TableCell className="text-center">50 Mbps</TableCell>
-                  <TableCell className="text-center">100 Mbps</TableCell>
-                  <TableCell className="text-center">250 Mbps</TableCell>
-                  <TableCell className="text-center">1000 Mbps</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Upload Speed</TableCell>
-                  <TableCell className="text-center">20 Mbps</TableCell>
-                  <TableCell className="text-center">20 Mbps</TableCell>
-                  <TableCell className="text-center">25 Mbps</TableCell>
-                  <TableCell className="text-center">50 Mbps</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Unlimited Data</TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">4K Streaming</TableCell>
-                  <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Best for Gaming</TableCell>
-                  <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
-                  <TableCell className="text-center"><X className="inline h-5 w-5 text-muted-foreground" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                  <TableCell className="text-center"><Check className="inline h-5 w-5 text-green-500" /></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+        {/* Why Choose Section */}
+        <section className="py-16 max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Why we're the best for internet</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-bold mb-2">Unlimited data</h3>
+              <p className="text-sm text-muted-foreground">
+                We spell 'unlimited' the correct way. No data limits or excess usage charges.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Lock className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-bold mb-2">No lock-in plans</h3>
+              <p className="text-sm text-muted-foreground">
+                Month-to-month plans means you'll never be tied down. Leave when you want.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Wifi className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-bold mb-2">Free modem</h3>
+              <p className="text-sm text-muted-foreground">
+                Get a free eero 7 mesh router when you stay connected for 36 months.
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* CTA */}
+        <section className="text-center py-12">
+          <p className="text-muted-foreground mb-4">Not sure which plan is right for you?</p>
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/support">Contact Us</Link>
+          </Button>
+        </section>
       </div>
     </div>
   );
