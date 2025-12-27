@@ -304,28 +304,31 @@ export default function Plans() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-16 max-w-7xl mx-auto">
-          {plans.map((plan) => {
-            const available = isPlanAvailable(plan.speed, false);
-            return (
-              <PlanCard
-                key={plan.name}
-                name={plan.name}
-                speed={plan.speed}
-                upload={plan.upload}
-                price={plan.price}
-                promoPrice={plan.promoPrice}
-                typicalSpeed={plan.typical}
-                typicalUpload={plan.typicalUpload}
-                isPopular={plan.popular}
-                tier={plan.tier}
-                badge={plan.badge}
-                disabled={coverageVerified && !available}
-                showSignup={available}
-                address={coverageResult?.normalizedAddress}
-              />
-            );
-          })}
+        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4">
+          <div className="flex gap-4 min-w-max">
+            {plans.map((plan) => {
+              const available = isPlanAvailable(plan.speed, false);
+              return (
+                <div key={plan.name} className="w-[280px] flex-shrink-0">
+                  <PlanCard
+                    name={plan.name}
+                    speed={plan.speed}
+                    upload={plan.upload}
+                    price={plan.price}
+                    promoPrice={plan.promoPrice}
+                    typicalSpeed={plan.typical}
+                    typicalUpload={plan.typicalUpload}
+                    isPopular={plan.popular}
+                    tier={plan.tier}
+                    badge={plan.badge}
+                    disabled={coverageVerified && !available}
+                    showSignup={available}
+                    address={coverageResult?.normalizedAddress}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
 
@@ -338,27 +341,30 @@ export default function Plans() {
           <p className="text-muted-foreground text-center mb-8">For regional and rural areas with NBN Fixed Wireless coverage</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16 max-w-5xl mx-auto">
-          {fixedWirelessPlans.map((plan) => {
-            const available = isPlanAvailable(plan.speed, true);
-            return (
-              <PlanCard
-                key={plan.name}
-                name={plan.name}
-                speed={plan.speed}
-                upload={plan.upload}
-                price={plan.price}
-                promoPrice={plan.promoPrice}
-                typicalSpeed={plan.typical}
-                isPopular={plan.popular}
-                tier={plan.tier}
-                badge={plan.badge}
-                disabled={coverageVerified && !available}
-                showSignup={available}
-                address={coverageResult?.normalizedAddress}
-              />
-            );
-          })}
+        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4">
+          <div className="flex gap-4 min-w-max justify-center">
+            {fixedWirelessPlans.map((plan) => {
+              const available = isPlanAvailable(plan.speed, true);
+              return (
+                <div key={plan.name} className="w-[280px] flex-shrink-0">
+                  <PlanCard
+                    name={plan.name}
+                    speed={plan.speed}
+                    upload={plan.upload}
+                    price={plan.price}
+                    promoPrice={plan.promoPrice}
+                    typicalSpeed={plan.typical}
+                    isPopular={plan.popular}
+                    tier={plan.tier}
+                    badge={plan.badge}
+                    disabled={coverageVerified && !available}
+                    showSignup={available}
+                    address={coverageResult?.normalizedAddress}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Plan Comparison Table */}
