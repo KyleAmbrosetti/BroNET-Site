@@ -145,7 +145,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* CTA Banner */}
           <div className="bg-gradient-brand py-12">
             <div className="container px-4 md:px-6 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Refresh your internet</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Upgrade your internet</h2>
               <p className="text-white/80 mb-6">Or, contact our call centre on <a href="tel:1300123456" className="underline font-medium">1300 123 456</a></p>
               <Button size="lg" variant="secondary" asChild>
                 <Link href="/plans">View Plans</Link>

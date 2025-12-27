@@ -327,23 +327,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-brand text-white">
-        <div className="container px-4 md:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to upgrade your internet?</h2>
-          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            Check if BroNET is available at your address and join thousands of happy customers.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" variant="secondary" className="h-12 px-8" asChild>
-              <Link href="/coverage">Check Your Address</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="h-12 px-8 border-white text-white hover:bg-white/10" asChild>
-              <Link href="/plans">View Plans</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
