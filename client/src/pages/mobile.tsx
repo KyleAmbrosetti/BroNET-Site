@@ -122,8 +122,9 @@ export default function Mobile() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Superloop Style */}
-      <section className="py-16 md:py-24">
-        <div className="container px-4 md:px-6">
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background dark:from-primary/30 dark:via-purple-600/20 dark:to-background" />
+        <div className="container px-4 md:px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <Badge className="mb-4" variant="outline">Coming Soon</Badge>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
