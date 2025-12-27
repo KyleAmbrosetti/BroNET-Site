@@ -167,35 +167,65 @@ export default function Support() {
               <HelpCircle className="h-6 w-6 text-primary" />
               <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
             </div>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger>How long does it take to switch?</AccordionTrigger>
+            <Accordion type="single" collapsible className="w-full space-y-2">
+              <AccordionItem value="item-1" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">How long does it take to switch?</AccordionTrigger>
                 <AccordionContent>
                   Most switches can be completed within 15-60 minutes if you have an existing NBN connection. For new connections, it usually takes 1-3 business days depending on NBN Co technician availability.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Do I need a new modem?</AccordionTrigger>
+              <AccordionItem value="item-2" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">Do I need a new modem?</AccordionTrigger>
                 <AccordionContent>
                   Not necessarily! If you have a BYO modem that is NBN compatible, you can use it. We also offer eero Wi-Fi 7 routers that you can purchase outright or pay off over time.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger>What is CGNAT?</AccordionTrigger>
+              <AccordionItem value="item-3" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">What is CGNAT?</AccordionTrigger>
                 <AccordionContent>
                   We use CGNAT (Carrier Grade NAT) to manage IPv4 addresses. This works fine for 99% of users. If you need port forwarding, you can add a Static IP for $5/mo in the portal.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-4">
-                <AccordionTrigger>Are there any cancellation fees?</AccordionTrigger>
+              <AccordionItem value="item-4" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">Are there any cancellation fees?</AccordionTrigger>
                 <AccordionContent>
                   Nope! We don't believe in locking you in. If you leave, you just pay for the remainder of your current billing month. No exit fees, ever.
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-5">
-                <AccordionTrigger>What speeds can I get?</AccordionTrigger>
+              <AccordionItem value="item-5" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">What speeds can I get?</AccordionTrigger>
                 <AccordionContent>
                   This depends on your connection type and location. Check your address on our coverage page to see what speeds are available. We offer plans from 50 Mbps up to 2000 Mbps.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-6" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">How do I change my plan?</AccordionTrigger>
+                <AccordionContent>
+                  You can change your plan anytime from your customer dashboard. Plan changes are processed instantly and your new speed will be active within minutes. No fees apply.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-7" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">I'm moving house. What do I do?</AccordionTrigger>
+                <AccordionContent>
+                  Let us know at least 2 weeks before your move date. We'll check NBN availability at your new address and arrange the transfer. If NBN isn't available, you can cancel without any fees.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-8" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">Why is my speed slower than expected?</AccordionTrigger>
+                <AccordionContent>
+                  Speed can be affected by your modem, Wi-Fi interference, or the number of devices connected. Try a wired ethernet connection to test your actual line speed. If issues persist, run a speed test from your dashboard and contact us.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-9" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">What payment methods do you accept?</AccordionTrigger>
+                <AccordionContent>
+                  We accept Visa, Mastercard, American Express, and BECS Direct Debit from Australian bank accounts. All payments are processed securely through Stripe.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-10" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">When is my bill due?</AccordionTrigger>
+                <AccordionContent>
+                  Your bill is due on the same date each month based on when you signed up. You'll receive an email reminder 7 days before your payment is processed. View your billing date in your dashboard.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
