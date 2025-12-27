@@ -49,7 +49,7 @@ function getTierColor(tier?: string): string {
     case 'basic':
       return 'bg-green-500';
     case 'power':
-      return 'bg-orange-500';
+      return 'bg-red-500';
     case 'ultra':
       return 'bg-purple-600';
     default:
