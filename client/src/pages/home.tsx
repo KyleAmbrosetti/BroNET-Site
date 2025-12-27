@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import fiberBg from "@assets/generated_images/abstract_blue-purple_fiber_optic_waves_background.png";
 import promoBanner from "@assets/generated_images/internet_speed_promo_banner.png";
-import familyImage from "@assets/generated_images/family_enjoying_home_internet.png";
 
 function SpeedCard({ speed, time, label }: { speed: number; time: string; label: string }) {
   return (
@@ -67,51 +66,42 @@ export default function Home() {
         />
         
         <div className="container px-4 md:px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4" variant="secondary">
-                <Zap className="h-3 w-3 mr-1" />
-                Australia's fastest growing ISP
-              </Badge>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-                Upgrade your<br />
-                internet<span className="text-primary">_</span>
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-xl">
-                Super speedy NBN with award-winning service. No lock-in contracts, unlimited data, and 100% Aussie support.
-              </p>
-              <div className="flex flex-wrap gap-4 mb-8">
-                <Button size="lg" className="h-12 px-8 bg-gradient-brand hover:opacity-90 border-0 rounded-lg" asChild>
-                  <Link href="/plans">
-                    View Plans
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg" asChild>
-                  <Link href="/coverage">Check Address</Link>
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span>Unlimited data</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span>No lock-in contract</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span>100% Aussie support</span>
-                </div>
-              </div>
+          <div className="max-w-3xl mx-auto text-center">
+            <Badge className="mb-4" variant="secondary">
+              <Zap className="h-3 w-3 mr-1" />
+              Australia's fastest growing ISP
+            </Badge>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+              Upgrade your<br />
+              internet<span className="text-primary">_</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-xl mx-auto">
+              Super speedy NBN with award-winning service. No lock-in contracts, unlimited data, and 100% Aussie support.
+            </p>
+            <div className="flex flex-wrap gap-4 mb-8 justify-center">
+              <Button size="lg" className="h-12 px-8 bg-gradient-brand hover:opacity-90 border-0 rounded-lg" asChild>
+                <Link href="/plans">
+                  View Plans
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg" asChild>
+                <Link href="/coverage">Check Address</Link>
+              </Button>
             </div>
-            <div className="hidden lg:block">
-              <img 
-                src={familyImage} 
-                alt="Family enjoying fast internet at home" 
-                className="rounded-2xl shadow-2xl"
-              />
+            <div className="flex flex-wrap gap-4 text-sm justify-center">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>Unlimited data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>No lock-in contract</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>100% Aussie support</span>
+              </div>
             </div>
           </div>
         </div>
