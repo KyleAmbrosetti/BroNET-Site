@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PlanCard } from "@/components/plan-card";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   Zap,
   Lock, 
@@ -12,17 +13,19 @@ import {
   Wifi,
   Smartphone,
   Gauge,
-  ArrowRight
+  ArrowRight,
+  Check
 } from "lucide-react";
+import fiberBg from "@assets/generated_images/abstract_blue-purple_fiber_optic_waves_background.png";
+import promoBanner from "@assets/generated_images/internet_speed_promo_banner.png";
+import familyImage from "@assets/generated_images/family_enjoying_home_internet.png";
 
 function SpeedCard({ speed, time, label }: { speed: number; time: string; label: string }) {
   return (
-    <div className="flex-shrink-0 w-[200px] bg-card rounded-2xl border p-6 text-center hover:shadow-lg transition-shadow">
-      <p className="text-sm text-muted-foreground mb-2">Download speed</p>
-      <p className="text-3xl font-bold text-primary mb-1">{speed}<span className="text-lg">Mbps</span></p>
-      <p className="text-xs text-muted-foreground mb-4">Approx. {time}</p>
-      <p className="text-xs text-muted-foreground">To download a 4GB Ultra HD video</p>
-      <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
+    <div className="flex-shrink-0 w-[180px] bg-card rounded-2xl border p-5 text-center hover:shadow-lg transition-shadow">
+      <p className="text-3xl font-bold text-primary mb-1">{speed}<span className="text-base">Mbps</span></p>
+      <p className="text-xs text-muted-foreground mb-3">Approx. {time}</p>
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div 
           className="h-full bg-gradient-brand rounded-full transition-all duration-500"
           style={{ width: `${Math.min((speed / 2000) * 100, 100)}%` }}
@@ -36,7 +39,7 @@ function SpeedCard({ speed, time, label }: { speed: number; time: string; label:
 function ServiceCard({ icon: Icon, title, description, href }: { icon: any; title: string; description: string; href: string }) {
   return (
     <Link href={href}>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 h-full">
+      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 h-full border-2 hover:border-primary/50">
         <CardContent className="p-6 flex items-start gap-4">
           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <Icon className="h-6 w-6 text-primary" />
@@ -55,34 +58,95 @@ function ServiceCard({ icon: Icon, title, description, href }: { icon: any; titl
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section - Superloop Style */}
-      <section className="py-20 md:py-32">
+      {/* Hero Section with Fiber Background */}
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20 dark:opacity-30"
+          style={{ backgroundImage: `url(${fiberBg})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+        
+        <div className="container px-4 md:px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-4" variant="secondary">
+                <Zap className="h-3 w-3 mr-1" />
+                Australia's fastest growing ISP
+              </Badge>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+                Upgrade your<br />
+                internet<span className="text-primary">_</span>
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 max-w-xl">
+                Super speedy NBN with award-winning service. No lock-in contracts, unlimited data, and 100% Aussie support.
+              </p>
+              <div className="flex flex-wrap gap-4 mb-8">
+                <Button size="lg" className="h-12 px-8 bg-gradient-brand hover:opacity-90 border-0 rounded-lg" asChild>
+                  <Link href="/plans">
+                    View Plans
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg" asChild>
+                  <Link href="/coverage">Check Address</Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span>Unlimited data</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span>No lock-in contract</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span>Free modem on 36mo</span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img 
+                src={familyImage} 
+                alt="Family enjoying fast internet at home" 
+                className="rounded-2xl shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Promo Banner */}
+      <section className="py-8 bg-muted/30">
         <div className="container px-4 md:px-6">
-          <div className="max-w-4xl">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6">
-              Upgrade your<br />
-              internet<span className="text-primary">_</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl">
-              Super speedy NBN with award-winning service. No lock-in contracts, unlimited data, and 100% Aussie support.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="h-12 px-8 bg-gradient-brand hover:opacity-90 border-0 rounded-lg" asChild>
-                <Link href="/plans">View Plans</Link>
-              </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg" asChild>
-                <Link href="/coverage">Check Address</Link>
-              </Button>
+          <div className="relative rounded-2xl overflow-hidden">
+            <img 
+              src={promoBanner} 
+              alt="Fast internet promotion" 
+              className="w-full h-48 md:h-64 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-purple-600/90 flex items-center">
+              <div className="container px-8 md:px-12">
+                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">NBN 2000 is here</h2>
+                <p className="text-white/80 mb-4 max-w-lg">Experience ultra-fast speeds up to 2 Gbps. Perfect for large households and power users.</p>
+                <Button variant="secondary" asChild>
+                  <Link href="/nbn-2000">
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Services Grid - Superloop Style */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">The new standard of internet</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">The new standard of internet<span className="text-primary">_</span></h2>
             <p className="text-muted-foreground text-lg">Make BroNET the benchmark for speed, service and value.</p>
           </div>
           
@@ -115,15 +179,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Speed Comparison - Superloop Style */}
-      <section className="py-20">
+      {/* Speed Comparison */}
+      <section className="py-16 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              New 2 Gbps plans powered by BroNET
+              New 2 Gbps plans powered by BroNET<span className="text-primary">_</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Get ready to experience super-fast internet. BroNET's 2 Gbps plans deliver high-powered speeds for the most demanding households.
+              Download a 4GB Ultra HD video in seconds. Choose the speed that fits your lifestyle.
             </p>
           </div>
 
@@ -137,22 +201,28 @@ export default function Home() {
 
           <div className="flex justify-center gap-4 mt-8">
             <Button className="bg-gradient-brand hover:opacity-90 border-0" asChild>
-              <Link href="/plans">View All Plans</Link>
+              <Link href="/plans">
+                View All Plans
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
       </section>
 
       {/* Featured Plans */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-16">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Popular Plans</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Popular Plans<span className="text-primary">_</span></h2>
               <p className="text-muted-foreground text-lg">Choose the speed that fits your lifestyle.</p>
             </div>
             <Button variant="outline" asChild>
-              <Link href="/plans">View All Plans</Link>
+              <Link href="/plans">
+                View All Plans
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
           
@@ -186,11 +256,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us - Superloop Style */}
-      <section className="py-20">
+      {/* Why Choose Us */}
+      <section className="py-16 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why we're the best for internet</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why we're the best for internet<span className="text-primary">_</span></h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -264,9 +334,14 @@ export default function Home() {
           <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             Check if BroNET is available at your address and join thousands of happy customers.
           </p>
-          <Button size="lg" variant="secondary" className="h-12 px-8" asChild>
-            <Link href="/coverage">Check Your Address</Link>
-          </Button>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button size="lg" variant="secondary" className="h-12 px-8" asChild>
+              <Link href="/coverage">Check Your Address</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-12 px-8 border-white text-white hover:bg-white/10" asChild>
+              <Link href="/plans">View Plans</Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>
