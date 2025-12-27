@@ -57,6 +57,15 @@ export default function Plans() {
       tier: 'power' as const
     },
     { 
+      name: "NBN 500", 
+      speed: 500, 
+      upload: 50, 
+      price: 119, 
+      typical: "480 Mbps",
+      typicalUpload: "45",
+      tier: 'power' as const
+    },
+    { 
       name: "NBN 1000", 
       speed: 1000, 
       upload: 50, 
