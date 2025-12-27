@@ -102,7 +102,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
-                  <span>Free modem on 36mo</span>
+                  <span>100% Aussie support</span>
                 </div>
               </div>
             </div>
