@@ -85,7 +85,7 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg" asChild>
+              <Button size="lg" variant="outline" className="h-12 px-8 rounded-lg bg-background/90 hover:bg-background border-border" asChild>
                 <Link href="/coverage">Check Address</Link>
               </Button>
             </div>
