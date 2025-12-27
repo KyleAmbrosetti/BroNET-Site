@@ -35,7 +35,7 @@ const products = [
     id: "eero-7",
     name: "eero 7",
     subtitle: "Tri-band Wi-Fi 7 mesh router",
-    price: "$299",
+    price: "$199",
     priceNote: "Starting from",
     description: "Perfect for small to medium homes. Fast, reliable Wi-Fi 7 with seamless mesh coverage.",
     features: [
@@ -58,7 +58,7 @@ const products = [
     id: "eero-pro-7",
     name: "eero Pro 7",
     subtitle: "Premium tri-band Wi-Fi 7 mesh router",
-    price: "$599",
+    price: "$299",
     priceNote: "Starting from",
     description: "For power users and large homes. Maximum performance with support for NBN's fastest plans.",
     features: [
@@ -81,7 +81,7 @@ const products = [
     id: "eero-max-7",
     name: "eero Max 7",
     subtitle: "Ultimate quad-band Wi-Fi 7 mesh router",
-    price: "$899",
+    price: "$820",
     priceNote: "Starting from",
     description: "The ultimate mesh router for demanding users. Quad-band Wi-Fi 7 with 10 GbE support for maximum performance.",
     features: [
@@ -326,9 +326,9 @@ export default function ModemsPage() {
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Starting Price</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-7">$299</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-pro-7">$599</TableCell>
-                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-max-7">$899</TableCell>
+                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-7">$199</TableCell>
+                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-pro-7">$299</TableCell>
+                  <TableCell className="text-center font-bold" data-testid="compare-price-eero-max-7">$820</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
