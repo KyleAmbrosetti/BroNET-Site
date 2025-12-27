@@ -95,7 +95,7 @@ export default function Home() {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
              <PlanCard 
               name="NBN 50" 
               speed={50} 
@@ -120,23 +120,6 @@ export default function Home() {
               price={109} 
               typicalSpeed="245 Mbps"
               tier="power"
-            />
-            <PlanCard 
-              name="NBN 1000" 
-              speed={1000} 
-              upload={50} 
-              price={129} 
-              typicalSpeed="850 Mbps"
-              tier="ultra"
-            />
-            <PlanCard 
-              name="NBN 2000" 
-              speed={2000} 
-              upload={200} 
-              price={155} 
-              typicalSpeed="1800 Mbps"
-              tier="ultra"
-              badge="New"
             />
           </div>
         </div>
