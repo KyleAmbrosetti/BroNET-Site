@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useUser } from "@/hooks/use-user";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Home, Check, ArrowRight, Wifi, Shield, Smartphone, Signal, Gift } from "lucide-react";
+import { ChevronRight, ChevronDown, Wifi, Home, Signal, Zap, Shield, Check } from "lucide-react";
 import eero7Image from "@assets/eero_7_1766481389429.jpg";
 import eeroPro7Image from "@assets/eero_pro_7_1766472837873.jpg";
 import eeroMax7Image from "@assets/eero-max-7_bc8e_1766481757902.jpg";
@@ -21,99 +21,105 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Link } from "wouter";
 
 const products = [
   {
-    id: "eero-7",
-    name: "eero 7",
-    subtitle: "Tri-band Wi-Fi 7 mesh router",
-    price: 199,
-    priceNote: "or FREE on 36mo plan",
-    description: "Perfect for small to medium homes. Fast, reliable Wi-Fi 7 with seamless mesh coverage.",
+    id: "eero-pro-7",
+    name: "Amazon eero Pro 7",
+    subtitle: "Wi-Fi 7 mesh modem",
+    price: 299,
     features: [
-      "Wi-Fi 7 (802.11be)",
-      "Tri-band (2.4GHz, 5GHz, 6GHz)",
-      "Up to 2.1 Gbps speeds",
-      "Covers up to 200 sqm",
-      "Supports NBN 1000 plans",
-      "Easy mesh expansion",
+      { title: "Blazing-fast performance", description: "With support for internet plans up to 5 Gbps and wireless speeds up to 3.9 Gbps, eero Pro 7 powers through bandwidth-heavy tasks with ease." },
+      { title: "Smarter Wi-Fi that follows you", description: "Thanks to TrueMesh, TrueRoam, and TrueChannel, your signal sticks with you. Room to room, floor to floor." },
+      { title: "Next-gen power, old-gen love", description: "Built on Wi-Fi 7, eero Pro 7 plays nice with previous eero systems — because even the future has a soft spot for legacy." },
     ],
     specs: {
-      bands: "Tri-band",
-      speed: "2.1 Gbps",
-      coverage: "200 sqm",
-      nbn: "NBN 1000",
-      ethernet: "Dual GbE",
+      type: "Modem",
+      priceText: "$299 outright",
+      priceNote: "or pay in 12/24 months",
+      bands: "Tri-band, Wi-Fi 7",
+      speed: "Up to 5 Gbps (up to 4.7 Gbps wired or up to 3.9 Gbps wireless)",
+      voip: "—",
+      coverage: "Covers up to 190 m²",
+      security: "eero Secure",
     },
-    ideal: "2-4 bedroom homes",
-    badge: "Popular",
-    badgeVariant: "default" as const,
-    image: eero7Image,
-    highlight: false,
+    image: eeroPro7Image,
+    imagePosition: "right",
   },
   {
-    id: "eero-pro-7",
-    name: "eero Pro 7",
-    subtitle: "Premium tri-band Wi-Fi 7 mesh router",
-    price: 299,
-    priceNote: "or FREE on 36mo plan",
-    description: "For power users and large homes. Maximum performance with support for NBN's fastest plans.",
+    id: "eero-7",
+    name: "Amazon eero 7",
+    subtitle: "Wi-Fi 7 mesh modem",
+    price: 199,
     features: [
-      "Wi-Fi 7 (802.11be)",
-      "Up to 4.3 Gbps speeds",
-      "Covers up to 300 sqm",
-      "Supports NBN 2000 plans",
-      "2.5 GbE ethernet port",
-      "Advanced mesh networking",
+      { title: "Multi-gig speed for multitasking", description: "Bring Wi-Fi 7 speed to your day-to-day devices and enjoy HD streaming and gaming with low latency." },
+      { title: "Say goodbye to dead spots", description: "eero 7 helps minimise network disruptions to ensure you have fast, reliable Wi-Fi in every room of your home." },
+      { title: "Boosted performance", description: "eero 7 helps reduce buffering and delays for smooth performance, even when using multiple devices simultaneously." },
     ],
     specs: {
-      bands: "Tri-band",
-      speed: "4.3 Gbps",
-      coverage: "300 sqm",
-      nbn: "NBN 2000",
-      ethernet: "2.5 GbE + GbE",
+      type: "Modem",
+      priceText: "$199 outright",
+      priceNote: "or pay in 12/24 months",
+      bands: "Dual-band, Wi-Fi 7",
+      speed: "Up to 2.5 Gbps (up to 2.3 Gbps wired or up to 1.8 Gbps wireless)",
+      voip: "—",
+      coverage: "Covers up to 190 m²",
+      security: "eero Secure",
     },
-    ideal: "4+ bedroom homes",
-    badge: "Best Value",
-    badgeVariant: "secondary" as const,
-    image: eeroPro7Image,
-    highlight: true,
+    image: eero7Image,
+    imagePosition: "left",
   },
   {
     id: "eero-max-7",
-    name: "eero Max 7",
-    subtitle: "Ultimate quad-band Wi-Fi 7 mesh router",
+    name: "Amazon eero Max 7",
+    subtitle: "Ultimate Wi-Fi 7 mesh modem",
     price: 820,
-    priceNote: "Starting from",
-    description: "The ultimate mesh router for demanding users. Quad-band Wi-Fi 7 with 10 GbE support.",
     features: [
-      "Wi-Fi 7 (802.11be)",
-      "Quad-band technology",
-      "Up to 11 Gbps aggregate speeds",
-      "Covers up to 400 sqm",
-      "10 GbE + 2.5 GbE ethernet",
-      "Thread border router built-in",
+      { title: "Quad-band technology", description: "Experience the ultimate in wireless performance with quad-band Wi-Fi 7, delivering up to 11 Gbps aggregate speeds." },
+      { title: "10 GbE connectivity", description: "Future-proof your home with 10 GbE ethernet for blazing-fast wired connections to your most demanding devices." },
+      { title: "Thread border router", description: "Built-in Thread border router support for seamless smart home integration and IoT device connectivity." },
     ],
     specs: {
-      bands: "Quad-band",
-      speed: "11 Gbps",
-      coverage: "400 sqm",
-      nbn: "NBN 2000+",
-      ethernet: "10 GbE + 2.5 GbE",
+      type: "Modem",
+      priceText: "$820 outright",
+      priceNote: "or pay in 12/24 months",
+      bands: "Quad-band, Wi-Fi 7",
+      speed: "Up to 11 Gbps aggregate (10 GbE + 2.5 GbE wired)",
+      voip: "—",
+      coverage: "Covers up to 400 m²",
+      security: "eero Secure+",
     },
-    ideal: "Enthusiasts & large homes",
-    badge: "Ultimate",
-    badgeVariant: "destructive" as const,
     image: eeroMax7Image,
-    highlight: false,
+    imagePosition: "right",
+  },
+];
+
+const faqs = [
+  {
+    question: "What is Wi-Fi 7?",
+    answer: "Wi-Fi 7 is the next-generation wireless standard (802.11be), offering faster speeds, lower latency, and better performance in crowded networks. It supports up to 46 Gbps, wider 320 MHz channels, and advanced tech like Multi-Link Operation (MLO) for smoother, more reliable connections."
+  },
+  {
+    question: "What is a mesh router?",
+    answer: "A mesh router system uses multiple units (a main router and satellites) to provide seamless Wi-Fi coverage throughout your home. Unlike a traditional router, it reduces dead zones by letting devices automatically connect to the strongest signal as you move around."
+  },
+  {
+    question: "How do I claim my FREE* BroNET modem?",
+    answer: "Connect to one of our eligible nbn plans to get an Amazon eero 7 for FREE*. *When you stay connected for 36 months. Check out the website for all current offers."
+  },
+  {
+    question: "Which modem is best for my nbn plan?",
+    answer: "The best modem depends on your nbn type and usage. For fast plans (e.g. nbn 100+), a Wi-Fi 6 or Wi-Fi 7 router is ideal. For large homes, a mesh system is best."
+  },
+  {
+    question: "Do I need a new modem for nbn?",
+    answer: "You may need a new router if your current one doesn't support your nbn technology (e.g., FTTP, HFC) or can't handle your desired speed. Upgrading to a newer modem can also improve speed, coverage, and device support."
   },
 ];
 
@@ -187,314 +193,217 @@ export default function ModemsPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background dark:from-primary/30 dark:via-purple-600/20 dark:to-background" />
         <div className="container px-4 md:px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge className="mb-4" variant="secondary">
-              <Wifi className="h-3 w-3 mr-1" />
-              Wi-Fi 7 Technology
-            </Badge>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              Fast hardware for<br />fast internet<span className="text-primary">_</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+              BroNET's ultrafast next-gen modems<span className="text-primary">_</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Whole-home mesh Wi-Fi coverage with the latest Wi-Fi 7 technology. 
-              Get a free eero router when you stay connected for 36 months.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Get a free* next-gen modem and enjoy seamless connectivity and reliable performance for every home and business.
             </p>
-            
-            {/* Feature Pills */}
-            <div className="flex flex-wrap justify-center gap-3 mb-10">
-              <div className="flex items-center gap-2 bg-card border rounded-full px-4 py-2 text-sm">
-                <Gift className="h-4 w-4 text-primary" />
-                <span>Free on 36mo plans</span>
-              </div>
-              <div className="flex items-center gap-2 bg-card border rounded-full px-4 py-2 text-sm">
-                <Signal className="h-4 w-4 text-primary" />
-                <span>Whole-home coverage</span>
-              </div>
-              <div className="flex items-center gap-2 bg-card border rounded-full px-4 py-2 text-sm">
-                <Smartphone className="h-4 w-4 text-primary" />
-                <span>Easy app setup</span>
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              * Free when you stay connected for 36 months. T&Cs apply.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Free Modem Banner */}
-      <section className="py-6 bg-primary/10 border-y">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center md:text-left">
-            <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-              <Gift className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold">Get your modem FREE when you stay connected for 36 months</p>
-              <p className="text-sm text-muted-foreground">No upfront cost. Just reliable internet with great hardware.</p>
-            </div>
-            <Button className="bg-gradient-brand" asChild>
-              <Link href="/plans">View Plans</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <div className="container px-4 md:px-6 py-16">
-        {/* Product Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-          {products.map((product) => (
-            <Card 
-              key={product.id} 
-              className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                product.highlight ? 'border-primary border-2 shadow-lg' : 'border'
-              }`}
-              data-testid={`card-product-${product.id}`}
-            >
+      {/* Product Sections - Alternating Layout */}
+      {products.map((product, index) => (
+        <section 
+          key={product.id} 
+          className={`py-16 md:py-24 ${index % 2 === 1 ? 'bg-muted/30' : ''}`}
+        >
+          <div className="container px-4 md:px-6">
+            <div className={`grid md:grid-cols-2 gap-8 md:gap-16 items-center ${
+              product.imagePosition === 'left' ? 'md:flex-row-reverse' : ''
+            }`}>
               {/* Image */}
-              <div className="relative h-48 md:h-56 bg-muted overflow-hidden">
-                {product.badge && (
-                  <Badge 
-                    className={`absolute top-3 left-3 z-10 text-white font-semibold shadow-lg px-3 py-1 ${
-                      product.id === 'eero-7' ? 'bg-primary' : 
-                      product.id === 'eero-pro-7' ? 'bg-green-600' : 
-                      'bg-orange-500'
-                    }`}
-                    data-testid={`badge-${product.id}`}
-                  >
-                    {product.badge}
-                  </Badge>
-                )}
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className={`h-full w-full object-cover ${
-                    product.id === 'eero-max-7' ? 'object-[center_60%]' : 'object-center'
-                  }`}
-                  data-testid={`image-${product.id}`}
-                />
+              <div className={`${product.imagePosition === 'left' ? 'md:order-2' : 'md:order-1'}`}>
+                <div className="aspect-square max-w-md mx-auto rounded-2xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                    data-testid={`image-${product.id}`}
+                  />
+                </div>
               </div>
 
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl md:text-2xl" data-testid={`title-${product.id}`}>
-                  {product.name}
-                </CardTitle>
-                <CardDescription data-testid={`subtitle-${product.id}`}>
-                  {product.subtitle}
-                </CardDescription>
-              </CardHeader>
+              {/* Content */}
+              <div className={`${product.imagePosition === 'left' ? 'md:order-1' : 'md:order-2'}`}>
+                <h2 className="text-3xl md:text-4xl font-bold mb-2">{product.name}</h2>
+                <p className="text-muted-foreground mb-8">{product.subtitle}</p>
 
-              <CardContent className="flex-1 flex flex-col gap-4">
-                {/* Price */}
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <span className="text-3xl md:text-4xl font-bold" data-testid={`price-${product.id}`}>
-                    ${product.price}
-                  </span>
-                  <p className="text-sm text-primary font-medium mt-1">{product.priceNote}</p>
-                </div>
-
-                {/* Quick Specs */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Signal className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span>{product.specs.speed}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span>{product.specs.coverage}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span>{product.specs.bands}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span>{product.specs.nbn}</span>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div className="space-y-2 flex-1">
-                  {product.features.slice(0, 4).map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-sm" data-testid={`feature-${product.id}-${idx}`}>
-                      <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
+                <ul className="space-y-6">
+                  {product.features.map((feature, idx) => (
+                    <li key={idx} className="flex gap-4">
+                      <div className="h-2 w-2 rounded-full bg-primary mt-2.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold mb-1">{feature.title}</h3>
+                        <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
 
-                {/* Ideal For */}
-                <div className="pt-3 border-t mt-auto">
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Ideal for:</span> {product.ideal}
-                  </p>
-                </div>
-              </CardContent>
-
-              <CardFooter>
                 <Button 
-                  className={`w-full ${product.highlight ? 'bg-gradient-brand' : ''}`}
-                  variant={product.highlight ? 'default' : 'outline'}
-                  size="lg"
+                  className="mt-8 group"
+                  variant="link"
                   onClick={() => handleEnquire(product.id)}
-                  data-testid={`button-enquire-${product.id}`}
+                  data-testid={`button-learn-${product.id}`}
                 >
-                  Enquire Now
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  Enquire about {product.name.split(' ').slice(-2).join(' ')}
+                  <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-              </CardFooter>
-            </Card>
-          ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {/* Compare All Modems */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Compare all modems<span className="text-primary">_</span>
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <Card key={product.id} className="overflow-hidden" data-testid={`compare-card-${product.id}`}>
+                <div className="aspect-square bg-gradient-to-br from-muted to-muted/50 p-8">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-2">{product.name.replace('Amazon ', '')}</h3>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary group mb-4"
+                    onClick={() => handleEnquire(product.id)}
+                  >
+                    Learn more
+                    <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+
+                  <div className="border-t pt-4 space-y-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">{product.specs.type}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold">{product.specs.priceText}</span>
+                      <p className="text-muted-foreground text-xs">{product.specs.priceNote}</p>
+                    </div>
+                    <div className="text-muted-foreground">{product.specs.bands}</div>
+                    <div className="text-muted-foreground text-xs">{product.specs.speed}</div>
+                    <div className="text-muted-foreground">{product.specs.voip}</div>
+                    <div className="text-muted-foreground">{product.specs.coverage}</div>
+                    <div className="text-muted-foreground">{product.specs.security}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Comparison Table */}
-        <section className="mb-20">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Compare Models<span className="text-primary">_</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Find the perfect router for your home. All models support the latest Wi-Fi 7 standard.
-            </p>
-          </div>
-          
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-1/4 font-bold">Feature</TableHead>
-                    <TableHead className="text-center">
-                      <div className="font-bold">eero 7</div>
-                      <div className="text-xs font-normal text-muted-foreground">From $199</div>
-                    </TableHead>
-                    <TableHead className="text-center bg-primary/5">
-                      <div className="font-bold text-primary">eero Pro 7</div>
-                      <div className="text-xs font-normal text-muted-foreground">From $299</div>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <div className="font-bold">eero Max 7</div>
-                      <div className="text-xs font-normal text-muted-foreground">From $820</div>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Wi-Fi Standard</TableCell>
-                    <TableCell className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                    <TableCell className="text-center bg-primary/5"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Frequency Bands</TableCell>
-                    <TableCell className="text-center">Tri-band</TableCell>
-                    <TableCell className="text-center bg-primary/5">Tri-band</TableCell>
-                    <TableCell className="text-center font-medium text-primary">Quad-band</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Maximum Speed</TableCell>
-                    <TableCell className="text-center">2.1 Gbps</TableCell>
-                    <TableCell className="text-center bg-primary/5">4.3 Gbps</TableCell>
-                    <TableCell className="text-center font-medium text-primary">11 Gbps</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Coverage Area</TableCell>
-                    <TableCell className="text-center">200 sqm</TableCell>
-                    <TableCell className="text-center bg-primary/5">300 sqm</TableCell>
-                    <TableCell className="text-center">400 sqm</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">NBN Plan Support</TableCell>
-                    <TableCell className="text-center">Up to 1000</TableCell>
-                    <TableCell className="text-center bg-primary/5 font-medium">Up to 2000</TableCell>
-                    <TableCell className="text-center font-medium text-primary">2000+</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Ethernet Ports</TableCell>
-                    <TableCell className="text-center">Dual GbE</TableCell>
-                    <TableCell className="text-center bg-primary/5">2.5 GbE + GbE</TableCell>
-                    <TableCell className="text-center font-medium text-primary">10 GbE + 2.5 GbE</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Free on 36mo Plan</TableCell>
-                    <TableCell className="text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                    <TableCell className="text-center bg-primary/5"><Check className="h-5 w-5 text-green-500 mx-auto" /></TableCell>
-                    <TableCell className="text-center text-muted-foreground">—</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+      {/* Why Modem Performance Matters */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Why modem Wi-Fi performance matters<span className="text-primary">_</span>
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Faster and more dependable Wi-Fi means faster downloads, seamless streaming, and less-lag gaming and crucial connectivity, powered by your modem.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Home className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-bold mb-2">Whole-home coverage</h3>
+              <p className="text-sm text-muted-foreground">
+                Older Wi-Fi setups can struggle in big homes. Mesh systems reduce dead zones with stronger, wider coverage to reach every room.
+              </p>
             </div>
-          </Card>
-        </section>
 
-        {/* Why Choose Section */}
-        <section className="mb-16">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why choose eero<span className="text-primary">_</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Industry-leading mesh technology trusted by millions of homes worldwide.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Zap className="h-7 w-7 text-primary" />
+            <div className="text-center">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">Optimized for NBN</h3>
+              <h3 className="font-bold mb-2">Faster speeds for more devices</h3>
               <p className="text-sm text-muted-foreground">
-                Tested and verified to work perfectly with all BroNET NBN plans
+                Old routers lag, especially when serving too many devices at once. Modern Wi-Fi delivers speed and handles them all smoothly without slowing down.
               </p>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Smartphone className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="font-bold mb-2">Easy App Setup</h3>
-              <p className="text-sm text-muted-foreground">
-                Simple mobile app gets you online in minutes, no tech expertise needed
-              </p>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Signal className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="font-bold mb-2">Expandable Coverage</h3>
-              <p className="text-sm text-muted-foreground">
-                Add more units anytime to extend your mesh network coverage
-              </p>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="font-bold mb-2">Auto Security</h3>
-              <p className="text-sm text-muted-foreground">
-                Automatic firmware updates keep your network secure 24/7
-              </p>
-            </Card>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="text-center">
-          <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 p-8 md:p-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to upgrade your Wi-Fi?</h2>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Get a free eero router when you sign up for a 36-month NBN plan. 
-              Experience whole-home coverage with the latest Wi-Fi 7 technology.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-gradient-brand" asChild>
-                <Link href="/plans">
-                  View NBN Plans
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/coverage">Check Address</Link>
-              </Button>
             </div>
-          </Card>
-        </section>
-      </div>
+
+            <div className="text-center">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Signal className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-bold mb-2">Stable connections</h3>
+              <p className="text-sm text-muted-foreground">
+                Modern Wi-Fi delivers stable, reliable connections limiting dropped signals or buffering, even during peak usage times.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Claim Free Modem CTA */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="h-1 w-12 bg-primary mx-auto mb-8" />
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Claim your FREE* modem<span className="text-primary">_</span>
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Connect to one of our eligible nbn plans and get a free* modem. Choose from the Amazon eero 7 or get the Amazon eero Pro 7 available exclusively on our 2 Gbps Hyperspeed plan.
+            </p>
+            <Button size="lg" className="bg-gradient-brand group" asChild>
+              <Link href="/plans">
+                View nbn plans
+                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <p className="text-xs text-muted-foreground mt-4">
+              * If you stay connected for 36 months. T&Cs apply.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Things you need to know<span className="text-primary">_</span>
+          </h2>
+
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`faq-${index}`}
+                  className="bg-background rounded-lg border px-6"
+                >
+                  <AccordionTrigger className="text-left font-semibold hover:no-underline py-4">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-4">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </div>
+      </section>
 
       {/* Enquiry Dialog */}
       <Dialog open={showEnquiryDialog} onOpenChange={setShowEnquiryDialog}>
