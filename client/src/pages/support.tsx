@@ -102,43 +102,49 @@ export default function Support() {
       <section className="py-8 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Phone className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Call Us</h3>
-                  <p className="text-sm text-muted-foreground">1300 123 456</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Mail className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Email Us</h3>
-                  <p className="text-sm text-muted-foreground">support@brointernet.com</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Live Chat</h3>
-                  <p className="text-sm text-muted-foreground">In customer portal</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className={`hover:shadow-lg transition-shadow ${status === 'operational' ? 'border-green-300' : 'border-yellow-300'}`}>
+            <a href="tel:1300123456" className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" data-testid="link-call">
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Call Us</h3>
+                    <p className="text-sm text-muted-foreground">1300 123 456</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </a>
+            <a href="mailto:support@brointernet.com" className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" data-testid="link-email">
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Email Us</h3>
+                    <p className="text-sm text-muted-foreground">support@brointernet.com</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </a>
+            <Link href="/dashboard" className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" data-testid="link-chat">
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Live Chat</h3>
+                    <p className="text-sm text-muted-foreground">In customer portal</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Card className={`${status === 'operational' ? 'border-green-300' : 'border-yellow-300'}`} role="status" aria-live="polite">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${status === 'operational' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
-                  <Activity className={`h-6 w-6 ${status === 'operational' ? 'text-green-600' : 'text-yellow-600'}`} />
+                  <Activity className={`h-6 w-6 ${status === 'operational' ? 'text-green-600' : 'text-yellow-600'}`} aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Network Status</h3>
