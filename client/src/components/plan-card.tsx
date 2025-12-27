@@ -51,7 +51,7 @@ function getTierColor(tier?: string): string {
     case 'power':
       return 'bg-red-500';
     case 'ultra':
-      return 'bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500';
+      return 'bg-fire-animated';
     default:
       return 'bg-primary';
   }

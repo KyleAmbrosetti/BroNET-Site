@@ -274,6 +274,59 @@
   }
 }
 
+/* Ultra fire animation for plan cards */
+.bg-fire-animated {
+  background: linear-gradient(
+    90deg,
+    #7c3aed,
+    #a855f7,
+    #ec4899,
+    #f97316,
+    #fbbf24,
+    #f97316,
+    #ec4899,
+    #a855f7,
+    #7c3aed
+  );
+  background-size: 300% 100%;
+  animation: fire-dance 2s ease-in-out infinite;
+  position: relative;
+}
+
+.bg-fire-animated::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 100% 200%;
+  animation: fire-flicker 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes fire-dance {
+  0%, 100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
+@keyframes fire-flicker {
+  0% {
+    background-position: center 0%;
+    opacity: 0.5;
+  }
+  100% {
+    background-position: center 100%;
+    opacity: 0.8;
+  }
+}
+
 .font-heading {
   font-family: var(--font-heading);
 }
