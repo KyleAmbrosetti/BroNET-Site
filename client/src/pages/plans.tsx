@@ -44,7 +44,7 @@ export default function Plans() {
       price: 89, 
       typical: "98 Mbps",
       typicalUpload: "18",
-      tier: 'power' as const,
+      tier: 'basic' as const,
       popular: true
     },
     { 

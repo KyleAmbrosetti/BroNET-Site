@@ -47,7 +47,7 @@ function getSpeedPercentage(speed: number): number {
 function getTierColor(tier?: string): string {
   switch (tier) {
     case 'basic':
-      return 'bg-slate-500';
+      return 'bg-green-500';
     case 'power':
       return 'bg-orange-500';
     case 'ultra':
