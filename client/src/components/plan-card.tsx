@@ -95,9 +95,7 @@ export function PlanCard({
     : `/signup?plan=${encodeURIComponent(name)}&speed=${speed}&price=${price}`;
 
   return (
-    <Card className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-      isPopular ? 'border-primary border-2 shadow-lg scale-[1.02] z-10' : 'border-border'
-    }`}>
+    <Card className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary hover:border-2 border-border`}>
       {(tier || badge || isPopular) && (
         <div className={`flex items-center justify-between px-3 py-1.5 ${getTierColor(tier)} text-white text-xs font-bold uppercase tracking-wider`}>
           <span>{getTierLabel(tier)}</span>
