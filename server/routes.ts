@@ -17,6 +17,12 @@ import { checkNBNAvailability, getSQMode, generateAddressHash } from "./services
 import bcrypt from "bcrypt";
 import { registerChatRoutes } from "./replit_integrations/chat";
 
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+  }
+}
+
 // Middleware to require authentication
 function requireAuth(req: any, res: any, next: any) {
   if (!req.session?.userId) {

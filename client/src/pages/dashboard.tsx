@@ -142,6 +142,9 @@ export default function Dashboard() {
   
   // Plan Change State
   const [isChangingPlan, setIsChangingPlan] = useState(false);
+  
+  // Stripe Portal State
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -157,7 +160,7 @@ export default function Dashboard() {
         api.getMessages(),
         api.getModemEnquiries(),
         api.getBillingHistory(),
-        fetch("/api/orders", { credentials: "include" }).then(r => r.json()).catch(() => ({ orders: [] }))
+        api.getOrders()
       ]);
       
       if (ticketsRes.data) setTickets(ticketsRes.data.tickets);
@@ -165,7 +168,7 @@ export default function Dashboard() {
       if (messagesRes.data) setContactMessages(messagesRes.data.messages);
       if (modemEnquiriesRes.data) setModemEnquiries(modemEnquiriesRes.data.enquiries);
       if (billingRes.data) setBillingHistory(billingRes.data.history);
-      if (ordersRes?.orders) setOrders(ordersRes.orders);
+      if (ordersRes.data?.orders) setOrders(ordersRes.data.orders);
     };
     
     loadData();
@@ -253,6 +256,25 @@ export default function Dashboard() {
     if (billingRes.data) setBillingHistory(billingRes.data.history);
     
     toast({ title: "Plan changed successfully" });
+  };
+
+  const handleOpenBillingPortal = async () => {
+    setIsOpeningPortal(true);
+    const { data, error } = await api.createBillingPortal();
+    setIsOpeningPortal(false);
+    
+    if (error) {
+      toast({ 
+        title: "Unable to open billing portal", 
+        description: "You may not have an active subscription yet.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    if (data?.url) {
+      window.location.href = data.url;
+    }
   };
 
   if (!user) return null;
@@ -523,7 +545,7 @@ export default function Dashboard() {
                   <CardTitle>Next Payment</CardTitle>
                   <CardDescription>Your upcoming billing date</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
                     <div className="p-3 bg-primary/10 rounded-full">
                       <Calendar className="h-6 w-6 text-primary" />
@@ -537,6 +559,16 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleOpenBillingPortal}
+                    disabled={isOpeningPortal}
+                    data-testid="button-manage-payment"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    {isOpeningPortal ? "Opening..." : "Manage Payment Method"}
+                  </Button>
                 </CardContent>
               </Card>
             </div>

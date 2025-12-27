@@ -161,4 +161,31 @@ export const api = {
   createBillingPortal: () => apiFetch('/stripe/portal', {
     method: 'POST',
   }),
+
+  // Address suggestions
+  getAddressSuggestions: (query: string) => apiFetch(`/coverage/suggest?q=${encodeURIComponent(query)}`),
+
+  // Orders
+  getOrders: () => apiFetch('/orders'),
+  
+  getOrder: (orderId: string) => apiFetch(`/orders/${orderId}`),
+  
+  createOrder: (data: any) => apiFetch('/orders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  qualifyOrder: (address: string, locId?: string) => apiFetch('/orders/qualify', {
+    method: 'POST',
+    body: JSON.stringify({ address, locId }),
+  }),
+  
+  updateOrderStatus: (orderId: string, status: string) => apiFetch(`/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
+  
+  activateOrder: (orderId: string) => apiFetch(`/orders/${orderId}/activate`, {
+    method: 'POST',
+  }),
 };
