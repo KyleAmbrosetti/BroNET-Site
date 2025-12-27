@@ -247,21 +247,20 @@ export default function ModemsPage() {
               }`}
               data-testid={`card-product-${product.id}`}
             >
-              {product.badge && (
-                <Badge 
-                  className={`absolute top-4 right-4 z-10 text-white font-semibold shadow-lg ${
-                    product.id === 'eero-7' ? 'bg-primary' : 
-                    product.id === 'eero-pro-7' ? 'bg-green-600' : 
-                    'bg-orange-500'
-                  }`}
-                  data-testid={`badge-${product.id}`}
-                >
-                  {product.badge}
-                </Badge>
-              )}
-              
               {/* Image */}
-              <div className="h-48 md:h-56 bg-muted overflow-hidden">
+              <div className="relative h-48 md:h-56 bg-muted overflow-hidden">
+                {product.badge && (
+                  <Badge 
+                    className={`absolute top-3 left-3 z-10 text-white font-semibold shadow-lg px-3 py-1 ${
+                      product.id === 'eero-7' ? 'bg-primary' : 
+                      product.id === 'eero-pro-7' ? 'bg-green-600' : 
+                      'bg-orange-500'
+                    }`}
+                    data-testid={`badge-${product.id}`}
+                  >
+                    {product.badge}
+                  </Badge>
+                )}
                 <img 
                   src={product.image} 
                   alt={product.name}
