@@ -29,8 +29,8 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/coming-soon" component={ComingSoon} />
+        <Route path="/" component={ComingSoon} />
+        <Route path="/home" component={Home} />
         <Route path="/plans" component={Plans} />
         <Route path="/mobile" component={Mobile} />
         <Route path="/speed-test" component={SpeedTest} />
