@@ -304,8 +304,8 @@ export default function Plans() {
           </p>
         </div>
 
-        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4">
-          <div className="flex gap-4 min-w-max">
+        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4 pt-2">
+          <div className="flex gap-4 min-w-max py-2">
             {plans.map((plan) => {
               const available = isPlanAvailable(plan.speed, false);
               return (
@@ -341,8 +341,8 @@ export default function Plans() {
           <p className="text-muted-foreground text-center mb-8">For regional and rural areas with NBN Fixed Wireless coverage</p>
         </div>
 
-        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4">
-          <div className="flex gap-4 min-w-max justify-center">
+        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4 pt-2">
+          <div className="flex gap-4 min-w-max justify-center py-2">
             {fixedWirelessPlans.map((plan) => {
               const available = isPlanAvailable(plan.speed, true);
               return (
