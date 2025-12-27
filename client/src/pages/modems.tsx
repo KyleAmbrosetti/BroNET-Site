@@ -110,8 +110,8 @@ const faqs = [
     answer: "A mesh router system uses multiple units (a main router and satellites) to provide seamless Wi-Fi coverage throughout your home. Unlike a traditional router, it reduces dead zones by letting devices automatically connect to the strongest signal as you move around."
   },
   {
-    question: "How do I claim my FREE* BroNET modem?",
-    answer: "Connect to one of our eligible nbn plans to get an Amazon eero 7 for FREE*. *When you stay connected for 36 months. Check out the website for all current offers."
+    question: "Can I buy a modem from BroNET?",
+    answer: "Yes! You can purchase any of our eero modems outright or pay them off over 12 or 24 months. Simply enquire about your preferred modem and we'll help you get set up."
   },
   {
     question: "Which modem is best for my nbn plan?",
@@ -197,10 +197,7 @@ export default function ModemsPage() {
               BroNET's ultrafast next-gen modems<span className="text-primary">_</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Get a free* next-gen modem and enjoy seamless connectivity and reliable performance for every home and business.
-            </p>
-            <p className="text-sm text-muted-foreground mt-4">
-              * Free when you stay connected for 36 months. T&Cs apply.
+              Experience seamless connectivity and reliable performance with our next-gen modems for every home and business.
             </p>
           </div>
         </div>
@@ -353,16 +350,16 @@ export default function ModemsPage() {
         </div>
       </section>
 
-      {/* Claim Free Modem CTA */}
+      {/* View Plans CTA */}
       <section className="py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <div className="h-1 w-12 bg-primary mx-auto mb-8" />
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Claim your FREE* modem<span className="text-primary">_</span>
+              Ready to get connected<span className="text-primary">?</span>
             </h2>
             <p className="text-muted-foreground mb-8">
-              Connect to one of our eligible nbn plans and get a free* modem. Choose from the Amazon eero 7 or get the Amazon eero Pro 7 available exclusively on our 2 Gbps Hyperspeed plan.
+              Pair your new modem with one of our ultra-fast nbn plans for the best experience.
             </p>
             <Button size="lg" className="bg-gradient-brand group" asChild>
               <Link href="/plans">
@@ -370,9 +367,6 @@ export default function ModemsPage() {
                 <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <p className="text-xs text-muted-foreground mt-4">
-              * If you stay connected for 36 months. T&Cs apply.
-            </p>
           </div>
         </div>
       </section>

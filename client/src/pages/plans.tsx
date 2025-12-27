@@ -219,7 +219,7 @@ export default function Plans() {
               </div>
               <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
                 <Wifi className="h-4 w-4 text-primary" />
-                <span>Free modem on 36mo</span>
+                <span>eero Wi-Fi 7 modems</span>
               </div>
             </div>
 
@@ -378,9 +378,9 @@ export default function Plans() {
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Wifi className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">Free modem</h3>
+              <h3 className="font-bold mb-2">Wi-Fi 7 modems</h3>
               <p className="text-sm text-muted-foreground">
-                Get a free eero 7 mesh router when you stay connected for 36 months.
+                Pair your plan with our eero Wi-Fi 7 mesh routers for whole-home coverage.
               </p>
             </div>
           </div>

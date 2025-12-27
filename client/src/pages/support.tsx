@@ -177,7 +177,7 @@ export default function Support() {
               <AccordionItem value="item-2">
                 <AccordionTrigger>Do I need a new modem?</AccordionTrigger>
                 <AccordionContent>
-                  Not necessarily! If you have a BYO modem that is NBN compatible, you can use it. We also offer free eero 7 routers when you stay connected for 36 months.
+                  Not necessarily! If you have a BYO modem that is NBN compatible, you can use it. We also offer eero Wi-Fi 7 routers that you can purchase outright or pay off over time.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
