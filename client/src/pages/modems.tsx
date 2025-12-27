@@ -249,8 +249,11 @@ export default function ModemsPage() {
             >
               {product.badge && (
                 <Badge 
-                  variant={product.badgeVariant} 
-                  className="absolute top-4 right-4 z-10"
+                  className={`absolute top-4 right-4 z-10 text-white font-semibold shadow-lg ${
+                    product.id === 'eero-7' ? 'bg-primary' : 
+                    product.id === 'eero-pro-7' ? 'bg-green-600' : 
+                    'bg-orange-500'
+                  }`}
                   data-testid={`badge-${product.id}`}
                 >
                   {product.badge}
