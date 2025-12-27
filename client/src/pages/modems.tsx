@@ -238,12 +238,12 @@ export default function ModemsPage() {
 
       <div className="container px-4 md:px-6 py-16">
         {/* Product Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
           {products.map((product) => (
             <Card 
               key={product.id} 
-              className={`relative flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                product.highlight ? 'border-primary shadow-lg scale-[1.02]' : ''
+              className={`relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl ${
+                product.highlight ? 'border-primary border-2 shadow-lg' : 'border'
               }`}
               data-testid={`card-product-${product.id}`}
             >
@@ -258,63 +258,57 @@ export default function ModemsPage() {
               )}
               
               {/* Image */}
-              <div className="relative h-56 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+              <div className="h-48 md:h-56 bg-muted overflow-hidden">
                 <img 
                   src={product.image} 
                   alt={product.name}
-                  className={`h-full w-full object-cover transition-transform duration-300 hover:scale-105 ${
+                  className={`h-full w-full object-cover ${
                     product.id === 'eero-max-7' ? 'object-[center_60%]' : 'object-center'
                   }`}
                   data-testid={`image-${product.id}`}
                 />
               </div>
 
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-2xl" data-testid={`title-${product.id}`}>
-                      {product.name}
-                    </CardTitle>
-                    <CardDescription data-testid={`subtitle-${product.id}`}>
-                      {product.subtitle}
-                    </CardDescription>
-                  </div>
-                </div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl md:text-2xl" data-testid={`title-${product.id}`}>
+                  {product.name}
+                </CardTitle>
+                <CardDescription data-testid={`subtitle-${product.id}`}>
+                  {product.subtitle}
+                </CardDescription>
               </CardHeader>
 
-              <CardContent className="flex-1 space-y-4">
+              <CardContent className="flex-1 flex flex-col gap-4">
                 {/* Price */}
-                <div className="bg-muted/50 rounded-xl p-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold" data-testid={`price-${product.id}`}>
-                      ${product.price}
-                    </span>
-                  </div>
-                  <p className="text-sm text-primary font-medium">{product.priceNote}</p>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <span className="text-3xl md:text-4xl font-bold" data-testid={`price-${product.id}`}>
+                    ${product.price}
+                  </span>
+                  <p className="text-sm text-primary font-medium mt-1">{product.priceNote}</p>
                 </div>
 
                 {/* Quick Specs */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <Signal className="h-4 w-4 text-muted-foreground" />
+                    <Signal className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{product.specs.speed}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4 text-muted-foreground" />
+                    <Home className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{product.specs.coverage}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-muted-foreground" />
+                    <Wifi className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{product.specs.bands}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-muted-foreground" />
+                    <Zap className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span>{product.specs.nbn}</span>
                   </div>
                 </div>
 
                 {/* Features */}
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   {product.features.slice(0, 4).map((feature, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-sm" data-testid={`feature-${product.id}-${idx}`}>
                       <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
@@ -324,14 +318,14 @@ export default function ModemsPage() {
                 </div>
 
                 {/* Ideal For */}
-                <div className="pt-3 border-t">
+                <div className="pt-3 border-t mt-auto">
                   <p className="text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">Ideal for:</span> {product.ideal}
                   </p>
                 </div>
               </CardContent>
 
-              <CardFooter className="pt-0">
+              <CardFooter>
                 <Button 
                   className={`w-full ${product.highlight ? 'bg-gradient-brand' : ''}`}
                   variant={product.highlight ? 'default' : 'outline'}
