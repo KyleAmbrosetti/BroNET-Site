@@ -110,7 +110,7 @@ export default function Home() {
               upload={20} 
               price={89} 
               typicalSpeed="98 Mbps" 
-              tier="power"
+              tier="basic"
               isPopular={true}
             />
             <PlanCard 
