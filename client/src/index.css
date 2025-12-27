@@ -276,7 +276,7 @@
 
 /* Ultra fire animation for plan cards - sideways flames */
 .bg-fire-animated {
-  background: linear-gradient(90deg, #ec4899, #f43f5e);
+  background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899);
   position: relative;
   overflow: visible;
 }
