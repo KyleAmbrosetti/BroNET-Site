@@ -4,12 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MessageSquare, Activity, AlertTriangle, CheckCircle, Send } from "lucide-react";
+import { Mail, Phone, MessageSquare, Activity, CheckCircle, Send, Headphones, ArrowRight, HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { Link } from "wouter";
 
 export default function Support() {
   const [status, setStatus] = useState<"operational" | "incident">("operational");
@@ -17,7 +17,6 @@ export default function Support() {
   const { user } = useUser();
   const { toast } = useToast();
   
-  // Contact Form State
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [topic, setTopic] = useState("");
@@ -26,7 +25,6 @@ export default function Support() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // Poll for incidents
     const updateStatus = async () => {
       const { data } = await api.getIncidents();
       if (data) {
@@ -41,7 +39,6 @@ export default function Support() {
     return () => clearInterval(interval);
   }, []);
 
-  // Pre-fill form if logged in
   useEffect(() => {
     if (user) {
       setName(user.firstName + ' ' + user.lastName);
@@ -75,7 +72,6 @@ export default function Support() {
     setIsSuccess(true);
     toast({ title: "Message sent!", description: "We'll get back to you shortly." });
     
-    // Reset form if not logged in (keep name/email if logged in)
     if (!user) {
       setName("");
       setEmail("");
@@ -83,86 +79,87 @@ export default function Support() {
     setTopic("");
     setMessage("");
     
-    // Reset success message after 5s
     setTimeout(() => setIsSuccess(false), 5000);
   };
 
   return (
-    <div className="container py-16 px-4 md:px-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Left Column - Contact & Status */}
-        <div className="space-y-8">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-4">Support</h1>
-            <p className="text-muted-foreground text-lg">
-              We're here to help. Our Aussie team is available 8am - 8pm AEDT.
+    <div className="min-h-screen">
+      {/* Hero Section - Superloop Style */}
+      <section className="py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+              Get help and<br />support<span className="text-primary">_</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              We're here for you. Our Aussie team is available to help with any questions about your internet service.
             </p>
           </div>
+        </div>
+      </section>
 
-          <Card className={`border-l-4 ${status === 'operational' ? 'border-l-green-500' : 'border-l-yellow-500'}`}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Activity className={`h-5 w-5 ${status === 'operational' ? 'text-green-500' : 'text-yellow-500'}`} />
-                <CardTitle className="text-lg">Network Status</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {status === 'operational' ? (
-                <>
-                  <p className="text-sm font-medium">All systems operational</p>
-                  <p className="text-xs text-muted-foreground mt-1">Last updated: Just now</p>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Active Incidents:</p>
-                  {incidents.map(inc => (
-                    <div key={inc.id} className="text-xs bg-muted p-2 rounded">
-                      <div className="font-bold">{inc.title}</div>
-                      <div className="text-muted-foreground capitalize">{inc.status}</div>
-                    </div>
-                  ))}
+      {/* Quick Actions */}
+      <section className="py-8 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Phone className="h-6 w-6 text-primary" />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Phone className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-bold">1300 BRO NET</div>
-                <div className="text-xs text-muted-foreground">Mon-Sun, 8am - 8pm</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-bold">support@brointernet.com</div>
-                <div className="text-xs text-muted-foreground">Response within 24 hours</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <MessageSquare className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-bold">Live Chat</div>
-                <div className="text-xs text-muted-foreground">Available in Customer Portal</div>
-              </div>
-            </div>
+                <div>
+                  <h3 className="font-semibold">Call Us</h3>
+                  <p className="text-sm text-muted-foreground">1300 123 456</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Email Us</h3>
+                  <p className="text-sm text-muted-foreground">support@brointernet.com</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Live Chat</h3>
+                  <p className="text-sm text-muted-foreground">In customer portal</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className={`hover:shadow-lg transition-shadow ${status === 'operational' ? 'border-green-300' : 'border-yellow-300'}`}>
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${status === 'operational' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                  <Activity className={`h-6 w-6 ${status === 'operational' ? 'text-green-600' : 'text-yellow-600'}`} />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Network Status</h3>
+                  <p className={`text-sm ${status === 'operational' ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {status === 'operational' ? 'All systems operational' : `${incidents.length} active incident(s)`}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
+      </section>
 
-        {/* Right Column - FAQ & Form */}
-        <div className="lg:col-span-2 space-y-12">
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+      <div className="container py-16 px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* FAQ Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <HelpCircle className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
+            </div>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger>How long does it take to switch?</AccordionTrigger>
@@ -173,13 +170,13 @@ export default function Support() {
               <AccordionItem value="item-2">
                 <AccordionTrigger>Do I need a new modem?</AccordionTrigger>
                 <AccordionContent>
-                  Not necessarily! If you have a BYO modem that is NBN compatible (VDSL for FTTN, or WAN port for FTTP/HFC), you can use it. We also sell pre-configured eero 7 routers if you want an upgrade.
+                  Not necessarily! If you have a BYO modem that is NBN compatible, you can use it. We also offer free eero 7 routers when you stay connected for 36 months.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3">
                 <AccordionTrigger>What is CGNAT?</AccordionTrigger>
                 <AccordionContent>
-                  We use CGNAT (Carrier Grade NAT) to manage IPv4 addresses. This works fine for 99% of users. If you need port forwarding for hosting servers or specific gaming setups, you can add a Static IP for $5/mo in the portal.
+                  We use CGNAT (Carrier Grade NAT) to manage IPv4 addresses. This works fine for 99% of users. If you need port forwarding, you can add a Static IP for $5/mo in the portal.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-4">
@@ -188,11 +185,30 @@ export default function Support() {
                   Nope! We don't believe in locking you in. If you leave, you just pay for the remainder of your current billing month. No exit fees, ever.
                 </AccordionContent>
               </AccordionItem>
+              <AccordionItem value="item-5">
+                <AccordionTrigger>What speeds can I get?</AccordionTrigger>
+                <AccordionContent>
+                  This depends on your connection type and location. Check your address on our coverage page to see what speeds are available. We offer plans from 50 Mbps up to 2000 Mbps.
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
-          </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Send us a message</h2>
+            <div className="mt-8">
+              <Button variant="outline" asChild>
+                <Link href="/coverage">
+                  Check your address
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <Headphones className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold">Send us a message</h2>
+            </div>
             <Card>
               <CardContent className="pt-6">
                 {isSuccess ? (
@@ -202,7 +218,7 @@ export default function Support() {
                     </div>
                     <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
                     <p className="text-muted-foreground max-w-sm">
-                      Thanks for reaching out. One of our local support legends will get back to you shortly via email.
+                      Thanks for reaching out. One of our team will get back to you shortly.
                     </p>
                     <Button variant="outline" className="mt-6" onClick={() => setIsSuccess(false)}>
                       Send another message
@@ -253,7 +269,7 @@ export default function Support() {
                         required
                       />
                     </div>
-                    <Button className="w-full bg-gradient-brand" disabled={isSubmitting}>
+                    <Button className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? "Sending..." : "Send Message"}
                       {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
                     </Button>
@@ -261,7 +277,7 @@ export default function Support() {
                 )}
               </CardContent>
             </Card>
-          </section>
+          </div>
         </div>
       </div>
     </div>
