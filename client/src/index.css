@@ -284,57 +284,59 @@
 .bg-fire-animated::before {
   content: '';
   position: absolute;
-  left: -12px;
-  top: 0;
-  bottom: 0;
-  width: 24px;
+  right: -20px;
+  top: -8px;
+  bottom: -8px;
+  width: 40px;
   background: 
-    radial-gradient(ellipse 100% 80% at 100% 20%, #fbbf24 0%, transparent 50%),
-    radial-gradient(ellipse 100% 60% at 100% 50%, #f97316 0%, transparent 50%),
-    radial-gradient(ellipse 100% 80% at 100% 80%, #ef4444 0%, transparent 50%),
-    radial-gradient(ellipse 120% 100% at 100% 50%, #ec4899 0%, transparent 60%);
-  animation: sideways-flames 0.6s ease-in-out infinite alternate;
-  filter: blur(2px);
+    radial-gradient(ellipse 100% 60% at 0% 15%, #fbbf24 0%, transparent 60%),
+    radial-gradient(ellipse 100% 50% at 0% 40%, #f97316 0%, transparent 55%),
+    radial-gradient(ellipse 100% 60% at 0% 65%, #ef4444 0%, transparent 60%),
+    radial-gradient(ellipse 100% 50% at 0% 90%, #fbbf24 0%, transparent 55%),
+    radial-gradient(ellipse 140% 100% at 0% 50%, #ec4899 0%, transparent 70%);
+  animation: sideways-flames-right 0.5s ease-in-out infinite alternate;
+  filter: blur(3px);
   z-index: 10;
 }
 
 .bg-fire-animated::after {
   content: '';
   position: absolute;
-  left: -8px;
-  top: 0;
-  bottom: 0;
-  width: 16px;
+  right: -12px;
+  top: -4px;
+  bottom: -4px;
+  width: 24px;
   background: 
-    radial-gradient(ellipse 100% 50% at 100% 30%, #fff 0%, #fbbf24 20%, transparent 50%),
-    radial-gradient(ellipse 100% 50% at 100% 70%, #fff 0%, #f97316 20%, transparent 50%);
-  animation: sideways-flames-inner 0.4s ease-in-out infinite alternate-reverse;
-  filter: blur(1px);
+    radial-gradient(ellipse 100% 40% at 0% 25%, #fff 0%, #fbbf24 30%, transparent 60%),
+    radial-gradient(ellipse 100% 40% at 0% 50%, #fff 0%, #f97316 30%, transparent 60%),
+    radial-gradient(ellipse 100% 40% at 0% 75%, #fff 0%, #fbbf24 30%, transparent 60%);
+  animation: sideways-flames-inner-right 0.35s ease-in-out infinite alternate-reverse;
+  filter: blur(2px);
   z-index: 11;
 }
 
-@keyframes sideways-flames {
+@keyframes sideways-flames-right {
   0% {
-    transform: scaleX(1) scaleY(0.95);
-    opacity: 0.9;
+    transform: scaleX(1) scaleY(0.92);
+    opacity: 0.85;
   }
   50% {
-    transform: scaleX(1.15) scaleY(1.05);
+    transform: scaleX(1.2) scaleY(1.08);
     opacity: 1;
   }
   100% {
-    transform: scaleX(0.9) scaleY(1);
-    opacity: 0.85;
+    transform: scaleX(0.85) scaleY(0.96);
+    opacity: 0.9;
   }
 }
 
-@keyframes sideways-flames-inner {
+@keyframes sideways-flames-inner-right {
   0% {
-    transform: scaleX(0.8) translateX(-2px);
-    opacity: 0.7;
+    transform: scaleX(0.7) translateX(3px);
+    opacity: 0.6;
   }
   100% {
-    transform: scaleX(1.1) translateX(2px);
+    transform: scaleX(1.15) translateX(-3px);
     opacity: 1;
   }
 }
