@@ -241,6 +241,18 @@ GUIDELINES:
                 setAiMode(data.mode);
               }
               
+              if (data.status) {
+                // Show status message while tool is executing
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[newMessages.length - 1] = {
+                    role: "assistant",
+                    content: `⏳ ${data.status}`,
+                  };
+                  return newMessages;
+                });
+              }
+              
               if (data.content) {
                 assistantMessage += data.content;
                 setMessages((prev) => {

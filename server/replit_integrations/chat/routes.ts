@@ -1,6 +1,192 @@
 import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
 import { chatStorage } from "./storage";
+import { checkNBNAvailability } from "../../services/sq";
+import { storage } from "../../storage";
+
+// Define the tools for OpenAI function calling
+const ALEX_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "check_nbn_coverage",
+      description: "Check NBN availability and speed tiers at an Australian address. Use this when the user provides an address and wants to know if NBN is available.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: {
+            type: "string",
+            description: "The full Australian address to check, e.g. '123 Main Street, Sydney NSW 2000'"
+          }
+        },
+        required: ["address"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_plan_details",
+      description: "Get details about BroNET internet plans. Use this when the user asks about plans, pricing, or speeds.",
+      parameters: {
+        type: "object",
+        properties: {
+          plan_type: {
+            type: "string",
+            enum: ["all", "everyday", "extra_value", "family_max", "lightspeed", "hyperspeed"],
+            description: "The specific plan to get details for, or 'all' for all plans"
+          }
+        },
+        required: ["plan_type"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_account_info",
+      description: "Get the logged-in user's account information including their current plan and service status. Only use this when the user asks about their own account, plan, or service.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_support_ticket",
+      description: "Create a support ticket for the user. Use this when the user wants to report an issue, request help, or needs to escalate to human support.",
+      parameters: {
+        type: "object",
+        properties: {
+          subject: {
+            type: "string",
+            description: "A brief summary of the issue"
+          },
+          description: {
+            type: "string",
+            description: "Detailed description of the issue or request"
+          }
+        },
+        required: ["subject", "description"]
+      }
+    }
+  }
+];
+
+// Context for tool execution
+interface ToolContext {
+  userId?: string;
+}
+
+// Function to execute tool calls with user context
+async function executeToolCall(toolName: string, args: Record<string, any>, context: ToolContext = {}): Promise<string> {
+  switch (toolName) {
+    case "check_nbn_coverage": {
+      try {
+        const result = await checkNBNAvailability(args.address, '', undefined, undefined);
+        if (result.error || !result.available) {
+          return JSON.stringify({
+            available: false,
+            address: args.address,
+            message: result.error || "NBN service is not currently available at this address.",
+            suggestion: "Please verify the address is correct or contact support for assistance."
+          });
+        }
+        return JSON.stringify({
+          available: true,
+          address: result.formattedAddress || args.address,
+          technology: result.technology || "NBN",
+          maxSpeed: result.maxTier || "Contact for details",
+          message: `NBN is available via ${result.technology || 'NBN'}. Maximum speed: ${result.maxTier || 'Contact for details'}.`
+        });
+      } catch (error) {
+        return JSON.stringify({
+          available: false,
+          error: "Unable to check coverage at this time. Please try the coverage checker at /coverage."
+        });
+      }
+    }
+    case "get_plan_details": {
+      const plans = {
+        everyday: { name: "Everyday", speed: "25Mbps", promo: "$45/month for 6 months", regular: "$72/month", description: "Great for casual browsing and email" },
+        extra_value: { name: "Extra Value", speed: "50Mbps", promo: "$65/month for 6 months", regular: "$85/month", description: "Perfect for HD streaming" },
+        family_max: { name: "Family Max", speed: "500Mbps", promo: "$69/month for 6 months", regular: "$95/month", description: "Ideal for families - RECOMMENDED", recommended: true },
+        lightspeed: { name: "Lightspeed", speed: "1000Mbps", promo: "$85/month for 6 months", regular: "$109/month", description: "Ultra-fast for power users" },
+        hyperspeed: { name: "Hyperspeed", speed: "2000Mbps", promo: "$145/month for 6 months", regular: "$165/month", description: "Maximum speed available" }
+      };
+      
+      if (args.plan_type === "all") {
+        return JSON.stringify({ plans: Object.values(plans), note: "All plans include unlimited data and no lock-in contracts" });
+      }
+      const plan = plans[args.plan_type as keyof typeof plans];
+      return plan ? JSON.stringify(plan) : JSON.stringify({ error: "Plan not found" });
+    }
+    case "get_account_info": {
+      if (!context.userId) {
+        return JSON.stringify({
+          error: "User not logged in",
+          message: "Please log in to view your account information. You can log in at /auth or check your dashboard at /dashboard."
+        });
+      }
+      try {
+        const user = await storage.getUser(context.userId);
+        if (!user) {
+          return JSON.stringify({ error: "User not found" });
+        }
+        // Get user's tickets
+        const tickets = await storage.getTicketsByUser(context.userId);
+        const openTickets = tickets.filter(t => t.status !== 'resolved' && t.status !== 'closed');
+        
+        const fullName = `${user.firstName} ${user.lastName}`.trim();
+        
+        return JSON.stringify({
+          name: fullName,
+          email: user.email,
+          plan: user.planId || "No active plan",
+          serviceAddress: user.serviceAddress || "Not set",
+          accountStatus: "Active",
+          openTickets: openTickets.length,
+          message: `Account found for ${fullName}. ${openTickets.length > 0 ? `You have ${openTickets.length} open support ticket(s).` : ''}`
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Unable to retrieve account information",
+          message: "Please check your dashboard at /dashboard for account details."
+        });
+      }
+    }
+    case "create_support_ticket": {
+      if (!context.userId) {
+        return JSON.stringify({
+          error: "User not logged in",
+          message: "Please log in to create a support ticket. You can log in at /auth or create a ticket from your dashboard at /dashboard."
+        });
+      }
+      try {
+        const ticket = await storage.createTicket({
+          userId: context.userId,
+          subject: args.subject,
+          description: args.description
+        });
+        return JSON.stringify({
+          success: true,
+          ticketId: ticket.id,
+          message: `Support ticket #${ticket.id} has been created. Our team will respond within 24 hours. You can track your ticket in your dashboard at /dashboard.`
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Failed to create ticket",
+          message: "Unable to create the support ticket. Please try again or submit through your dashboard at /dashboard."
+        });
+      }
+    }
+    default:
+      return JSON.stringify({ error: "Unknown function" });
+  }
+}
 
 // Rate limiting map: IP -> { count, resetTime }
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -236,10 +422,10 @@ export function registerChatRoutes(app: Express): void {
       let fullResponse = "";
       
       if (openai) {
-        // AI mode: Use OpenAI
+        // AI mode: Use OpenAI with function calling
         try {
           // Get conversation history for context (only if logging enabled)
-          const chatMessages: Array<{ role: "user" | "assistant" | "system"; content: string }> = [];
+          const chatMessages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> = [];
           
           if (systemPrompt) {
             chatMessages.push({ role: "system", content: systemPrompt });
@@ -256,18 +442,72 @@ export function registerChatRoutes(app: Express): void {
             chatMessages.push({ role: "user", content: sanitizedMessage });
           }
           
-          const stream = await openai.chat.completions.create({
+          // First call - check if we need to use tools
+          const initialResponse = await openai.chat.completions.create({
             model: "gpt-4.1-mini",
             messages: chatMessages,
-            stream: true,
+            tools: ALEX_TOOLS,
+            tool_choice: "auto",
             max_completion_tokens: 1024,
           });
           
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || "";
-            if (content) {
-              fullResponse += content;
-              res.write(`data: ${JSON.stringify({ content })}\n\n`);
+          const assistantMessage = initialResponse.choices[0]?.message;
+          
+          // Check if there are tool calls
+          if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
+            // Execute all tool calls
+            const toolResults: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+            
+            for (const toolCall of assistantMessage.tool_calls) {
+              const args = JSON.parse(toolCall.function.arguments);
+              const result = await executeToolCall(toolCall.function.name, args, { userId });
+              
+              // Send status update to client
+              const statusMap: Record<string, string> = {
+                'check_nbn_coverage': 'Checking NBN coverage...',
+                'get_plan_details': 'Looking up plan details...',
+                'get_account_info': 'Retrieving your account info...',
+                'create_support_ticket': 'Creating support ticket...'
+              };
+              res.write(`data: ${JSON.stringify({ status: statusMap[toolCall.function.name] || 'Processing...' })}\n\n`);
+              
+              toolResults.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+              });
+            }
+            
+            // Add assistant message with tool calls and tool results
+            chatMessages.push(assistantMessage);
+            chatMessages.push(...toolResults);
+            
+            // Get final response with tool results
+            const finalStream = await openai.chat.completions.create({
+              model: "gpt-4.1-mini",
+              messages: chatMessages,
+              stream: true,
+              max_completion_tokens: 1024,
+            });
+            
+            for await (const chunk of finalStream) {
+              const content = chunk.choices[0]?.delta?.content || "";
+              if (content) {
+                fullResponse += content;
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+              }
+            }
+          } else {
+            // No tool calls, stream the response directly
+            if (assistantMessage?.content) {
+              fullResponse = assistantMessage.content;
+              // Simulate streaming for consistent UX
+              const words = fullResponse.split(' ');
+              for (let i = 0; i < words.length; i++) {
+                const chunk = (i === 0 ? '' : ' ') + words[i];
+                res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+                await new Promise(resolve => setTimeout(resolve, 15));
+              }
             }
           }
         } catch (error) {
