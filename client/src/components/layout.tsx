@@ -8,6 +8,7 @@ import {
 import { Menu, Zap, User, Moon, Sun, LayoutDashboard, Phone, ChevronRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/use-user";
+import { Alex } from "@/components/chatbot";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -210,6 +211,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </footer>
       )}
       
+      {/* Alex AI Assistant */}
+      <Alex />
     </div>
   );
 }
