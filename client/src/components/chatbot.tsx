@@ -17,7 +17,7 @@ interface Message {
   content: string;
 }
 
-export function ChatBot() {
+export function Alex() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -71,7 +71,7 @@ export function ChatBot() {
       setMessages([
         {
           role: "assistant",
-          content: "G'day! I'm BroNET's customer support assistant. How can I help you today? I can answer questions about our NBN plans, coverage, modems, billing, or technical support.\n\n⚠️ Privacy Notice: Don't share passwords or sensitive personal information in this chat.",
+          content: "G'day! I'm Alex, your BroNET AI assistant. 👋\n\nI can help you with:\n• Check NBN availability at your address\n• Browse our internet plans\n• Answer questions about billing & account\n• Troubleshoot connection issues\n• Create support tickets\n\nWhat can I help you with today?",
         },
       ]);
     }
@@ -158,22 +158,46 @@ export function ChatBot() {
         body: JSON.stringify({
           conversationId,
           message: userMessage,
-          systemPrompt: `You are BroNET's friendly and helpful AI customer support assistant for an Australian NBN internet service provider.
+          systemPrompt: `You are Alex, BroNET's friendly AI assistant for an Australian NBN internet service provider. You're knowledgeable, helpful, and use Australian English (G'day, mate, no worries, etc.).
 
-Key information about BroNET:
-- We offer NBN plans: Basic (25Mbps, $59/month), Standard (50Mbps, $69/month), Fast (100Mbps, $79/month), Superfast (250Mbps, $99/month), Ultra (1000Mbps, $129/month)
-- We sell eero 7 ($299), eero Pro 7 ($599), and eero Max 7 ($899) mesh routers
-- Coverage check is available on our website at /coverage
-- Support is available 24/7 via support tickets in the dashboard at /dashboard
-- We service all NBN-connected areas in Australia
-- Billing cycles are monthly
-- Plan details and FAQs are available at /plans and /support
-- Privacy policy at /privacy, Terms at /terms
+KEY CAPABILITIES:
+1. NBN COVERAGE CHECK - When users ask about coverage or give an address:
+   - Tell them to use our coverage checker at /coverage
+   - Or say "Let me check that for you" and guide them to enter their full address
+   
+2. PLAN INFORMATION:
+   - Everyday (25Mbps): $45/month for 6 months, then $72/month
+   - Extra Value (50Mbps): $65/month for 6 months, then $85/month
+   - Family Max (500Mbps): $69/month for 6 months, then $95/month - RECOMMENDED
+   - Lightspeed (1000Mbps): $85/month for 6 months, then $109/month
+   - Hyperspeed (2000Mbps): $145/month for 6 months, then $165/month
+   - All plans include unlimited data, no lock-in contracts
 
-Be helpful, friendly, and use Australian English. Keep responses concise but informative.
-Guide users to relevant pages when appropriate (e.g., "Check /plans for more details").
-If you don't know something specific about the user's account, suggest they check their dashboard or submit a support ticket.
-Never ask for or accept passwords, credit card numbers, or other sensitive information.`,
+3. ROUTERS:
+   - FREE router on 500Mbps+ plans (36-month agreement)
+   - eero 7: Great for most homes
+   - eero Pro 7: For larger homes or heavy usage
+   - BYO option available
+
+4. ACCOUNT & BILLING:
+   - Direct users to /dashboard for account management
+   - Billing cycles are monthly
+   - Can create support tickets for complex issues
+
+5. TROUBLESHOOTING:
+   - Common issues: restart modem, check cables, check for outages
+   - For persistent issues, create a support ticket
+
+6. SUPPORT ESCALATION:
+   - If user is frustrated or issue is complex, offer to create a support ticket
+   - Phone support: 1800 BRO NET
+
+GUIDELINES:
+- Be concise but friendly
+- Use emojis sparingly (1-2 per message max)
+- Guide to relevant pages: /plans, /coverage, /dashboard, /support
+- Never ask for passwords, credit cards, or sensitive info
+- If unsure, suggest creating a support ticket`,
         }),
       });
 
@@ -304,7 +328,7 @@ Never ask for or accept passwords, credit card numbers, or other sensitive infor
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                <span className="font-semibold">BroNET Support</span>
+                <span className="font-semibold">Alex</span>
                 {unreadCount > 0 && (
                   <Badge className="bg-red-500 text-white" data-testid="badge-minimized-unread">
                     {unreadCount}
@@ -341,9 +365,9 @@ Never ask for or accept passwords, credit card numbers, or other sensitive infor
               <Zap className="h-3 w-3 absolute -bottom-1 -right-1 text-yellow-300" />
             </div>
             <div>
-              <CardTitle className="text-base font-semibold">BroNET AI Support</CardTitle>
+              <CardTitle className="text-base font-semibold">Alex</CardTitle>
               <p className="text-xs text-white/80">
-                {aiMode === 'ai' ? 'AI-Powered' : aiMode === 'fallback' ? 'FAQ Mode' : 'Ready to help'}
+                {aiMode === 'ai' ? 'AI Assistant' : aiMode === 'fallback' ? 'FAQ Mode' : 'Your BroNET assistant'}
               </p>
             </div>
           </div>
