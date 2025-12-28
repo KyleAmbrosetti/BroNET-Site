@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Wifi, Mail, ArrowRight, Clock, Zap, Bell, Eye, Download } from "lucide-react";
+import { Wifi, Mail, ArrowRight, Clock, Zap, Bell, Eye } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -66,16 +66,9 @@ export default function ComingSoon() {
           </div>
           
           <div className="flex justify-center mb-8">
-            <a 
-              href="/favicon.svg" 
-              download="bronet-logo.svg"
-              className="group relative h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-xl hover:scale-105 transition-transform cursor-pointer"
-              title="Download BroNET Logo"
-              data-testid="link-download-logo"
-            >
-              <Wifi className="h-10 w-10 text-white group-hover:opacity-0 transition-opacity" />
-              <Download className="h-10 w-10 text-white absolute opacity-0 group-hover:opacity-100 transition-opacity" />
-            </a>
+            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-xl">
+              <Wifi className="h-10 w-10 text-white" />
+            </div>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6" data-testid="heading-coming-soon">
