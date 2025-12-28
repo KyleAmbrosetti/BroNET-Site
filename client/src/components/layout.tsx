@@ -5,7 +5,7 @@ import {
   SheetContent, 
   SheetTrigger 
 } from "@/components/ui/sheet";
-import { Menu, Zap, User, Moon, Sun, LayoutDashboard, Phone, ChevronRight } from "lucide-react";
+import { Menu, Zap, User, Moon, Sun, LayoutDashboard, Phone, ChevronRight, Download } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/use-user";
 
@@ -30,12 +30,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Navbar - Superloop Style */}
       <header className="sticky top-0 z-50 w-full border-b bg-background">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-primary p-1.5 rounded-lg text-white">
-              <Zap className="h-5 w-5 fill-current" />
-            </div>
-            <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <a 
+              href="/favicon.png" 
+              download="bronet-logo.png"
+              className="group relative bg-primary p-1.5 rounded-lg text-white hover:scale-105 transition-transform"
+              title="Download BroNET Logo"
+            >
+              <Zap className="h-5 w-5 fill-current group-hover:opacity-0 transition-opacity" />
+              <Download className="h-5 w-5 absolute inset-0 m-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+            <Link href="/">
+              <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
+            </Link>
+          </div>
           {/* BroNET logo links to coming soon page (/) */}
 
           {/* Desktop Nav */}
