@@ -343,11 +343,17 @@ export async function registerRoutes(
   
   // Intercom-friendly NBN lookup endpoint (for custom actions/bots)
   app.get("/api/intercom/nbn-lookup", async (req, res) => {
+    // Set proper headers for Intercom
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
     try {
       const address = req.query.address as string;
       
       if (!address || address.length < 5) {
-        return res.json({
+        return res.status(200).json({
           success: false,
           message: "Please provide a full Australian address to check NBN availability."
         });
