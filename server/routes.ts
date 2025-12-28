@@ -341,6 +341,57 @@ export async function registerRoutes(
 
   // ============ COVERAGE CHECK ROUTES ============
   
+  // Intercom-friendly NBN lookup endpoint (for custom actions/bots)
+  app.get("/api/intercom/nbn-lookup", async (req, res) => {
+    try {
+      const address = req.query.address as string;
+      
+      if (!address || address.length < 5) {
+        return res.json({
+          success: false,
+          message: "Please provide a full Australian address to check NBN availability."
+        });
+      }
+
+      // Import and use the NBN availability check
+      const sqResult = await checkNBNAvailability(
+        address,
+        '',
+        undefined,
+        undefined
+      );
+
+      if (sqResult.error || !sqResult.available) {
+        return res.json({
+          success: false,
+          address: address,
+          message: sqResult.error || "NBN service is not currently available at this address.",
+          suggestion: "Please check the address is correct or contact our support team for assistance."
+        });
+      }
+
+      // Format a friendly response for Intercom
+      const response = {
+        success: true,
+        address: sqResult.formattedAddress || address,
+        technology: sqResult.technology || "NBN",
+        maxSpeed: sqResult.maxTier || "Contact for details",
+        available: sqResult.available,
+        message: `Great news! NBN is available at this address via ${sqResult.technology || 'NBN'}. Maximum speed available: ${sqResult.maxTier || 'Contact for details'}.`,
+        plans_url: "https://bronet-site.replit.app/plans",
+        signup_url: "https://bronet-site.replit.app/signup"
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      console.error('Intercom NBN lookup error:', error);
+      res.json({
+        success: false,
+        message: "Sorry, I couldn't check that address right now. Please try again or contact our support team."
+      });
+    }
+  });
+
   // Address autocomplete suggestions
   app.get("/api/coverage/suggest", async (req, res) => {
     try {
