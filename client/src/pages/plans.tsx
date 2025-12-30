@@ -224,7 +224,7 @@ export default function Plans() {
             </div>
 
             {/* Free Modem Offer Banner */}
-            <div className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border border-primary/20 rounded-xl px-6 py-4 mb-10 max-w-xl mx-auto">
+            <div className="bg-white dark:bg-card border border-primary/20 rounded-xl px-6 py-4 mb-10 max-w-xl mx-auto shadow-sm">
               <div className="flex items-center justify-center gap-3">
                 <Wifi className="h-6 w-6 text-primary" />
                 <div className="text-center">
