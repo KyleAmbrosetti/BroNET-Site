@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -339,6 +340,39 @@ export async function registerRoutes(
     }
   });
 
+  // ============ INTERCOM ROUTES ============
+  
+  // Generate HMAC hash for Intercom Identity Verification
+  app.get("/api/intercom/token", async (req, res) => {
+    try {
+      const secret = process.env.INTERCOM_IDENTITY_SECRET;
+      if (!secret) {
+        return res.status(500).json({ error: "Intercom identity verification not configured" });
+      }
+      
+      // If user is logged in, include their info
+      if (req.session?.userId) {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          const userId = String(user.id);
+          const userHash = crypto.createHmac('sha256', secret).update(userId).digest('hex');
+          return res.json({ 
+            user_hash: userHash, 
+            user_id: userId, 
+            email: user.email, 
+            name: `${user.firstName} ${user.lastName}`.trim() 
+          });
+        }
+      }
+      
+      // For anonymous users, no user_hash needed
+      return res.json({ anonymous: true });
+    } catch (error: any) {
+      console.error('Intercom token error:', error);
+      res.status(500).json({ error: "Failed to generate token" });
+    }
+  });
+  
   // ============ COVERAGE CHECK ROUTES ============
   
   // Intercom-friendly NBN lookup endpoint (for custom actions/bots)
