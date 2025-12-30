@@ -107,6 +107,22 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Free Modem Offer */}
+      <section className="py-4 bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5">
+        <div className="container px-4 md:px-6">
+          <div className="flex items-center justify-center gap-4 text-center">
+            <Wifi className="h-6 w-6 text-primary" />
+            <div>
+              <span className="font-bold text-lg">FREE eero Wi-Fi 7 Router</span>
+              <span className="text-muted-foreground ml-2">on 250Mbps+ plans with 24-month agreement</span>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/modems">Learn More</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Promo Banner */}
       <section className="py-8 bg-muted/30">
         <div className="container px-4 md:px-6">
