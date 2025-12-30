@@ -190,7 +190,7 @@ KEY CAPABILITIES:
 
 6. SUPPORT ESCALATION:
    - If user is frustrated or issue is complex, offer to create a support ticket
-   - Phone support: 1800 BRO NET
+   - Phone support: 07 4276 6387
 
 GUIDELINES:
 - Be concise but friendly

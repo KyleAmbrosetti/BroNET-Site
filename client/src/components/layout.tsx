@@ -147,7 +147,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="bg-gradient-brand py-12">
             <div className="container px-4 md:px-6 text-center">
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Upgrade your internet</h2>
-              <p className="text-white/80 mb-6">Or, contact our call centre on <a href="tel:1300123456" className="underline font-medium">1300 123 456</a></p>
+              <p className="text-white/80 mb-6">Or, contact our call centre on <a href="tel:0742766387" className="underline font-medium">07 4276 6387</a></p>
               <Button size="lg" variant="secondary" asChild>
                 <Link href="/plans">View Plans</Link>
               </Button>
@@ -176,7 +176,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li><Link href="/support" className="hover:text-foreground">Support</Link></li>
                   <li><Link href="/support" className="hover:text-foreground">Network Status</Link></li>
-                  <li><a href="tel:1300123456" className="hover:text-foreground">1300 123 456</a></li>
+                  <li><a href="tel:0742766387" className="hover:text-foreground">07 4276 6387</a></li>
                 </ul>
               </div>
               <div>

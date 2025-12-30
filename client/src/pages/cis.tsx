@@ -34,7 +34,7 @@ export default function CIS() {
               </div>
               <div>
                 <p className="text-sm font-medium">Customer Service</p>
-                <p className="text-muted-foreground">1300 BRO NET (1300 276 638)</p>
+                <p className="text-muted-foreground">07 4276 6387</p>
               </div>
               <div>
                 <p className="text-sm font-medium">Support Hours</p>
@@ -223,7 +223,7 @@ export default function CIS() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm font-medium">Technical Support</p>
-                <p className="text-muted-foreground">Phone: 1300 BRO NET, Email: support@brointernet.com</p>
+                <p className="text-muted-foreground">Phone: 07 4276 6387, Email: support@brointernet.com</p>
                 <p className="text-sm text-muted-foreground">Available 8am-8pm AEDT, 7 days per week</p>
               </div>
               <div>
