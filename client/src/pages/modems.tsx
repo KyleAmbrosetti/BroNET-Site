@@ -93,7 +93,7 @@ const products = [
       speed: "Up to 11 Gbps aggregate (10 GbE + 2.5 GbE wired)",
       voip: "—",
       coverage: "Covers up to 400 m²",
-      security: "eero Secure+",
+      security: "eero Secure",
     },
     image: eeroMax7Image,
     imagePosition: "right",
