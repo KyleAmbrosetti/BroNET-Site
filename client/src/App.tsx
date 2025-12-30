@@ -67,9 +67,40 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    Intercom({
-      app_id: 'wj8o6t7c',
-    });
+    // Initialize Intercom with identity verification
+    async function initIntercom() {
+      try {
+        const response = await fetch('/api/intercom/token', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user_hash && data.user_id) {
+            // Authenticated user with HMAC verification
+            Intercom({
+              app_id: 'wj8o6t7c',
+              user_id: data.user_id,
+              user_hash: data.user_hash,
+              email: data.email,
+              name: data.name,
+            });
+          } else {
+            // Anonymous visitor
+            Intercom({
+              app_id: 'wj8o6t7c',
+            });
+          }
+        } else {
+          Intercom({
+            app_id: 'wj8o6t7c',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to initialize Intercom:', error);
+        Intercom({
+          app_id: 'wj8o6t7c',
+        });
+      }
+    }
+    initIntercom();
   }, []);
 
   return (
