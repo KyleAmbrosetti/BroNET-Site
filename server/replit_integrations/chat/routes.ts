@@ -73,6 +73,54 @@ const ALEX_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         required: ["subject", "description"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "check_network_outages",
+      description: "Check for any current network outages or incidents affecting BroNET services. Use this when users report connectivity issues or ask about outages.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_billing_info",
+      description: "Get the user's billing information including next payment date, current charges, and recent invoices. Only use for logged-in users asking about their bill or payments.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_usage_data",
+      description: "Get the user's internet usage data for the current and recent billing periods. Use when users ask about their data usage or how much they've downloaded.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "check_service_status",
+      description: "Check the current status of the user's internet service connection. Use when users ask if their service is active, connected, or having issues.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
   }
 ];
 
@@ -180,6 +228,195 @@ async function executeToolCall(toolName: string, args: Record<string, any>, cont
         return JSON.stringify({
           error: "Failed to create ticket",
           message: "Unable to create the support ticket. Please try again or submit through your dashboard at /dashboard."
+        });
+      }
+    }
+    case "check_network_outages": {
+      try {
+        const allIncidents = await storage.getIncidents();
+        // Filter for active incidents (not resolved)
+        const incidents = allIncidents.filter(inc => 
+          inc.status === 'investigating' || inc.status === 'identified' || inc.status === 'monitoring'
+        );
+        if (incidents.length === 0) {
+          return JSON.stringify({
+            hasOutages: false,
+            message: "All systems are operating normally. There are no current network outages or incidents affecting BroNET services.",
+            checkTime: new Date().toISOString()
+          });
+        }
+        const activeIncidents = incidents.map(inc => ({
+          title: inc.title,
+          severity: inc.severity,
+          status: inc.status,
+          affectedAreas: inc.affectedAreas,
+          description: inc.description
+        }));
+        return JSON.stringify({
+          hasOutages: true,
+          count: incidents.length,
+          incidents: activeIncidents,
+          message: `There ${incidents.length === 1 ? 'is' : 'are'} currently ${incidents.length} active incident(s) affecting BroNET services.`,
+          moreInfo: "Visit /support for full network status updates."
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Unable to check network status",
+          message: "Please visit /support to view the current network status."
+        });
+      }
+    }
+    case "get_billing_info": {
+      if (!context.userId) {
+        return JSON.stringify({
+          error: "User not logged in",
+          message: "Please log in to view your billing information. You can access billing details in your dashboard at /dashboard."
+        });
+      }
+      try {
+        const user = await storage.getUser(context.userId);
+        if (!user) {
+          return JSON.stringify({ error: "User not found" });
+        }
+        
+        // Get billing info based on plan pricing
+        const planPrices: Record<string, number> = {
+          'everyday': 72,
+          'extra_value': 85,
+          'family_max': 95,
+          'lightspeed': 109,
+          'hyperspeed': 165
+        };
+        
+        const currentPlan = user.planId || 'none';
+        const monthlyAmount = planPrices[currentPlan] || 0;
+        
+        if (currentPlan === 'none') {
+          return JSON.stringify({
+            plan: 'No active plan',
+            message: "No active subscription found. Visit /plans to sign up for BroNET internet.",
+            manageAt: "Visit /signup to get started."
+          });
+        }
+        
+        return JSON.stringify({
+          plan: currentPlan.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          monthlyAmount: `$${monthlyAmount}/month`,
+          paymentMethod: user.stripeCustomerId ? "Card on file" : "Not set up",
+          message: `Your ${currentPlan.replace('_', ' ')} plan costs $${monthlyAmount}/month.`,
+          note: "For your exact billing date, payment history, and invoices, please check your dashboard.",
+          manageAt: "Visit /dashboard to view billing details and manage payment methods."
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Unable to retrieve billing information",
+          message: "Please check your dashboard at /dashboard for billing details."
+        });
+      }
+    }
+    case "get_usage_data": {
+      if (!context.userId) {
+        return JSON.stringify({
+          error: "User not logged in",
+          message: "Please log in to view your usage data. You can access usage stats in your dashboard at /dashboard."
+        });
+      }
+      try {
+        const user = await storage.getUser(context.userId);
+        if (!user) {
+          return JSON.stringify({ error: "User not found" });
+        }
+        
+        if (!user.planId) {
+          return JSON.stringify({
+            message: "No active plan found. Sign up at /plans to start using BroNET internet.",
+            dataLimit: "N/A"
+          });
+        }
+        
+        // All BroNET plans include unlimited data
+        return JSON.stringify({
+          plan: user.planId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          dataLimit: "Unlimited",
+          message: "Your BroNET plan includes unlimited data - download and stream as much as you like!",
+          note: "For detailed usage statistics and history, please check your modem's admin panel or visit your dashboard.",
+          viewDetails: "Visit /dashboard for account management."
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Unable to retrieve usage data",
+          message: "Please check your dashboard at /dashboard for usage information."
+        });
+      }
+    }
+    case "check_service_status": {
+      if (!context.userId) {
+        return JSON.stringify({
+          error: "User not logged in",
+          message: "Please log in to check your service status. You can view your connection status in your dashboard at /dashboard."
+        });
+      }
+      try {
+        const user = await storage.getUser(context.userId);
+        if (!user) {
+          return JSON.stringify({ error: "User not found" });
+        }
+        
+        // Check if user has an active service
+        const hasActivePlan = !!user.planId;
+        
+        if (!hasActivePlan) {
+          return JSON.stringify({
+            status: "No active service",
+            message: "You don't have an active internet plan. Visit /plans to sign up for BroNET internet.",
+            action: "Sign up at /signup to get connected."
+          });
+        }
+        
+        // Check for any outages affecting this user's area
+        const allIncidents = await storage.getIncidents();
+        const activeIncidents = allIncidents.filter(inc => 
+          inc.status === 'investigating' || inc.status === 'identified' || inc.status === 'monitoring'
+        );
+        
+        // Safely extract suburb from address for matching
+        let userSuburb = '';
+        if (user.serviceAddress) {
+          const addressParts = user.serviceAddress.split(',');
+          if (addressParts.length > 1 && addressParts[1]) {
+            userSuburb = addressParts[1].trim().toLowerCase();
+          }
+        }
+        
+        const areaIncidents = activeIncidents.filter(inc => {
+          if (!userSuburb || !inc.affectedAreas) return false;
+          return inc.affectedAreas.toLowerCase().includes(userSuburb);
+        });
+        
+        if (areaIncidents.length > 0) {
+          return JSON.stringify({
+            status: "Potential issues",
+            connectionHealth: "Degraded",
+            activeIncidents: areaIncidents.length,
+            message: `There may be network issues in your area. ${areaIncidents.length} incident(s) could be affecting your connection.`,
+            troubleshooting: "Try restarting your modem. If issues persist, our team is working to resolve the outage.",
+            moreInfo: "Visit /support for full network status."
+          });
+        }
+        
+        return JSON.stringify({
+          status: "Active",
+          connectionHealth: "Good",
+          plan: user.planId?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          serviceAddress: user.serviceAddress || "Not set",
+          lastChecked: new Date().toISOString(),
+          message: "Your internet service is active and operating normally. No issues detected.",
+          troubleshooting: "If you're experiencing issues, try restarting your modem or create a support ticket."
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "Unable to check service status",
+          message: "Please check your dashboard at /dashboard for service information."
         });
       }
     }
