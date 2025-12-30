@@ -174,10 +174,11 @@ KEY CAPABILITIES:
    - All plans include unlimited data, no lock-in contracts
 
 3. ROUTERS:
-   - FREE router on 500Mbps+ plans (36-month agreement)
+   - FREE* eero Wi-Fi 7 modem on 500Mbps+ plans (*when you stay connected for 36 months)
    - eero 7: Great for most homes
    - eero Pro 7: For larger homes or heavy usage
    - BYO option available
+   - No free modem on 25Mbps and 50Mbps plans
 
 4. NETWORK STATUS & OUTAGES:
    - Use check_network_outages tool to see if there are any current issues

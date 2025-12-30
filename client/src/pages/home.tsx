@@ -110,16 +110,17 @@ export default function Home() {
       {/* Free Modem Offer */}
       <section className="py-4 bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5">
         <div className="container px-4 md:px-6">
-          <div className="flex items-center justify-center gap-4 text-center">
+          <div className="flex items-center justify-center gap-4 text-center flex-wrap">
             <Wifi className="h-6 w-6 text-primary" />
             <div>
-              <span className="font-bold text-lg">FREE eero Wi-Fi 7 Router</span>
-              <span className="text-muted-foreground ml-2">on 250Mbps+ plans with 24-month agreement</span>
+              <span className="font-bold text-lg">FREE* eero Wi-Fi 7 modem</span>
+              <span className="text-muted-foreground ml-2">on 500Mbps+ plans</span>
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href="/modems">Learn More</Link>
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-2">*When you stay connected for 36 months. T&Cs apply.</p>
         </div>
       </section>
 
