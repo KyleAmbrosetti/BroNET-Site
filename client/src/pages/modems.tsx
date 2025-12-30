@@ -268,11 +268,13 @@ export default function ModemsPage() {
             {products.map((product) => (
               <Card key={product.id} className="overflow-hidden" data-testid={`compare-card-${product.id}`}>
                 <div className="aspect-square bg-gradient-to-br from-muted to-muted/50 p-6 flex items-center justify-center">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="max-h-full max-w-full object-contain"
-                  />
+                  <div className="rounded-2xl overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
                 </div>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-2">{product.name.replace('Amazon ', '')}</h3>
