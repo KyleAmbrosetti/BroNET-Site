@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, Clock, ArrowRight } from "lucide-react";
+import { Check, Zap, Clock, ArrowRight, Wifi, X } from "lucide-react";
 import { Link } from "wouter";
 
 interface PlanProps {
@@ -197,13 +197,25 @@ export function PlanCard({
               </div>
               <span>No Lock-in Contract</span>
             </li>
-            <li className="flex items-center gap-2">
-              <div className="rounded-full bg-green-100 p-0.5 dark:bg-green-900/30">
-                <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-              </div>
-              <span>BYO or add eero WiFi</span>
-            </li>
+            {speed >= 500 ? (
+              <li className="flex items-center gap-2">
+                <div className="rounded-full bg-primary/10 p-0.5">
+                  <Wifi className="h-3 w-3 text-primary" />
+                </div>
+                <span className="font-medium text-primary">Free modem option*</span>
+              </li>
+            ) : (
+              <li className="flex items-center gap-2">
+                <div className="rounded-full bg-muted p-0.5">
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </div>
+                <span className="text-muted-foreground">No free modem option</span>
+              </li>
+            )}
           </ul>
+          {speed >= 500 && (
+            <p className="text-[10px] text-muted-foreground">*When you stay connected for 36 months</p>
+          )}
         </div>
       </CardContent>
 
