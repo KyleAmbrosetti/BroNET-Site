@@ -103,7 +103,7 @@ export default function Support() {
       <section className="py-8 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <a href="tel:1300123456" className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" data-testid="link-call">
+            <a href="tel:0742766387" className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" data-testid="link-call">
               <Card className="hover:shadow-lg transition-shadow h-full">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -111,7 +111,7 @@ export default function Support() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Call Us</h3>
-                    <p className="text-sm text-muted-foreground">1300 123 456</p>
+                    <p className="text-sm text-muted-foreground">07 4276 6387</p>
                   </div>
                 </CardContent>
               </Card>

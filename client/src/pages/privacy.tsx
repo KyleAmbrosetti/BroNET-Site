@@ -130,7 +130,7 @@ export default function Privacy() {
             <p><strong>Privacy Officer</strong></p>
             <p>BroNET Pty Ltd<br />
             Email: privacy@brointernet.com<br />
-            Phone: 1300 BRO NET (1300 276 638)<br />
+            Phone: 07 4276 6387<br />
             Post: PO Box 12345, Sydney NSW 2000</p>
             <p className="mt-4">
               If you are not satisfied with our response to your privacy complaint, you may contact the Office of the Australian Information Commissioner (OAIC) at www.oaic.gov.au or 1300 363 992.

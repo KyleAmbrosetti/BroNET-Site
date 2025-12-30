@@ -1140,9 +1140,9 @@ export default function SignupWizard() {
         <div className="container py-4 px-4 md:px-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Sign Up for BroNET</h1>
-            <a href="tel:1800123456" className="text-sm text-muted-foreground hover:text-foreground">
+            <a href="tel:0742766387" className="text-sm text-muted-foreground hover:text-foreground">
               <Phone className="inline h-4 w-4 mr-1" />
-              1800 123 456
+              07 4276 6387
             </a>
           </div>
         </div>
