@@ -1,5 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { useEffect } from "react";
+import Intercom from '@intercom/messenger-js-sdk';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,6 +66,12 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    Intercom({
+      app_id: 'wj8o6t7c',
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
