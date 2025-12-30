@@ -228,8 +228,9 @@ export default function Plans() {
               <div className="flex items-center justify-center gap-3">
                 <Wifi className="h-6 w-6 text-primary" />
                 <div className="text-center">
-                  <p className="font-bold text-lg">FREE eero Wi-Fi 7 Router</p>
-                  <p className="text-sm text-muted-foreground">On 250Mbps+ plans with 24-month agreement</p>
+                  <p className="font-bold text-lg">FREE* eero Wi-Fi 7 modem</p>
+                  <p className="text-sm text-muted-foreground">On 500Mbps+ plans</p>
+                  <p className="text-xs text-muted-foreground mt-1">*When you stay connected for 36 months. T&Cs apply.</p>
                 </div>
               </div>
             </div>
