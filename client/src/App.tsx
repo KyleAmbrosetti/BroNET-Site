@@ -81,6 +81,7 @@ function App() {
               user_hash: data.user_hash,
               email: data.email,
               name: data.name,
+              created_at: data.created_at,
             });
           } else {
             // Anonymous visitor

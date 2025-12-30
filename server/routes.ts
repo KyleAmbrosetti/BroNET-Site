@@ -356,11 +356,13 @@ export async function registerRoutes(
         if (user) {
           const userId = String(user.id);
           const userHash = crypto.createHmac('sha256', secret).update(userId).digest('hex');
+          const createdAt = user.joinedAt ? Math.floor(new Date(user.joinedAt).getTime() / 1000) : undefined;
           return res.json({ 
             user_hash: userHash, 
             user_id: userId, 
             email: user.email, 
-            name: `${user.firstName} ${user.lastName}`.trim() 
+            name: `${user.firstName} ${user.lastName}`.trim(),
+            created_at: createdAt
           });
         }
       }
