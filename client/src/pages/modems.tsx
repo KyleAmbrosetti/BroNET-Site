@@ -267,12 +267,12 @@ export default function ModemsPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {products.map((product) => (
               <Card key={product.id} className="overflow-hidden" data-testid={`compare-card-${product.id}`}>
-                <div className="aspect-square bg-gradient-to-br from-muted to-muted/50 p-8">
-                  <div className="h-full w-full rounded-2xl overflow-hidden bg-white/50">
+                <div className="aspect-square bg-gradient-to-br from-muted to-muted/50 p-6">
+                  <div className="h-full w-full rounded-2xl bg-white/60 dark:bg-white/10 p-4 flex items-center justify-center">
                     <img 
                       src={product.image} 
                       alt={product.name}
-                      className="h-full w-full object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                 </div>
