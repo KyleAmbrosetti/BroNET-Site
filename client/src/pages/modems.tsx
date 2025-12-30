@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, ChevronDown, Wifi, Home, Signal, Zap, Shield, Check } from "lucide-react";
-import eero7Image from "@assets/eero_7_1766481389429.jpg";
+import eero7Image from "@assets/eero_7_1766456146814.png";
 import eeroPro7Image from "@assets/eero_pro_7_1766472837873.jpg";
 import eeroMax7Image from "@assets/eero-max-7_bc8e_1766481757902.jpg";
 import {
