@@ -211,8 +211,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </footer>
       )}
       
-      {/* Alex AI Assistant */}
-      <Alex />
+      {/* Alex AI Assistant - Hidden for now */}
+      {/* <Alex /> */}
     </div>
   );
 }
