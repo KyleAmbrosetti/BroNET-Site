@@ -271,7 +271,7 @@ export default function ModemsPage() {
                   <img 
                     src={product.image} 
                     alt={product.name}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain rounded-2xl"
                   />
                 </div>
                 <CardContent className="p-6">
