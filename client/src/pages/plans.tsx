@@ -208,7 +208,7 @@ export default function Plans() {
             </p>
             
             {/* Feature Pills */}
-            <div className="flex flex-wrap justify-center gap-3 mb-10">
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
               <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
                 <Zap className="h-4 w-4 text-primary" />
                 <span>Unlimited data</span>
@@ -220,6 +220,17 @@ export default function Plans() {
               <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2 text-sm">
                 <Wifi className="h-4 w-4 text-primary" />
                 <span>eero Wi-Fi 7 modems</span>
+              </div>
+            </div>
+
+            {/* Free Modem Offer Banner */}
+            <div className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border border-primary/20 rounded-xl px-6 py-4 mb-10 max-w-xl mx-auto">
+              <div className="flex items-center justify-center gap-3">
+                <Wifi className="h-6 w-6 text-primary" />
+                <div className="text-center">
+                  <p className="font-bold text-lg">FREE eero Wi-Fi 7 Router</p>
+                  <p className="text-sm text-muted-foreground">On 250Mbps+ plans with 24-month agreement</p>
+                </div>
               </div>
             </div>
 
