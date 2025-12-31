@@ -200,6 +200,16 @@ export default function SignupWizard() {
     fetchProducts();
   }, []);
 
+  // Update priceId when stripeProducts load (for URL-parameter plans)
+  useEffect(() => {
+    if (selectedPlan && !selectedPlan.priceId && stripeProducts.length > 0) {
+      const product = stripeProducts.find(p => p.name === selectedPlan.name);
+      if (product?.prices?.[0]?.id) {
+        setSelectedPlan({ ...selectedPlan, priceId: product.prices[0].id });
+      }
+    }
+  }, [stripeProducts, selectedPlan]);
+
   const getStepIndex = (step: Step) => STEPS.findIndex(s => s.id === step);
   const currentStepIndex = getStepIndex(currentStep);
 
