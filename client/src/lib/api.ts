@@ -215,6 +215,11 @@ export const api = {
     body: JSON.stringify({ status, message }),
   }),
   
+  updateAdminOrderAvcId: (id: string, avcId: string) => apiFetch(`/admin/orders/${id}/avc`, {
+    method: 'PATCH',
+    body: JSON.stringify({ avcId }),
+  }),
+  
   deleteAdminOrder: (id: string) => apiFetch(`/admin/orders/${id}`, {
     method: 'DELETE',
   }),

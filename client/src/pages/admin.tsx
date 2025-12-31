@@ -188,6 +188,8 @@ export default function Admin() {
   const [newOrderStatus, setNewOrderStatus] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [editAvcId, setEditAvcId] = useState('');
+  const [isUpdatingAvcId, setIsUpdatingAvcId] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -268,6 +270,7 @@ export default function Admin() {
     setSelectedOrder(order);
     setNewOrderStatus(order.status);
     setStatusMessage('');
+    setEditAvcId(order.avcId || '');
     setIsOrderDialogOpen(true);
     
     const { data } = await api.getAdminOrder(order.id);
@@ -322,6 +325,28 @@ export default function Admin() {
       toast({ title: "Order deleted" });
       loadOrders();
     }
+  };
+
+  const handleUpdateAvcId = async () => {
+    if (!selectedOrder || !editAvcId.trim()) return;
+    
+    setIsUpdatingAvcId(true);
+    const { data, error } = await api.updateAdminOrderAvcId(selectedOrder.id, editAvcId.trim());
+    
+    if (error) {
+      toast({
+        title: "Failed to update AVC ID",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "AVC ID updated" });
+      if (data?.order) {
+        setSelectedOrder(data.order);
+      }
+      loadOrders();
+    }
+    setIsUpdatingAvcId(false);
   };
 
   const handleCreate = async () => {
@@ -1094,9 +1119,27 @@ export default function Admin() {
                       <span className="text-muted-foreground">LOC ID:</span>
                       <span className="font-mono">{selectedOrder.locId || '—'}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">AVC ID:</span>
-                      <span className="font-mono">{selectedOrder.avcId || '—'}</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editAvcId}
+                          onChange={(e) => setEditAvcId(e.target.value)}
+                          placeholder="Enter AVC ID"
+                          className="h-7 w-32 font-mono text-xs"
+                          data-testid="input-avc-id"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleUpdateAvcId}
+                          disabled={isUpdatingAvcId || !editAvcId.trim() || editAvcId === selectedOrder.avcId}
+                          className="h-7 px-2"
+                          data-testid="button-save-avc-id"
+                        >
+                          {isUpdatingAvcId ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
