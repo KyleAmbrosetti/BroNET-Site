@@ -355,5 +355,117 @@ export const insertPlanSchema = createInsertSchema(plans);
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
 export type Plan = typeof plans.$inferSelect;
 
+// Superloop Webhook Events Table
+export const superloopEvents = pgTable("superloop_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: text("event_id").notNull(), // Superloop's unique event ID
+  eventType: text("event_type").notNull(), // appointment, diagnostic, order, service, disruption, health, location_quote
+  eventSubtype: text("event_subtype"), // e.g., appointment.created, order.status_changed
+  orderId: varchar("order_id").references(() => serviceOrders.id), // Related order if applicable
+  serviceId: text("service_id"), // Superloop service ID
+  avcId: text("avc_id"), // Related AVC if applicable
+  status: text("status"), // Event status (e.g., confirmed, cancelled)
+  severity: text("severity"), // For disruptions: low, medium, high, critical
+  title: text("title"),
+  description: text("description"),
+  scheduledAt: timestamp("scheduled_at"), // For appointments
+  startedAt: timestamp("started_at"), // For disruptions
+  endedAt: timestamp("ended_at"), // For disruptions
+  metadata: text("metadata"), // JSON string for additional event-specific data
+  acknowledged: integer("acknowledged").default(0), // Whether admin has acknowledged the event
+  acknowledgedBy: varchar("acknowledged_by").references(() => users.id),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSuperloopEventSchema = createInsertSchema(superloopEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSuperloopEvent = z.infer<typeof insertSuperloopEventSchema>;
+export type SuperloopEvent = typeof superloopEvents.$inferSelect;
+
+// Network Disruptions Table (for aggregated outage tracking)
+export const networkDisruptions = pgTable("network_disruptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  externalId: text("external_id"), // Superloop/NBN disruption ID
+  title: text("title").notNull(),
+  description: text("description"),
+  severity: text("severity").notNull(), // low, medium, high, critical
+  status: text("status").notNull().default("active"), // active, resolved, scheduled
+  affectedAreas: text("affected_areas"), // JSON array of affected suburbs/regions
+  affectedTechnologies: text("affected_technologies"), // JSON array: FTTP, HFC, etc.
+  estimatedResolution: timestamp("estimated_resolution"),
+  startedAt: timestamp("started_at").notNull(),
+  resolvedAt: timestamp("resolved_at"),
+  source: text("source").default("superloop"), // superloop, nbn, manual
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertNetworkDisruptionSchema = createInsertSchema(networkDisruptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNetworkDisruption = z.infer<typeof insertNetworkDisruptionSchema>;
+export type NetworkDisruption = typeof networkDisruptions.$inferSelect;
+
+// Service Health Records (periodic health checks from Superloop)
+export const serviceHealthRecords = pgTable("service_health_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceId: text("service_id").notNull(), // Superloop service ID
+  avcId: text("avc_id"), // NBN AVC ID
+  orderId: varchar("order_id").references(() => serviceOrders.id),
+  userId: varchar("user_id").references(() => users.id),
+  status: text("status").notNull(), // healthy, degraded, down
+  syncSpeed: integer("sync_speed"), // Line sync speed in Mbps
+  maxAttainableSpeed: integer("max_attainable_speed"),
+  signalQuality: text("signal_quality"), // good, fair, poor
+  errorCount: integer("error_count"), // CRC errors etc.
+  latency: integer("latency"), // ms
+  packetLoss: text("packet_loss"), // percentage as string
+  metadata: text("metadata"), // JSON for additional diagnostics
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+});
+
+export const insertServiceHealthRecordSchema = createInsertSchema(serviceHealthRecords).omit({
+  id: true,
+  recordedAt: true,
+});
+
+export type InsertServiceHealthRecord = z.infer<typeof insertServiceHealthRecordSchema>;
+export type ServiceHealthRecord = typeof serviceHealthRecords.$inferSelect;
+
+// Appointment Slots (for technician appointments)
+export const appointmentSlots = pgTable("appointment_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").references(() => serviceOrders.id).notNull(),
+  externalAppointmentId: text("external_appointment_id"), // Superloop/NBN appointment ID
+  slotDate: timestamp("slot_date").notNull(),
+  slotWindow: text("slot_window"), // AM, PM, ALL_DAY
+  status: text("status").notNull().default("scheduled"), // scheduled, confirmed, completed, cancelled, rescheduled
+  technicianName: text("technician_name"),
+  technicianPhone: text("technician_phone"),
+  notes: text("notes"),
+  confirmedAt: timestamp("confirmed_at"),
+  completedAt: timestamp("completed_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  cancellationReason: text("cancellation_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAppointmentSlotSchema = createInsertSchema(appointmentSlots).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAppointmentSlot = z.infer<typeof insertAppointmentSlotSchema>;
+export type AppointmentSlot = typeof appointmentSlots.$inferSelect;
+
 // Re-export chat models
 export * from "./models/chat";
