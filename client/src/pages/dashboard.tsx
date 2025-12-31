@@ -330,43 +330,7 @@ export default function Dashboard() {
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Usage Card */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Data Usage</CardTitle>
-                  <CardDescription>Your consumption for the current billing cycle.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Used: {usage[0]?.download} GB</span>
-                    <span className="text-sm text-muted-foreground">Unlimited</span>
-                  </div>
-                  <Progress value={25} className="h-3 mb-6" />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-muted/30 p-4 rounded-lg flex items-center gap-4">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600">
-                        <Download className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground">Download</div>
-                        <div className="text-xl font-bold">{usage[0]?.download} GB</div>
-                      </div>
-                    </div>
-                    <div className="bg-muted/30 p-4 rounded-lg flex items-center gap-4">
-                      <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600">
-                        <Upload className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground">Upload</div>
-                        <div className="text-xl font-bold">{usage[0]?.upload} GB</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Current Plan Card */}
               <Card>
                 <CardHeader>
