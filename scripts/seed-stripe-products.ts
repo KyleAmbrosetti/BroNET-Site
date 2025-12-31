@@ -45,6 +45,18 @@ const fibrePlans: PlanConfig[] = [
     description: "Ultra-fast speeds for demanding households and home offices. Includes free WiFi 7 modem.",
     priceMonthly: 12900,
     metadata: { speed: "1000", upload: "50", typical: "900 Mbps", planType: "fibre", freeModem: "true", modemType: "eero7", modemCommitment: "24" }
+  },
+  {
+    name: "NBN 2000/200",
+    description: "Blazing fast speeds for ultra-connected smart homes. Includes free WiFi 7 modem.",
+    priceMonthly: 16900,
+    metadata: { speed: "2000", upload: "200", typical: "1800 Mbps", planType: "fibre", freeModem: "true", modemType: "eero7", modemCommitment: "24" }
+  },
+  {
+    name: "NBN 2000/400",
+    description: "Ultimate performance with maximum speeds for professionals. Includes free WiFi 7 modem.",
+    priceMonthly: 19900,
+    metadata: { speed: "2000", upload: "400", typical: "1800 Mbps", planType: "fibre", freeModem: "true", modemType: "eero7", modemCommitment: "24" }
   }
 ];
 
