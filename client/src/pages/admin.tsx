@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
-import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot, Inbox, Mail, Headphones, Router, ShoppingCart, Eye, Clock, Users, Key, Ban, UserCheck, BarChart3, TrendingUp, DollarSign, UserPlus, Download, RefreshCw } from "lucide-react";
+import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot, Inbox, Mail, Headphones, Router, ShoppingCart, Eye, Clock, Users, Key, Ban, UserCheck, BarChart3, TrendingUp, DollarSign, UserPlus, Download, RefreshCw, Bell, Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Legend } from "recharts";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -160,6 +160,49 @@ type Plan = {
   displayOrder: number;
 };
 
+type SuperloopEvent = {
+  id: string;
+  eventId: string;
+  eventType: string;
+  eventSubtype: string | null;
+  status: string | null;
+  severity: string | null;
+  title: string | null;
+  description: string | null;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  acknowledged: number;
+  createdAt: string;
+};
+
+type NetworkDisruption = {
+  id: string;
+  externalId: string | null;
+  title: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  affectedAreas: string | null;
+  affectedTechnologies: string | null;
+  estimatedResolution: string | null;
+  startedAt: string;
+  resolvedAt: string | null;
+  source: string;
+  createdAt: string;
+};
+
+const EVENT_TYPES = [
+  { value: 'all', label: 'All Events' },
+  { value: 'appointment', label: 'Appointment' },
+  { value: 'diagnostic', label: 'Diagnostic' },
+  { value: 'order', label: 'Order' },
+  { value: 'service', label: 'Service' },
+  { value: 'disruption', label: 'Disruption' },
+  { value: 'health', label: 'Health' },
+  { value: 'location_quote', label: 'Location Quote' },
+];
+
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending' },
   { value: 'submitted', label: 'Submitted' },
@@ -295,6 +338,23 @@ export default function Admin() {
   });
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
+  // Events State
+  const [superloopEvents, setSuperloopEvents] = useState<SuperloopEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
+  const [networkDisruptions, setNetworkDisruptions] = useState<NetworkDisruption[]>([]);
+  const [isLoadingDisruptions, setIsLoadingDisruptions] = useState(true);
+  const [isCreatingDisruption, setIsCreatingDisruption] = useState(false);
+  const [newDisruptionForm, setNewDisruptionForm] = useState({
+    title: '',
+    description: '',
+    severity: 'minor',
+    status: 'investigating',
+    affectedAreas: '',
+    affectedTechnologies: '',
+    estimatedResolution: '',
+  });
+
   useEffect(() => {
     if (!user) {
       setLocation("/auth");
@@ -325,6 +385,8 @@ export default function Admin() {
     loadAnalytics();
     loadAdminTickets();
     loadAdminPlans();
+    loadEvents();
+    loadDisruptions();
   }, [user, setLocation]);
 
   const loadDataset = async () => {
@@ -416,6 +478,139 @@ export default function Admin() {
       console.error("Error loading plans:", error);
     }
     setIsLoadingPlans(false);
+  };
+
+  const loadEvents = async (type?: string) => {
+    setIsLoadingEvents(true);
+    try {
+      const { data } = await api.getAdminEvents(type === 'all' ? undefined : type);
+      if (data) setSuperloopEvents(data.events || []);
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+    setIsLoadingEvents(false);
+  };
+
+  const loadDisruptions = async () => {
+    setIsLoadingDisruptions(true);
+    try {
+      const { data } = await api.getAdminDisruptions();
+      if (data) setNetworkDisruptions(data.disruptions || []);
+    } catch (error) {
+      console.error("Error loading disruptions:", error);
+    }
+    setIsLoadingDisruptions(false);
+  };
+
+  const handleAcknowledgeEvent = async (eventId: string) => {
+    const { error } = await api.acknowledgeEvent(eventId);
+    if (error) {
+      toast({
+        title: "Failed to acknowledge event",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "Event acknowledged" });
+      loadEvents(eventTypeFilter === 'all' ? undefined : eventTypeFilter);
+    }
+  };
+
+  const handleCreateDisruption = async () => {
+    if (!newDisruptionForm.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreatingDisruption(true);
+    const { error } = await api.createDisruption({
+      title: newDisruptionForm.title.trim(),
+      description: newDisruptionForm.description.trim() || undefined,
+      severity: newDisruptionForm.severity,
+      status: newDisruptionForm.status,
+      affectedAreas: newDisruptionForm.affectedAreas.trim() || undefined,
+      affectedTechnologies: newDisruptionForm.affectedTechnologies.trim() || undefined,
+      estimatedResolution: newDisruptionForm.estimatedResolution.trim() || undefined,
+      startedAt: new Date().toISOString(),
+    });
+
+    if (error) {
+      toast({
+        title: "Failed to create disruption",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "Disruption created" });
+      setNewDisruptionForm({
+        title: '',
+        description: '',
+        severity: 'minor',
+        status: 'investigating',
+        affectedAreas: '',
+        affectedTechnologies: '',
+        estimatedResolution: '',
+      });
+      loadDisruptions();
+    }
+    setIsCreatingDisruption(false);
+  };
+
+  const handleUpdateDisruptionStatus = async (id: string, status: string) => {
+    const updateData: { status: string; resolvedAt?: string } = { status };
+    if (status === 'resolved') {
+      updateData.resolvedAt = new Date().toISOString();
+    }
+    
+    const { error } = await api.updateDisruption(id, updateData);
+    if (error) {
+      toast({
+        title: "Failed to update disruption",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "Disruption status updated" });
+      loadDisruptions();
+    }
+  };
+
+  const getEventTypeBadgeClass = (type: string): string => {
+    switch (type) {
+      case 'appointment':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'diagnostic':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'order':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'service':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'disruption':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'health':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      case 'location_quote':
+        return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-400';
+    }
+  };
+
+  const getSeverityBadgeClass = (severity: string | null): string => {
+    switch (severity) {
+      case 'critical':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'major':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      case 'minor':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-400';
+    }
   };
 
   const handleOpenNewPlanDialog = () => {
@@ -911,7 +1106,7 @@ export default function Admin() {
       <h1 className="text-3xl font-bold mb-8" data-testid="text-admin-title">Admin Console</h1>
       
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="analytics" data-testid="tab-analytics">
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
@@ -941,6 +1136,10 @@ export default function Admin() {
           <TabsTrigger value="plans" data-testid="tab-plans">
             <DollarSign className="h-4 w-4 mr-2" />
             Plans
+          </TabsTrigger>
+          <TabsTrigger value="events" data-testid="tab-events">
+            <Bell className="h-4 w-4 mr-2" />
+            Events
           </TabsTrigger>
         </TabsList>
 
@@ -2167,6 +2366,329 @@ export default function Admin() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="events" className="mt-6">
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell className="h-5 w-5" />
+                      Superloop Webhook Events
+                    </CardTitle>
+                    <CardDescription>Events received from Superloop webhooks</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={eventTypeFilter} 
+                      onValueChange={(value) => {
+                        setEventTypeFilter(value);
+                        loadEvents(value === 'all' ? undefined : value);
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px]" data-testid="select-event-type-filter">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EVENT_TYPES.map(type => (
+                          <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => loadEvents(eventTypeFilter === 'all' ? undefined : eventTypeFilter)}
+                      data-testid="button-refresh-events"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingEvents ? (
+                  <p className="text-muted-foreground text-center py-8">Loading events...</p>
+                ) : superloopEvents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No events found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Event Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Created At</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {superloopEvents.map((event) => (
+                          <TableRow key={event.id} data-testid={`event-row-${event.id}`}>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                <Badge className={getEventTypeBadgeClass(event.eventType)}>
+                                  {event.eventType}
+                                </Badge>
+                                {event.eventSubtype && (
+                                  <span className="text-xs text-muted-foreground">{event.eventSubtype}</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                {event.status && (
+                                  <Badge variant="outline">{event.status}</Badge>
+                                )}
+                                {event.severity && (
+                                  <Badge className={getSeverityBadgeClass(event.severity)}>
+                                    {event.severity}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-[200px]">
+                              <span className="truncate block" title={event.title || undefined}>
+                                {event.title || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell className="max-w-[250px]">
+                              <span className="text-sm text-muted-foreground truncate block" title={event.description || undefined}>
+                                {event.description || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {format(new Date(event.createdAt), 'PP p')}
+                            </TableCell>
+                            <TableCell>
+                              {event.acknowledged === 0 ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleAcknowledgeEvent(event.id)}
+                                  data-testid={`button-acknowledge-${event.id}`}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Acknowledge
+                                </Button>
+                              ) : (
+                                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Acknowledged
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Create Network Disruption
+                  </CardTitle>
+                  <CardDescription>Manually create a network disruption notice</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="disruption-title">Title</Label>
+                    <Input
+                      id="disruption-title"
+                      value={newDisruptionForm.title}
+                      onChange={(e) => setNewDisruptionForm(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="e.g., Outage in Sydney CBD area"
+                      data-testid="input-disruption-title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="disruption-description">Description</Label>
+                    <Textarea
+                      id="disruption-description"
+                      value={newDisruptionForm.description}
+                      onChange={(e) => setNewDisruptionForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Describe the disruption..."
+                      data-testid="input-disruption-description"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Severity</Label>
+                      <Select 
+                        value={newDisruptionForm.severity} 
+                        onValueChange={(v) => setNewDisruptionForm(prev => ({ ...prev, severity: v }))}
+                      >
+                        <SelectTrigger data-testid="select-disruption-severity">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="minor">Minor</SelectItem>
+                          <SelectItem value="major">Major</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <Select 
+                        value={newDisruptionForm.status} 
+                        onValueChange={(v) => setNewDisruptionForm(prev => ({ ...prev, status: v }))}
+                      >
+                        <SelectTrigger data-testid="select-disruption-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="investigating">Investigating</SelectItem>
+                          <SelectItem value="identified">Identified</SelectItem>
+                          <SelectItem value="monitoring">Monitoring</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="disruption-areas">Affected Areas (optional)</Label>
+                    <Input
+                      id="disruption-areas"
+                      value={newDisruptionForm.affectedAreas}
+                      onChange={(e) => setNewDisruptionForm(prev => ({ ...prev, affectedAreas: e.target.value }))}
+                      placeholder="e.g., Sydney, Melbourne"
+                      data-testid="input-disruption-areas"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="disruption-tech">Affected Technologies (optional)</Label>
+                    <Input
+                      id="disruption-tech"
+                      value={newDisruptionForm.affectedTechnologies}
+                      onChange={(e) => setNewDisruptionForm(prev => ({ ...prev, affectedTechnologies: e.target.value }))}
+                      placeholder="e.g., FTTP, HFC"
+                      data-testid="input-disruption-tech"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="disruption-resolution">Estimated Resolution (optional)</Label>
+                    <Input
+                      id="disruption-resolution"
+                      value={newDisruptionForm.estimatedResolution}
+                      onChange={(e) => setNewDisruptionForm(prev => ({ ...prev, estimatedResolution: e.target.value }))}
+                      placeholder="e.g., 2 hours"
+                      data-testid="input-disruption-resolution"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleCreateDisruption} 
+                    disabled={isCreatingDisruption}
+                    className="w-full"
+                    data-testid="button-create-disruption"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {isCreatingDisruption ? 'Creating...' : 'Create Disruption'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Network Disruptions
+                      </CardTitle>
+                      <CardDescription>Active and recent disruptions</CardDescription>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadDisruptions}
+                      data-testid="button-refresh-disruptions"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingDisruptions ? (
+                    <p className="text-muted-foreground text-center py-8">Loading disruptions...</p>
+                  ) : networkDisruptions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No disruptions found</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                      {networkDisruptions.map((disruption) => (
+                        <div 
+                          key={disruption.id} 
+                          className="border rounded-lg p-4 space-y-3"
+                          data-testid={`disruption-${disruption.id}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium">{disruption.title}</p>
+                              {disruption.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{disruption.description}</p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Badge className={getSeverityBadgeClass(disruption.severity)}>
+                                {disruption.severity}
+                              </Badge>
+                              <Badge variant="outline">{disruption.status}</Badge>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                            {disruption.affectedAreas && (
+                              <span>Areas: {disruption.affectedAreas}</span>
+                            )}
+                            {disruption.affectedTechnologies && (
+                              <span>• Tech: {disruption.affectedTechnologies}</span>
+                            )}
+                            <span>• Started: {format(new Date(disruption.startedAt), 'PP p')}</span>
+                            {disruption.resolvedAt && (
+                              <span>• Resolved: {format(new Date(disruption.resolvedAt), 'PP p')}</span>
+                            )}
+                          </div>
+                          {disruption.status !== 'resolved' && (
+                            <div className="flex gap-2 pt-2 border-t">
+                              <Select 
+                                defaultValue={disruption.status}
+                                onValueChange={(value) => handleUpdateDisruptionStatus(disruption.id, value)}
+                              >
+                                <SelectTrigger className="w-[150px]" data-testid={`select-disruption-status-${disruption.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="investigating">Investigating</SelectItem>
+                                  <SelectItem value="identified">Identified</SelectItem>
+                                  <SelectItem value="monitoring">Monitoring</SelectItem>
+                                  <SelectItem value="resolved">Resolved</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
