@@ -69,7 +69,7 @@ type RouterOption = {
 };
 
 const ROUTER_OPTIONS: RouterOption[] = [
-  { id: "free", name: "Free BroNET Router", description: "Free WiFi 6 router on 500Mbps+ plans (36-month commitment)", price: 0, commitment: 36 },
+  { id: "free", name: "Free BroNET Router", description: "Free WiFi 7 router on 500Mbps+ plans (36-month commitment)", price: 0, commitment: 36 },
   { id: "eero", name: "eero 7 WiFi Router", description: "Premium whole-home mesh WiFi 7 system", price: 199, commitment: 24 },
   { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
 ];
