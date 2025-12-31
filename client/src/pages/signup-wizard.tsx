@@ -69,7 +69,8 @@ type RouterOption = {
 };
 
 const ROUTER_OPTIONS: RouterOption[] = [
-  { id: "eero", name: "eero 7 WiFi Router", description: "Whole-home mesh WiFi 7 system", price: 199, commitment: 24 },
+  { id: "free", name: "Free BroNET Router", description: "Free WiFi 6 router on 500Mbps+ plans (36-month commitment)", price: 0, commitment: 36 },
+  { id: "eero", name: "eero 7 WiFi Router", description: "Premium whole-home mesh WiFi 7 system", price: 199, commitment: 24 },
   { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
 ];
 
@@ -98,7 +99,7 @@ export default function SignupWizard() {
   const [stripeProducts, setStripeProducts] = useState<any[]>([]);
   
   // Router selection
-  const [selectedRouter, setSelectedRouter] = useState<string>("byo");
+  const [selectedRouter, setSelectedRouter] = useState<string>("free");
   
   // Promo code
   const [promoCode, setPromoCode] = useState("");
@@ -273,6 +274,14 @@ export default function SignupWizard() {
   const handlePlanSelect = (plan: Plan) => {
     const priceId = getPriceId(plan.name);
     setSelectedPlan({ ...plan, priceId });
+    
+    // Reset router selection if free router not available for this plan
+    if (plan.speed < 500 && selectedRouter === "free") {
+      setSelectedRouter("byo");
+    } else if (plan.speed >= 500 && selectedRouter === "byo") {
+      // Default to free router for 500Mbps+ plans
+      setSelectedRouter("free");
+    }
   };
 
   const handleApplyPromo = () => {
@@ -762,13 +771,20 @@ export default function SignupWizard() {
                 Router Options
               </CardTitle>
               <CardDescription>
-                Add an eero mesh system or bring your own router
+                {selectedPlan.speed >= 500 
+                  ? "Get a free router with your 500Mbps+ plan, or choose premium options"
+                  : "Add an eero mesh system or bring your own router"
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
               <RadioGroup value={selectedRouter} onValueChange={setSelectedRouter}>
                 <div className="grid gap-3">
-                  {ROUTER_OPTIONS.map((router) => (
+                  {ROUTER_OPTIONS.filter(router => {
+                    // Free router only available for 500Mbps+ plans
+                    if (router.id === "free" && selectedPlan.speed < 500) return false;
+                    return true;
+                  }).map((router) => (
                     <div
                       key={router.id}
                       className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
