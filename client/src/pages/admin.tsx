@@ -1059,6 +1059,14 @@ export default function Admin() {
                         {selectedOrder.status.replace('_', ' ')}
                       </Badge>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">LOC ID:</span>
+                      <span className="font-mono">{selectedOrder.locId || '—'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">AVC ID:</span>
+                      <span className="font-mono">{selectedOrder.avcId || '—'}</span>
+                    </div>
                   </CardContent>
                 </Card>
 
