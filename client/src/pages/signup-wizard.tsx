@@ -33,9 +33,43 @@ type CoverageResult = {
   locId?: string;
 };
 
+type NtdOption = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  isFree?: boolean;
+};
+
+type SuperloopQualification = {
+  locId: string;
+  locationId: string;
+  qualificationSearchId: string;
+  remoteQualificationSearchId: string;
+  technologyType: string;
+  serviceClass: number;
+  maxDownload: number;
+  maxUpload: number;
+  available: boolean;
+  region?: string;
+  poi?: string;
+  poiName?: string;
+  hasActivePOTS?: boolean;
+  serviceType?: string;
+  generationTwoNtds?: any[];
+  firstOrAdditionalNtdPlans?: string[];
+  generationOneNtdPlans?: string[];
+  generationTwoNtdPlans?: string[];
+  infrastructures?: any[];
+  infrastructureInstallationOptions?: string[];
+  plans?: any[];
+};
+
 type QualificationResult = {
   locId: string;
   csaId?: string;
+  locationId?: string;
+  qualificationSearchId?: string;
   address: string;
   postcode?: string;
   suburb?: string;
@@ -48,6 +82,9 @@ type QualificationResult = {
   sqReference: string;
   validUntil: string;
   available: boolean;
+  generationTwoNtds?: any[];
+  requiresGen2Ntd?: boolean;
+  ntdOptions?: NtdOption[];
 };
 
 type Plan = {
@@ -102,10 +139,12 @@ export default function SignupWizard() {
 
   // Address & Coverage
   const [address, setAddress] = useState("");
+  const [superloopLocationId, setSuperloopLocationId] = useState<string | null>(null);
   const [isCheckingCoverage, setIsCheckingCoverage] = useState(false);
   const [coverageResult, setCoverageResult] = useState<CoverageResult | null>(null);
   const [qualification, setQualification] = useState<QualificationResult | null>(null);
   const [isQualifying, setIsQualifying] = useState(false);
+  const [selectedNtdOption, setSelectedNtdOption] = useState<string | null>(null);
   
   // Plan selection
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -213,6 +252,19 @@ export default function SignupWizard() {
   const getStepIndex = (step: Step) => STEPS.findIndex(s => s.id === step);
   const currentStepIndex = getStepIndex(currentStep);
 
+  const handleAddressSelect = (suggestion: { 
+    address: string; 
+    suburb?: string; 
+    state?: string; 
+    postcode?: string;
+    locationId?: string;
+  }) => {
+    setAddress(suggestion.address);
+    if (suggestion.locationId) {
+      setSuperloopLocationId(suggestion.locationId);
+    }
+  };
+
   const handleCheckCoverage = async (addressToCheck?: string) => {
     const addr = addressToCheck || address;
     if (!addr.trim()) {
@@ -221,7 +273,72 @@ export default function SignupWizard() {
     }
 
     setIsCheckingCoverage(true);
+    setSelectedNtdOption(null);
+    
     try {
+      // If we have a Superloop location ID, use Superloop qualification directly
+      if (superloopLocationId) {
+        const { data, error } = await api.qualifySuperloopLocation(superloopLocationId);
+        if (data?.success && data.qualification) {
+          const sq = data.qualification;
+          
+          // Map NTD options for FTTP/HFC
+          const ntdOptions: NtdOption[] = [];
+          if (sq.generationTwoNtds && sq.generationTwoNtds.length > 0) {
+            for (const ntd of sq.generationTwoNtds) {
+              ntdOptions.push({
+                id: ntd.ntdOption || ntd.id,
+                name: getNtdDisplayName(ntd.ntdOption || ntd.id),
+                description: ntd.description || getNtdDescription(ntd.ntdOption || ntd.id),
+                price: ntd.price || 0,
+                isFree: ntd.price === 0 || ntd.isFree,
+              });
+            }
+          }
+          
+          // Set coverage result from Superloop data
+          setCoverageResult({
+            normalizedAddress: addr,
+            technology: sq.technologyType,
+            available: sq.available,
+            locId: sq.locId,
+          });
+          
+          // Set qualification with Gen 2 NTD info
+          const requiresGen2Ntd = (sq.generationTwoNtdPlans?.length ?? 0) > 0 && 
+                                   !(sq.generationOneNtdPlans?.length ?? 0);
+          
+          setQualification({
+            locId: sq.locId,
+            locationId: sq.locationId,
+            qualificationSearchId: sq.qualificationSearchId,
+            address: addr,
+            technology: sq.technologyType,
+            maxDownload: sq.maxDownload,
+            maxUpload: sq.maxUpload,
+            serviceClass: sq.serviceClass,
+            sqReference: sq.remoteQualificationSearchId || sq.qualificationSearchId,
+            validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            available: sq.available,
+            generationTwoNtds: sq.generationTwoNtds,
+            requiresGen2Ntd,
+            ntdOptions,
+          });
+          
+          // Auto-select first NTD option if available
+          if (ntdOptions.length > 0) {
+            const freeOption = ntdOptions.find(o => o.isFree || o.price === 0);
+            setSelectedNtdOption(freeOption?.id || ntdOptions[0].id);
+          }
+          
+          setIsCheckingCoverage(false);
+          return;
+        } else if (error) {
+          console.warn('Superloop qualification failed, falling back to standard check:', error);
+        }
+      }
+      
+      // Fallback to standard coverage check
       const { data, error } = await api.checkCoverage(addr);
       if (error || !data?.success) {
         toast({ title: "Check failed", description: error || "Unable to verify address", variant: "destructive" });
@@ -240,6 +357,26 @@ export default function SignupWizard() {
     }
   };
 
+  const getNtdDisplayName = (ntdOption: string): string => {
+    switch (ntdOption) {
+      case '1_PORT': return 'Standard NTD (1 Port)';
+      case '4_PORT': return 'Business NTD (4 Port)';
+      case '4_PORT_RESIDENTIAL': return 'Premium NTD (4 Port)';
+      case 'NTD_2.5': return 'HFC NTD 2.5G';
+      default: return ntdOption;
+    }
+  };
+
+  const getNtdDescription = (ntdOption: string): string => {
+    switch (ntdOption) {
+      case '1_PORT': return 'Standard single-port network device';
+      case '4_PORT': return 'Business-grade 4-port network device';
+      case '4_PORT_RESIDENTIAL': return 'Residential 4-port network device - required for speeds above 1000 Mbps';
+      case 'NTD_2.5': return 'High-speed HFC device with 2.5Gbps capability';
+      default: return 'Network termination device';
+    }
+  };
+
   const handleQualification = async (coverage: CoverageResult) => {
     setIsQualifying(true);
     try {
@@ -252,7 +389,7 @@ export default function SignupWizard() {
           postcode: coverage.postcode,
           suburb: coverage.suburb,
           state: coverage.state,
-          locId: coverage.locId, // Pass LOC ID from RapidAPI if available
+          locId: coverage.locId,
         }),
       });
 
@@ -444,6 +581,9 @@ export default function SignupWizard() {
         preferredDate: preferredDate || undefined,
         routerOption: selectedRouter,
         promoCode: promoApplied ? promoCode : undefined,
+        locationId: qualification?.locationId || undefined,
+        qualificationSearchId: qualification?.qualificationSearchId || undefined,
+        ntdOption: selectedNtdOption || undefined,
       });
       
       if (error) {
@@ -715,7 +855,11 @@ export default function SignupWizard() {
           <CardContent>
             <AddressSearch
               value={address}
-              onChange={setAddress}
+              onChange={(val) => {
+                setAddress(val);
+                setSuperloopLocationId(null);
+              }}
+              onSelect={handleAddressSelect}
               onSearch={() => handleCheckCoverage()}
               isSearching={isCheckingCoverage || isQualifying}
               placeholder="Enter your street address..."
@@ -802,6 +946,63 @@ export default function SignupWizard() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* NTD Selection for High-Speed FTTP/HFC Plans */}
+        {selectedPlan && selectedPlan.speed > 1000 && qualification?.ntdOptions && qualification.ntdOptions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Cable className="h-5 w-5" />
+                Network Device Upgrade
+              </CardTitle>
+              <CardDescription>
+                Speeds above 1000 Mbps require a Generation 2 Network Termination Device (NTD)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert className="mb-4">
+                <Info className="h-4 w-4" />
+                <AlertTitle>NBN Upgrade Required</AlertTitle>
+                <AlertDescription>
+                  Your selected {selectedPlan.speed} Mbps plan requires an upgraded network device. 
+                  This is a one-time installation by an NBN technician.
+                </AlertDescription>
+              </Alert>
+              <RadioGroup value={selectedNtdOption || ''} onValueChange={setSelectedNtdOption}>
+                <div className="grid gap-3">
+                  {qualification.ntdOptions.map((ntd) => (
+                    <div
+                      key={ntd.id}
+                      className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                        selectedNtdOption === ntd.id 
+                          ? "border-primary bg-primary/5" 
+                          : "border-muted hover:border-primary/30"
+                      }`}
+                      onClick={() => setSelectedNtdOption(ntd.id)}
+                      data-testid={`ntd-option-${ntd.id}`}
+                    >
+                      <RadioGroupItem value={ntd.id} id={`ntd-${ntd.id}`} />
+                      <div className="flex-1">
+                        <Label htmlFor={`ntd-${ntd.id}`} className="font-medium cursor-pointer">
+                          {ntd.name}
+                        </Label>
+                        <div className="text-sm text-muted-foreground">{ntd.description}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-bold ${ntd.isFree ? 'text-green-600' : ''}`}>
+                          {ntd.isFree || ntd.price === 0 ? "FREE" : `$${ntd.price}`}
+                        </div>
+                        {!ntd.isFree && ntd.price > 0 && (
+                          <div className="text-xs text-muted-foreground">one-time</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
             </CardContent>
           </Card>
         )}

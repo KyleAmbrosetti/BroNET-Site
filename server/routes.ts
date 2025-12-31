@@ -451,9 +451,31 @@ export async function registerRoutes(
         return res.json({ suggestions: [] });
       }
       
+      // Try Superloop location search first (if configured)
+      try {
+        const { getSuperloopClient } = await import('./superloopClient');
+        const client = getSuperloopClient();
+        
+        if (client.isConfigured()) {
+          const locations = await client.searchLocationEnhanced(query);
+          const suggestions = locations.map(loc => ({
+            displayName: loc.description || loc.address,
+            address: loc.description || loc.address,
+            suburb: loc.suburb,
+            state: loc.state,
+            postcode: loc.postcode,
+            locationId: loc.id,
+          }));
+          return res.json({ suggestions, source: 'superloop' });
+        }
+      } catch (superloopError) {
+        console.warn('Superloop location search failed, falling back to Nominatim:', superloopError);
+      }
+      
+      // Fallback to Nominatim
       const { searchAddresses } = await import("./services/nominatim");
       const suggestions = await searchAddresses(query);
-      res.json({ suggestions });
+      res.json({ suggestions, source: 'nominatim' });
     } catch (error: any) {
       console.error('Address suggestion error:', error);
       res.json({ suggestions: [] });
