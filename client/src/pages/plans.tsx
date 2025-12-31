@@ -75,30 +75,25 @@ function PlansCarousel({
     }
   };
 
-  const cardHeight = 520; // Approximate height of plan cards
-
   return (
-    <div className="relative mb-16 overflow-visible" style={{ minHeight: cardHeight }}>
-      {canScrollLeft && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-2 z-20 bg-background/90 backdrop-blur-sm shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
-          style={{ top: cardHeight / 2, transform: 'translateY(-50%)' }}
-          onClick={() => scroll('left')}
-          data-testid="button-scroll-left"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-      )}
-      
+    <div className="flex items-center gap-2 mb-16 px-2 overflow-hidden">
+      <Button
+        variant="outline"
+        size="icon"
+        className={`flex-shrink-0 bg-background shadow-xl border-2 h-14 w-14 rounded-full hover:bg-accent hover:scale-110 transition-all ${canScrollLeft ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}
+        onClick={() => scroll('left')}
+        data-testid="button-scroll-left"
+      >
+        <ChevronLeft className="h-7 w-7" />
+      </Button>
+
       <div 
         ref={scrollRef}
-        className="overflow-x-auto pb-4 pt-2 scrollbar-hide"
+        className="flex-1 min-w-0 overflow-x-auto pb-4 pt-2 scrollbar-hide"
         onScroll={checkScrollability}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className="flex gap-4 min-w-max py-2 px-4">
+        <div className="flex gap-4 py-2 px-2">
           {plans.map((plan) => {
             const available = isPlanAvailable(plan.speed);
             return (
@@ -123,18 +118,15 @@ function PlansCarousel({
         </div>
       </div>
 
-      {canScrollRight && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-2 z-20 bg-background/90 backdrop-blur-sm shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
-          style={{ top: cardHeight / 2, transform: 'translateY(-50%)' }}
-          onClick={() => scroll('right')}
-          data-testid="button-scroll-right"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
-      )}
+      <Button
+        variant="outline"
+        size="icon"
+        className={`flex-shrink-0 bg-background shadow-xl border-2 h-14 w-14 rounded-full hover:bg-accent hover:scale-110 transition-all ${canScrollRight ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}
+        onClick={() => scroll('right')}
+        data-testid="button-scroll-right"
+      >
+        <ChevronRight className="h-7 w-7" />
+      </Button>
     </div>
   );
 }
