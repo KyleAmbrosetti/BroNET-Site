@@ -77,7 +77,7 @@ function PlansCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          className="absolute -left-4 top-[45%] -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
         >
@@ -120,7 +120,7 @@ function PlansCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          className="absolute -right-4 top-[45%] -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
         >
