@@ -113,20 +113,18 @@ function PlansCarousel({
 
         {/* Left Arrow - overlaying cards */}
         <button
-          className={`absolute left-2 top-0 bottom-0 my-auto h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
-          style={{ top: '50%', transform: 'translateY(-50%)' }}
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
 
         {/* Right Arrow - overlaying cards */}
         <button
-          className={`absolute right-2 top-0 bottom-0 my-auto h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
-          style={{ top: '50%', transform: 'translateY(-50%)' }}
         >
           <ChevronRight className="h-6 w-6" />
         </button>
