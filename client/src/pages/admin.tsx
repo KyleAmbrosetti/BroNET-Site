@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
-import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot, Inbox, Mail, Headphones, Router } from "lucide-react";
+import { Trash2, CheckCircle, AlertTriangle, Database, Upload, Info, MessageSquare, Bot, Inbox, Mail, Headphones, Router, ShoppingCart, Eye, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
@@ -68,6 +70,88 @@ type Ticket = {
   updatedAt: string;
 };
 
+type ServiceOrder = {
+  id: string;
+  userId: string;
+  orderReference: string;
+  nbnOrderId: string | null;
+  avcId: string | null;
+  cvcId: string | null;
+  planId: string;
+  planName: string;
+  downloadSpeed: number | null;
+  uploadSpeed: number | null;
+  serviceAddress: string;
+  locId: string | null;
+  technology: string | null;
+  status: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  preferredDate: string | null;
+  estimatedConnectionDate: string | null;
+  actualConnectionDate: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type OrderStatusHistory = {
+  id: string;
+  orderId: string;
+  status: string;
+  message: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+};
+
+const ORDER_STATUSES = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'provisioning', label: 'Provisioning' },
+  { value: 'active', label: 'Active' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'on_hold', label: 'On Hold' },
+];
+
+function getStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case 'active':
+      return 'default';
+    case 'cancelled':
+    case 'failed':
+      return 'destructive';
+    case 'pending':
+    case 'on_hold':
+      return 'secondary';
+    default:
+      return 'outline';
+  }
+}
+
+function getStatusBadgeClass(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+    case 'submitted':
+    case 'in_progress':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'provisioning':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+    case 'active':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+    case 'cancelled':
+    case 'failed':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    case 'on_hold':
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+    default:
+      return '';
+  }
+}
+
 export default function Admin() {
   const { user } = useUser();
   const [, setLocation] = useLocation();
@@ -95,6 +179,16 @@ export default function Admin() {
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(true);
 
+  // Orders State
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
+  const [orderHistory, setOrderHistory] = useState<OrderStatusHistory[]>([]);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [newOrderStatus, setNewOrderStatus] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
   useEffect(() => {
     if (!user) {
       setLocation("/auth");
@@ -120,6 +214,7 @@ export default function Admin() {
     loadDataset();
     loadChatConfig();
     loadEnquiries();
+    loadOrders();
   }, [user, setLocation]);
 
   const loadDataset = async () => {
@@ -156,6 +251,58 @@ export default function Admin() {
       console.error("Error loading enquiries:", error);
     }
     setIsLoadingEnquiries(false);
+  };
+
+  const loadOrders = async () => {
+    setIsLoadingOrders(true);
+    try {
+      const { data } = await api.getAdminOrders();
+      if (data) setOrders(data.orders || []);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+    }
+    setIsLoadingOrders(false);
+  };
+
+  const handleViewOrder = async (order: ServiceOrder) => {
+    setSelectedOrder(order);
+    setNewOrderStatus(order.status);
+    setStatusMessage('');
+    setIsOrderDialogOpen(true);
+    
+    const { data } = await api.getAdminOrder(order.id);
+    if (data?.history) {
+      setOrderHistory(data.history);
+    }
+  };
+
+  const handleUpdateOrderStatus = async () => {
+    if (!selectedOrder || !newOrderStatus) return;
+    
+    setIsUpdatingStatus(true);
+    const { error } = await api.updateAdminOrderStatus(
+      selectedOrder.id,
+      newOrderStatus,
+      statusMessage || undefined
+    );
+    
+    if (error) {
+      toast({
+        title: "Failed to update status",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "Order status updated" });
+      loadOrders();
+      const { data } = await api.getAdminOrder(selectedOrder.id);
+      if (data) {
+        setSelectedOrder(data.order);
+        setOrderHistory(data.history || []);
+      }
+    }
+    setIsUpdatingStatus(false);
+    setStatusMessage('');
   };
 
   const handleCreate = async () => {
@@ -279,16 +426,20 @@ export default function Admin() {
       <h1 className="text-3xl font-bold mb-8" data-testid="text-admin-title">Admin Console</h1>
       
       <Tabs defaultValue="incidents" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="incidents" data-testid="tab-incidents">Network Incidents</TabsTrigger>
-          <TabsTrigger value="dataset" data-testid="tab-dataset">NBN Dataset</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="incidents" data-testid="tab-incidents">Incidents</TabsTrigger>
+          <TabsTrigger value="dataset" data-testid="tab-dataset">Dataset</TabsTrigger>
+          <TabsTrigger value="chatconfig" data-testid="tab-chatconfig">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Chat
+          </TabsTrigger>
           <TabsTrigger value="enquiries" data-testid="tab-enquiries">
             <Inbox className="h-4 w-4 mr-2" />
             Enquiries
           </TabsTrigger>
-          <TabsTrigger value="chatconfig" data-testid="tab-chatconfig">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat Config
+          <TabsTrigger value="orders" data-testid="tab-orders">
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Orders
           </TabsTrigger>
         </TabsList>
 
@@ -785,7 +936,278 @@ export default function Admin() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="orders" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    Service Orders
+                  </CardTitle>
+                  <CardDescription>
+                    Manage customer NBN service orders
+                  </CardDescription>
+                </div>
+                <Badge variant="secondary">{orders.length} orders</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingOrders ? (
+                <p className="text-muted-foreground text-center py-8">Loading orders...</p>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-12">
+                  <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No orders yet</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order #</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Plan</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
+                          <TableCell className="font-mono text-sm">{order.orderReference}</TableCell>
+                          <TableCell>{order.contactName}</TableCell>
+                          <TableCell className="text-sm">{order.contactEmail}</TableCell>
+                          <TableCell>{order.planName}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusBadgeClass(order.status)}>
+                              {order.status.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-sm" title={order.serviceAddress}>
+                            {order.serviceAddress}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {format(new Date(order.createdAt), 'PP')}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewOrder(order)}
+                              data-testid={`button-view-order-${order.id}`}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              Order #{selectedOrder?.orderReference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Order Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Reference:</span>
+                      <span className="font-mono">{selectedOrder.orderReference}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Plan:</span>
+                      <span>{selectedOrder.planName}</span>
+                    </div>
+                    {selectedOrder.downloadSpeed && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Speed:</span>
+                        <span>{selectedOrder.downloadSpeed}/{selectedOrder.uploadSpeed} Mbps</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Technology:</span>
+                      <span>{selectedOrder.technology || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <Badge className={getStatusBadgeClass(selectedOrder.status)}>
+                        {selectedOrder.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Name:</span>
+                      <span>{selectedOrder.contactName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email:</span>
+                      <span>{selectedOrder.contactEmail}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Phone:</span>
+                      <span>{selectedOrder.contactPhone}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Service Address</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <p>{selectedOrder.serviceAddress}</p>
+                  <div className="mt-2 flex flex-wrap gap-4 text-muted-foreground">
+                    {selectedOrder.locId && (
+                      <span>LOC ID: <span className="font-mono">{selectedOrder.locId}</span></span>
+                    )}
+                    {selectedOrder.avcId && (
+                      <span>AVC ID: <span className="font-mono">{selectedOrder.avcId}</span></span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Dates</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Created:</span>
+                    <span>{format(new Date(selectedOrder.createdAt), 'PPp')}</span>
+                  </div>
+                  {selectedOrder.preferredDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Preferred:</span>
+                      <span>{format(new Date(selectedOrder.preferredDate), 'PP')}</span>
+                    </div>
+                  )}
+                  {selectedOrder.estimatedConnectionDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Est. Connection:</span>
+                      <span>{format(new Date(selectedOrder.estimatedConnectionDate), 'PP')}</span>
+                    </div>
+                  )}
+                  {selectedOrder.actualConnectionDate && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Connected:</span>
+                      <span>{format(new Date(selectedOrder.actualConnectionDate), 'PP')}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Update Status</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-3">
+                    <Select value={newOrderStatus} onValueChange={setNewOrderStatus}>
+                      <SelectTrigger className="w-[180px]" data-testid="select-order-status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORDER_STATUSES.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      placeholder="Status message (optional)"
+                      value={statusMessage}
+                      onChange={(e) => setStatusMessage(e.target.value)}
+                      className="flex-1"
+                      data-testid="input-status-message"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleUpdateOrderStatus}
+                    disabled={isUpdatingStatus || newOrderStatus === selectedOrder.status}
+                    data-testid="button-update-status"
+                  >
+                    {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Status History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {orderHistory.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No status history</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {orderHistory.map((entry, index) => (
+                        <div key={entry.id} className="flex gap-3 relative">
+                          {index < orderHistory.length - 1 && (
+                            <div className="absolute left-[7px] top-5 w-0.5 h-full bg-border" />
+                          )}
+                          <div className={`w-4 h-4 rounded-full mt-0.5 flex-shrink-0 ${getStatusBadgeClass(entry.status)}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm capitalize">
+                                {entry.status.replace('_', ' ')}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(entry.createdAt), 'PPp')}
+                              </span>
+                            </div>
+                            {entry.message && (
+                              <p className="text-sm text-muted-foreground mt-1">{entry.message}</p>
+                            )}
+                            {entry.updatedBy && (
+                              <p className="text-xs text-muted-foreground">by {entry.updatedBy}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
