@@ -13,6 +13,8 @@ export interface SQResult {
   locality?: string;
   postcode?: string;
   state?: string;
+  // NBN Location ID from API when available
+  locId?: string;
 }
 
 function generateAddressHash(normalizedAddress: string, postcode: string): string {
@@ -312,6 +314,16 @@ async function checkRapidAPI(
     const formattedAddress = addressDetail?.formattedAddress || 
                             (addressSplit.address1 ? `${addressSplit.address1}, ${addressSplit.locality || ''} ${addressSplit.state || ''} ${addressSplit.postcode || ''}`.trim() : undefined);
     
+    // Extract LOC ID from RapidAPI response
+    // The API may return it as id, locId, locationId, or in addressDetail
+    const locId = addressDetail?.id || 
+                  addressDetail?.locId || 
+                  addressDetail?.locationId ||
+                  data.id ||
+                  data.locId ||
+                  data.locationId ||
+                  undefined;
+    
     return {
       source: 'rapidapi',
       available: isAvailable,
@@ -322,6 +334,7 @@ async function checkRapidAPI(
       locality: addressDetail?.locality || addressSplit.locality || servingArea?.description,
       postcode: addressSplit.postcode || undefined,
       state: addressSplit.state || undefined,
+      locId,
     };
   } catch (error: any) {
     console.error('RapidAPI NBN error:', error.message);

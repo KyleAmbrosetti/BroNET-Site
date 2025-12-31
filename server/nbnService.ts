@@ -138,7 +138,8 @@ export class NbnService {
     postcode?: string,
     suburb?: string,
     state?: string,
-    userId?: string
+    userId?: string,
+    existingLocId?: string // LOC ID from RapidAPI if available
   ): Promise<ServiceQualificationResult> {
     if (this.useNitrogen) {
       return this.nitrogenServiceQualification(address, technology, postcode, suburb, state, userId);
@@ -149,7 +150,7 @@ export class NbnService {
     if (this.useRealApi) {
       return this.realServiceQualification(address, technology, postcode, suburb, state, userId);
     }
-    return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId);
+    return this.simulatedServiceQualification(address, technology, postcode, suburb, state, userId, existingLocId);
   }
 
   private async nitrogenServiceQualification(
@@ -299,12 +300,14 @@ export class NbnService {
     postcode?: string,
     suburb?: string,
     state?: string,
-    userId?: string
+    userId?: string,
+    existingLocId?: string // Use LOC ID from RapidAPI if available
   ): Promise<ServiceQualificationResult> {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const specs = getTechnologySpecs(technology);
-    const locId = generateLocId();
+    // Use existing LOC ID from RapidAPI if available, otherwise generate a simulated one
+    const locId = existingLocId || generateLocId();
     const csaId = generateCsaId();
     const sqReference = generateSqReference();
     const validUntil = new Date();

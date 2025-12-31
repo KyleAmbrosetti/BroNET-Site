@@ -30,6 +30,7 @@ type CoverageResult = {
   technology?: string;
   maxTier?: string;
   available?: boolean;
+  locId?: string;
 };
 
 type QualificationResult = {
@@ -241,6 +242,7 @@ export default function SignupWizard() {
           postcode: coverage.postcode,
           suburb: coverage.suburb,
           state: coverage.state,
+          locId: coverage.locId, // Pass LOC ID from RapidAPI if available
         }),
       });
 

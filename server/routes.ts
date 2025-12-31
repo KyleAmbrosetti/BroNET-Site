@@ -583,6 +583,7 @@ export async function registerRoutes(
           maxTier: sqResult.maxTier,
           available: sqResult.available,
           source: sqResult.source,
+          locId: sqResult.locId,
         },
       });
 
@@ -1097,7 +1098,7 @@ export async function registerRoutes(
   // Perform service qualification (enhanced coverage check)
   app.post("/api/orders/qualify", async (req, res) => {
     try {
-      const { address, technology, postcode, suburb, state } = req.body;
+      const { address, technology, postcode, suburb, state, locId } = req.body;
       
       if (!address || !technology) {
         return res.status(400).json({ message: "Address and technology are required" });
@@ -1110,7 +1111,8 @@ export async function registerRoutes(
         postcode,
         suburb,
         state,
-        req.session?.userId
+        req.session?.userId,
+        locId // Pass LOC ID from RapidAPI if available
       );
 
       res.json({ success: true, qualification: result });
