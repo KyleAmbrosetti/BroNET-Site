@@ -26,6 +26,7 @@ type PlanData = {
   speed: number;
   upload: number;
   price: number;
+  promoPrice?: number;
   typical: string;
   typicalUpload?: string;
   tier: 'basic' | 'power' | 'ultra';
@@ -94,6 +95,7 @@ function PlansCarousel({
                     speed={plan.speed}
                     upload={plan.upload}
                     price={plan.price}
+                    promoPrice={plan.promoPrice}
                     typicalSpeed={plan.typical}
                     typicalUpload={plan.typicalUpload}
                     isPopular={plan.popular}
@@ -145,7 +147,8 @@ export default function Plans() {
       name: "NBN 50/20", 
       speed: 50, 
       upload: 20, 
-      price: 94, 
+      price: 94,
+      promoPrice: 79,
       typical: "50 Mbps",
       typicalUpload: "17",
       tier: 'basic' as const
@@ -154,7 +157,8 @@ export default function Plans() {
       name: "NBN 100/20", 
       speed: 100, 
       upload: 20, 
-      price: 105, 
+      price: 105,
+      promoPrice: 89,
       typical: "98 Mbps",
       typicalUpload: "18",
       tier: 'basic' as const,
@@ -164,7 +168,8 @@ export default function Plans() {
       name: "NBN 250/100", 
       speed: 250, 
       upload: 100, 
-      price: 110, 
+      price: 110,
+      promoPrice: 94,
       typical: "245 Mbps",
       typicalUpload: "95",
       tier: 'power' as const
@@ -173,7 +178,8 @@ export default function Plans() {
       name: "NBN 500/200", 
       speed: 500, 
       upload: 200, 
-      price: 131, 
+      price: 131,
+      promoPrice: 115,
       typical: "480 Mbps",
       typicalUpload: "190",
       tier: 'power' as const
@@ -182,7 +188,8 @@ export default function Plans() {
       name: "NBN 1000/400", 
       speed: 1000, 
       upload: 400, 
-      price: 152, 
+      price: 152,
+      promoPrice: 136,
       typical: "900 Mbps",
       typicalUpload: "380",
       tier: 'ultra' as const
@@ -191,7 +198,8 @@ export default function Plans() {
       name: "NBN 2000/200", 
       speed: 2000, 
       upload: 200, 
-      price: 183, 
+      price: 183,
+      promoPrice: 162,
       typical: "1800 Mbps",
       typicalUpload: "190",
       tier: 'ultra' as const
@@ -200,7 +208,8 @@ export default function Plans() {
       name: "NBN 2000/500", 
       speed: 2000, 
       upload: 500, 
-      price: 246, 
+      price: 246,
+      promoPrice: 208,
       typical: "1800 Mbps",
       typicalUpload: "480",
       tier: 'ultra' as const,
