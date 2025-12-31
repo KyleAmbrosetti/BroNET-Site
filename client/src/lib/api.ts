@@ -282,4 +282,44 @@ export const api = {
   deleteAdminPlan: (id: string) => apiFetch(`/admin/plans/${id}`, {
     method: 'DELETE',
   }),
+
+  // Superloop Connect API
+  getSuperloopStatus: () => apiFetch('/superloop/status'),
+
+  searchSuperloopLocations: (query: string) => apiFetch(`/superloop/locations?q=${encodeURIComponent(query)}`),
+
+  qualifySuperloopLocation: (locationId: string) => apiFetch('/superloop/qualify', {
+    method: 'POST',
+    body: JSON.stringify({ locationId }),
+  }),
+
+  createSuperloopOrder: (data: {
+    qualificationSearchId: string;
+    locationId: string;
+    planName: string;
+    term?: number;
+    trafficClass?: string;
+    restorationSla?: string;
+    contactName: string;
+    contactPhone: string;
+    contactEmail: string;
+    aggregationMethod?: string;
+    ntdInstallation?: string;
+    ntdOption?: string;
+    infrastructureId?: string;
+    portId?: number;
+    avcIdForTransfer?: string;
+    transferType?: string;
+    customerReference?: string;
+  }) => apiFetch('/superloop/orders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  getSuperloopOrder: (orderId: string) => apiFetch(`/superloop/orders/${orderId}`),
+
+  qualifyAvc: (avcId: string) => apiFetch('/superloop/avc-qualify', {
+    method: 'POST',
+    body: JSON.stringify({ avcId }),
+  }),
 };
