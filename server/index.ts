@@ -75,6 +75,51 @@ app.post(
       }
 
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      
+      // Handle checkout.session.completed to update order status
+      try {
+        const { getUncachableStripeClient } = await import('./stripeClient');
+        const stripe = await getUncachableStripeClient();
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        
+        if (webhookSecret) {
+          const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+          
+          if (event.type === 'checkout.session.completed') {
+            const session = event.data.object as any;
+            const orderId = session.metadata?.orderId;
+            const subscriptionId = session.subscription;
+            
+            if (orderId) {
+              console.log(`Checkout completed for order: ${orderId}`);
+              const { db } = await import('./db');
+              const { serviceOrders, orderStatusHistory } = await import('@shared/schema');
+              const { eq } = await import('drizzle-orm');
+              
+              await db.update(serviceOrders)
+                .set({ 
+                  status: 'submitted',
+                  stripeSessionId: session.id,
+                  stripeSubscriptionId: subscriptionId || null,
+                  updatedAt: new Date()
+                })
+                .where(eq(serviceOrders.id, orderId));
+              
+              await db.insert(orderStatusHistory).values({
+                orderId,
+                status: 'submitted',
+                message: 'Payment completed - order submitted for processing',
+                updatedBy: 'stripe_webhook',
+              });
+              
+              console.log(`Order ${orderId} updated to submitted status`);
+            }
+          }
+        }
+      } catch (webhookErr: any) {
+        console.log('Custom webhook handling skipped:', webhookErr.message);
+      }
+      
       res.status(200).json({ received: true });
     } catch (error: any) {
       console.error('Webhook error:', error.message);
