@@ -32,6 +32,12 @@ const fibrePlans: PlanConfig[] = [
     metadata: { speed: "250", upload: "25", typical: "245 Mbps", planType: "fibre" }
   },
   {
+    name: "NBN 500",
+    description: "High-speed fibre for heavy users and large households",
+    priceMonthly: 11900,
+    metadata: { speed: "500", upload: "200", typical: "450 Mbps", planType: "fibre" }
+  },
+  {
     name: "NBN 1000",
     description: "Ultra-fast speeds for demanding households and home offices",
     priceMonthly: 12900,

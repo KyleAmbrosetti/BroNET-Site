@@ -298,11 +298,11 @@ export default function SignupWizard() {
     }
 
     // NBN fibre/HFC/FTTC/FTTB plans - show all that fit within maxSpeed
-    // Plans must match Stripe products exactly
     const nbnPlans = [
       { id: "nbn50", name: "NBN 50", speed: 50, upload: 20, price: 69, typicalEvening: 45 },
       { id: "nbn100", name: "NBN 100", speed: 100, upload: 20, price: 89, typicalEvening: 90 },
       { id: "nbn250", name: "NBN 250", speed: 250, upload: 25, price: 109, typicalEvening: 215 },
+      { id: "nbn500", name: "NBN 500", speed: 500, upload: 200, price: 119, typicalEvening: 450 },
       { id: "nbn1000", name: "NBN 1000", speed: 1000, upload: 50, price: 129, typicalEvening: 850 },
       { id: "nbn2000", name: "NBN 2000", speed: 2000, upload: 500, price: 155, typicalEvening: 1700 },
     ];
