@@ -857,6 +857,216 @@ export async function registerRoutes(
     }
   });
 
+  // ============ SUPERLOOP WEBHOOK EVENTS ============
+  
+  // Superloop webhook endpoint (receives events from Superloop)
+  app.post("/api/webhooks/superloop", async (req, res) => {
+    try {
+      const { superloopWebhookHandler } = await import('./superloopWebhookHandler');
+      
+      const event = {
+        eventId: req.body.eventId || req.body.id || `evt-${Date.now()}`,
+        eventType: req.body.eventType || req.body.type,
+        eventSubtype: req.body.eventSubtype || req.body.subtype,
+        timestamp: req.body.timestamp || new Date().toISOString(),
+        data: req.body.data || req.body,
+      };
+
+      if (!event.eventType) {
+        return res.status(400).json({ message: "Event type is required" });
+      }
+
+      const result = await superloopWebhookHandler.processEvent(event);
+      
+      if (result.success) {
+        res.json({ received: true, message: result.message });
+      } else {
+        res.status(500).json({ received: false, message: result.message });
+      }
+    } catch (error: any) {
+      console.error('Superloop webhook error:', error);
+      res.status(500).json({ received: false, message: error.message });
+    }
+  });
+
+  // Get recent Superloop events (admin)
+  app.get("/api/admin/events", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { superloopWebhookHandler } = await import('./superloopWebhookHandler');
+      const limit = parseInt(req.query.limit as string) || 50;
+      const eventType = req.query.type as string | undefined;
+      
+      const events = await superloopWebhookHandler.getRecentEvents(limit, eventType);
+      res.json({ events });
+    } catch (error: any) {
+      console.error('Get events error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Acknowledge an event (admin)
+  app.post("/api/admin/events/:eventId/acknowledge", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { superloopWebhookHandler } = await import('./superloopWebhookHandler');
+      await superloopWebhookHandler.acknowledgeEvent(req.params.eventId, req.session.userId!);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get active network disruptions (public)
+  app.get("/api/network/disruptions", async (_req, res) => {
+    try {
+      const { superloopWebhookHandler } = await import('./superloopWebhookHandler');
+      const disruptions = await superloopWebhookHandler.getActiveDisruptions();
+      res.json({ disruptions });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all disruptions (admin)
+  app.get("/api/admin/disruptions", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { networkDisruptions } = await import('@shared/schema');
+      const { db } = await import('./db');
+      const disruptions = await db.select().from(networkDisruptions).orderBy(networkDisruptions.startedAt);
+      res.json({ disruptions });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create manual disruption (admin)
+  app.post("/api/admin/disruptions", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { networkDisruptions } = await import('@shared/schema');
+      const { db } = await import('./db');
+      
+      const [disruption] = await db.insert(networkDisruptions).values({
+        title: req.body.title,
+        description: req.body.description,
+        severity: req.body.severity || 'medium',
+        status: req.body.status || 'active',
+        affectedAreas: req.body.affectedAreas ? JSON.stringify(req.body.affectedAreas) : null,
+        affectedTechnologies: req.body.affectedTechnologies ? JSON.stringify(req.body.affectedTechnologies) : null,
+        estimatedResolution: req.body.estimatedResolution ? new Date(req.body.estimatedResolution) : null,
+        startedAt: req.body.startedAt ? new Date(req.body.startedAt) : new Date(),
+        source: 'manual',
+      }).returning();
+
+      res.json({ success: true, disruption });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update disruption (admin)
+  app.patch("/api/admin/disruptions/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { networkDisruptions } = await import('@shared/schema');
+      const { db } = await import('./db');
+      const { eq } = await import('drizzle-orm');
+
+      const updates: any = { updatedAt: new Date() };
+      if (req.body.title) updates.title = req.body.title;
+      if (req.body.description !== undefined) updates.description = req.body.description;
+      if (req.body.severity) updates.severity = req.body.severity;
+      if (req.body.status) updates.status = req.body.status;
+      if (req.body.affectedAreas) updates.affectedAreas = JSON.stringify(req.body.affectedAreas);
+      if (req.body.affectedTechnologies) updates.affectedTechnologies = JSON.stringify(req.body.affectedTechnologies);
+      if (req.body.estimatedResolution) updates.estimatedResolution = new Date(req.body.estimatedResolution);
+      if (req.body.resolvedAt) updates.resolvedAt = new Date(req.body.resolvedAt);
+      if (req.body.status === 'resolved' && !req.body.resolvedAt) updates.resolvedAt = new Date();
+
+      const [disruption] = await db.update(networkDisruptions)
+        .set(updates)
+        .where(eq(networkDisruptions.id, req.params.id))
+        .returning();
+
+      res.json({ success: true, disruption });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get appointment slots for an order
+  app.get("/api/orders/:orderId/appointments", requireAuth, async (req, res) => {
+    try {
+      const { appointmentSlots, serviceOrders } = await import('@shared/schema');
+      const { db } = await import('./db');
+      const { eq } = await import('drizzle-orm');
+
+      const [order] = await db.select().from(serviceOrders)
+        .where(eq(serviceOrders.id, req.params.orderId))
+        .limit(1);
+
+      if (!order || order.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      const appointments = await db.select().from(appointmentSlots)
+        .where(eq(appointmentSlots.orderId, req.params.orderId))
+        .orderBy(appointmentSlots.slotDate);
+
+      res.json({ appointments });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get service health records
+  app.get("/api/orders/:orderId/health", requireAuth, async (req, res) => {
+    try {
+      const { serviceHealthRecords, serviceOrders } = await import('@shared/schema');
+      const { db } = await import('./db');
+      const { eq, desc } = await import('drizzle-orm');
+
+      const [order] = await db.select().from(serviceOrders)
+        .where(eq(serviceOrders.id, req.params.orderId))
+        .limit(1);
+
+      if (!order || order.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      const records = await db.select().from(serviceHealthRecords)
+        .where(eq(serviceHealthRecords.orderId, req.params.orderId))
+        .orderBy(desc(serviceHealthRecords.recordedAt))
+        .limit(50);
+
+      res.json({ records });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ ADMIN: NBN DATASET MANAGEMENT ============
   
   // Get all dataset records
