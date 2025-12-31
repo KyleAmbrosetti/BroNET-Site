@@ -114,6 +114,7 @@ export interface IStorage {
   getOrdersByUser(userId: string): Promise<ServiceOrder[]>;
   updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder>;
   getOrderHistory(orderId: string): Promise<OrderStatusHistory[]>;
+  deleteOrder(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -454,6 +455,11 @@ export class DatabaseStorage implements IStorage {
       .from(orderStatusHistory)
       .where(eq(orderStatusHistory.orderId, orderId))
       .orderBy(desc(orderStatusHistory.createdAt));
+  }
+
+  async deleteOrder(id: string): Promise<void> {
+    await db.delete(orderStatusHistory).where(eq(orderStatusHistory.orderId, id));
+    await db.delete(serviceOrders).where(eq(serviceOrders.id, id));
   }
 }
 
