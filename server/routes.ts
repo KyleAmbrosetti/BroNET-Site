@@ -1584,7 +1584,10 @@ export async function registerRoutes(
         contactPhone,
         preferredDate,
         routerOption,
-        promoCode
+        promoCode,
+        locationId,
+        qualificationSearchId,
+        ntdOption
       } = req.body;
       
       if (!priceId) {
@@ -1638,7 +1641,7 @@ export async function registerRoutes(
         contactEmail,
         contactPhone,
         preferredDate: preferredDate ? new Date(preferredDate) : null,
-        notes: JSON.stringify({ routerOption, promoCode, csaId, sqReference }),
+        notes: JSON.stringify({ routerOption, promoCode, csaId, sqReference, locationId, qualificationSearchId, ntdOption }),
       }).returning();
       
       const orderId = order.id;
