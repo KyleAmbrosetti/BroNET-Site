@@ -39,6 +39,13 @@ export async function registerRoutes(
   
   // Set up session middleware
   const PgStore = connectPgSimple(session);
+  const isProduction = process.env.REPLIT_DEPLOYMENT === "1" || process.env.NODE_ENV === "production";
+  
+  // Trust proxy for Replit's reverse proxy
+  if (isProduction) {
+    app.set('trust proxy', 1);
+  }
+  
   app.use(
     session({
       store: new PgStore({
@@ -49,9 +56,10 @@ export async function registerRoutes(
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === "production",
+        secure: isProduction, // Use secure cookies in production
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        sameSite: isProduction ? 'none' : 'lax', // Required for cross-site cookies
       },
     })
   );
