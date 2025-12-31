@@ -12,6 +12,7 @@ import {
   insertIncidentSchema,
   insertContactMessageSchema,
   insertNbnDatasetSchema,
+  insertPlanSchema,
 } from "@shared/schema";
 import { validateAddress } from "./services/nominatim";
 import { checkNBNAvailability, getSQMode, generateAddressHash } from "./services/sq";
@@ -749,7 +750,7 @@ export async function registerRoutes(
     }
   });
 
-  // Get all tickets (admin only)
+  // Get all tickets with user info (admin only)
   app.get("/api/admin/tickets", requireAuth, async (req, res) => {
     try {
       const user = await storage.getUser(req.session.userId!);
@@ -757,7 +758,120 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Admin access required" });
       }
       const tickets = await storage.getAllTickets();
-      res.json({ tickets });
+      
+      const ticketsWithUserInfo = await Promise.all(
+        tickets.map(async (ticket) => {
+          const ticketUser = await storage.getUser(ticket.userId);
+          return {
+            ...ticket,
+            userEmail: ticketUser?.email || 'Unknown',
+            userName: ticketUser ? `${ticketUser.firstName} ${ticketUser.lastName}` : 'Unknown',
+          };
+        })
+      );
+      
+      res.json({ tickets: ticketsWithUserInfo });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get single ticket with replies and user info (admin only)
+  app.get("/api/admin/tickets/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const ticket = await storage.getTicket(req.params.id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const ticketUser = await storage.getUser(ticket.userId);
+      const replies = await storage.getTicketReplies(req.params.id);
+      
+      const repliesWithUserInfo = await Promise.all(
+        replies.map(async (reply) => {
+          if (reply.userId) {
+            const replyUser = await storage.getUser(reply.userId);
+            return {
+              ...reply,
+              userName: replyUser ? `${replyUser.firstName} ${replyUser.lastName}` : 'Unknown',
+            };
+          }
+          return { ...reply, userName: reply.isStaff ? 'Staff' : 'Unknown' };
+        })
+      );
+      
+      res.json({
+        ticket: {
+          ...ticket,
+          userEmail: ticketUser?.email || 'Unknown',
+          userName: ticketUser ? `${ticketUser.firstName} ${ticketUser.lastName}` : 'Unknown',
+        },
+        replies: repliesWithUserInfo,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Add admin reply to ticket (admin only)
+  app.post("/api/admin/tickets/:id/reply", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { message } = req.body;
+      if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+      
+      const ticket = await storage.getTicket(req.params.id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const reply = await storage.createTicketReply({
+        ticketId: req.params.id,
+        userId: req.session.userId!,
+        message: message.trim(),
+        isStaff: 1,
+      });
+      
+      await storage.updateTicket(req.params.id, { status: ticket.status === 'open' ? 'in_progress' : ticket.status });
+      
+      res.status(201).json({ reply: { ...reply, userName: `${user.firstName} ${user.lastName}` } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update ticket status (admin only)
+  app.patch("/api/admin/tickets/:id/status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { status } = req.body;
+      const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be: open, in_progress, resolved, or closed" });
+      }
+      
+      const ticket = await storage.getTicket(req.params.id);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const updatedTicket = await storage.updateTicket(req.params.id, { status });
+      res.json({ ticket: updatedTicket });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -893,6 +1007,212 @@ export async function registerRoutes(
       
       await storage.deleteOrder(req.params.id);
       res.json({ success: true, message: "Order deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Export orders as CSV (admin only)
+  app.get("/api/admin/orders/export", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const orderIds = req.query.ids ? (req.query.ids as string).split(',') : null;
+      let orders = await storage.getAllOrders();
+      
+      if (orderIds && orderIds.length > 0) {
+        orders = orders.filter(o => orderIds.includes(o.id));
+      }
+
+      const csvHeaders = [
+        'Order Reference',
+        'Status',
+        'Plan Name',
+        'Contact Name',
+        'Contact Email',
+        'Contact Phone',
+        'Service Address',
+        'LOC ID',
+        'AVC ID',
+        'Technology',
+        'Download Speed',
+        'Upload Speed',
+        'Created At',
+        'Updated At'
+      ];
+
+      const escapeCSV = (value: any) => {
+        if (value === null || value === undefined) return '';
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const csvRows = orders.map(order => [
+        escapeCSV(order.orderReference),
+        escapeCSV(order.status),
+        escapeCSV(order.planName),
+        escapeCSV(order.contactName),
+        escapeCSV(order.contactEmail),
+        escapeCSV(order.contactPhone),
+        escapeCSV(order.serviceAddress),
+        escapeCSV(order.locId),
+        escapeCSV(order.avcId),
+        escapeCSV(order.technology),
+        escapeCSV(order.downloadSpeed),
+        escapeCSV(order.uploadSpeed),
+        escapeCSV(order.createdAt),
+        escapeCSV(order.updatedAt)
+      ].join(','));
+
+      const csv = [csvHeaders.join(','), ...csvRows].join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="orders-export-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csv);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Bulk update order statuses (admin only)
+  app.post("/api/admin/orders/bulk-status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { orderIds, status, message } = req.body;
+
+      if (!Array.isArray(orderIds) || orderIds.length === 0) {
+        return res.status(400).json({ message: "Order IDs are required" });
+      }
+
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      const validStatuses = ['pending', 'submitted', 'in_progress', 'provisioning', 'active', 'cancelled', 'failed', 'on_hold'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const results = [];
+      for (const orderId of orderIds) {
+        try {
+          const order = await storage.getOrder(orderId);
+          if (order) {
+            await storage.updateOrderStatus(orderId, status, message || `Bulk status update to ${status}`, 'admin');
+            results.push({ orderId, success: true });
+          } else {
+            results.push({ orderId, success: false, error: "Order not found" });
+          }
+        } catch (err: any) {
+          results.push({ orderId, success: false, error: err.message });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      res.json({ 
+        success: true, 
+        message: `Updated ${successCount} of ${orderIds.length} orders`,
+        results 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ ADMIN USER MANAGEMENT ============
+
+  // Get all users (admin only)
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const users = await storage.getAllUsers();
+      const sanitizedUsers = users.map(u => ({ ...u, password: undefined }));
+      res.json({ users: sanitizedUsers });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Disable user account (admin only)
+  app.patch("/api/admin/users/:id/disable", requireAuth, async (req, res) => {
+    try {
+      const adminUser = await storage.getUser(req.session.userId!);
+      if (!adminUser || adminUser.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (targetUser.isAdmin === 1) {
+        return res.status(400).json({ message: "Cannot disable admin accounts" });
+      }
+
+      const updated = await storage.disableUser(req.params.id);
+      res.json({ user: { ...updated, password: undefined } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Enable user account (admin only)
+  app.patch("/api/admin/users/:id/enable", requireAuth, async (req, res) => {
+    try {
+      const adminUser = await storage.getUser(req.session.userId!);
+      if (!adminUser || adminUser.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updated = await storage.enableUser(req.params.id);
+      res.json({ user: { ...updated, password: undefined } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Reset user password (admin only)
+  app.post("/api/admin/users/:id/reset-password", requireAuth, async (req, res) => {
+    try {
+      const adminUser = await storage.getUser(req.session.userId!);
+      if (!adminUser || adminUser.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const targetUser = await storage.getUser(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const newPassword = crypto.randomBytes(8).toString('hex');
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await storage.updateUser(req.params.id, { password: hashedPassword });
+      
+      res.json({ 
+        message: "Password reset successfully", 
+        newPassword,
+        userEmail: targetUser.email
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -1306,6 +1626,169 @@ export async function registerRoutes(
   });
 
   // Note: Nitrogen webhook is registered in index.ts before express.json() middleware
+
+  // ============ ADMIN: ANALYTICS ============
+
+  app.get("/api/admin/analytics", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const allUsers = await storage.getAllUsers();
+      const allOrders = await storage.getAllOrders();
+
+      const totalCustomers = allUsers.filter(u => u.isAdmin !== 1).length;
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentSignups = allUsers.filter(u => 
+        u.isAdmin !== 1 && new Date(u.joinedAt) >= thirtyDaysAgo
+      );
+
+      const signupsByDate: Record<string, number> = {};
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        signupsByDate[dateKey] = 0;
+      }
+      recentSignups.forEach(u => {
+        const dateKey = new Date(u.joinedAt).toISOString().split('T')[0];
+        if (signupsByDate[dateKey] !== undefined) {
+          signupsByDate[dateKey]++;
+        }
+      });
+      const signupsTrend = Object.entries(signupsByDate).map(([date, count]) => ({
+        date,
+        signups: count
+      }));
+
+      const totalOrders = allOrders.length;
+      const activeOrders = allOrders.filter(o => o.status === 'active').length;
+
+      const ordersByStatus: Record<string, number> = {};
+      allOrders.forEach(o => {
+        ordersByStatus[o.status] = (ordersByStatus[o.status] || 0) + 1;
+      });
+
+      const ordersByPlan: Record<string, number> = {};
+      allOrders.forEach(o => {
+        const planKey = o.planName || 'Unknown';
+        ordersByPlan[planKey] = (ordersByPlan[planKey] || 0) + 1;
+      });
+
+      const AVERAGE_PLAN_PRICE = 89;
+      const estimatedRevenue = activeOrders * AVERAGE_PLAN_PRICE;
+
+      res.json({
+        totalCustomers,
+        newSignups30Days: recentSignups.length,
+        signupsTrend,
+        totalOrders,
+        activeOrders,
+        ordersByStatus: Object.entries(ordersByStatus).map(([status, count]) => ({ status, count })),
+        ordersByPlan: Object.entries(ordersByPlan).map(([plan, count]) => ({ plan, count })),
+        estimatedMonthlyRevenue: estimatedRevenue,
+      });
+    } catch (error: any) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // ============ PLANS ROUTES ============
+
+  // Get all active plans (public)
+  app.get("/api/plans", async (_req, res) => {
+    try {
+      const plans = await storage.getPlans();
+      res.json({ plans });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all plans including inactive (admin only)
+  app.get("/api/admin/plans", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const plans = await storage.getAllPlansAdmin();
+      res.json({ plans });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create plan (admin only)
+  app.post("/api/admin/plans", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const data = insertPlanSchema.parse(req.body);
+      
+      const existingPlan = await storage.getPlan(data.id);
+      if (existingPlan) {
+        return res.status(400).json({ message: "Plan with this ID already exists" });
+      }
+      
+      const plan = await storage.createPlan(data);
+      res.status(201).json({ plan });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update plan (admin only)
+  app.patch("/api/admin/plans/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const existingPlan = await storage.getPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      
+      const updates = req.body;
+      delete updates.id;
+      
+      const plan = await storage.updatePlan(req.params.id, updates);
+      res.json({ plan });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete plan (admin only)
+  app.delete("/api/admin/plans/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const existingPlan = await storage.getPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      
+      await storage.deletePlan(req.params.id);
+      res.json({ success: true, message: "Plan deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   return httpServer;
 }

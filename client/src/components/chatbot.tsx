@@ -158,6 +158,7 @@ export function Alex() {
         body: JSON.stringify({
           conversationId,
           message: userMessage,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
           systemPrompt: `You are Alex, BroNET's friendly AI assistant for an Australian NBN internet service provider. You're knowledgeable, helpful, and use Australian English (G'day, mate, no worries, etc.).
 
 KEY CAPABILITIES:

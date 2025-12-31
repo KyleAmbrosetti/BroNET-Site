@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   planId: text("plan_id"),
   serviceAddress: text("service_address"),
   isAdmin: integer("is_admin").notNull().default(0),
+  disabled: integer("disabled").notNull().default(0),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
@@ -333,6 +334,26 @@ export const insertOrderStatusHistorySchema = createInsertSchema(orderStatusHist
 
 export type InsertOrderStatusHistory = z.infer<typeof insertOrderStatusHistorySchema>;
 export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;
+
+// Plans Table (for admin-managed internet plans)
+export const plans = pgTable("plans", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  speed: integer("speed").notNull(),
+  uploadSpeed: integer("upload_speed").notNull(),
+  priceMonthly: integer("price_monthly").notNull(),
+  promoPrice: integer("promo_price"),
+  promoDuration: integer("promo_duration"),
+  description: text("description"),
+  features: text("features").array(),
+  isActive: integer("is_active").notNull().default(1),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+export const insertPlanSchema = createInsertSchema(plans);
+
+export type InsertPlan = z.infer<typeof insertPlanSchema>;
+export type Plan = typeof plans.$inferSelect;
 
 // Re-export chat models
 export * from "./models/chat";

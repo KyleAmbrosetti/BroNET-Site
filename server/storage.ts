@@ -13,6 +13,7 @@ import {
   usageRecords,
   serviceOrders,
   orderStatusHistory,
+  plans,
   type User, 
   type InsertUser,
   type Ticket,
@@ -41,6 +42,8 @@ import {
   type InsertServiceOrder,
   type OrderStatusHistory,
   type InsertOrderStatusHistory,
+  type Plan,
+  type InsertPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -51,6 +54,9 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<InsertUser>): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  disableUser(id: string): Promise<User>;
+  enableUser(id: string): Promise<User>;
 
   // Tickets
   getTickets(userId: string): Promise<Ticket[]>;
@@ -116,6 +122,14 @@ export interface IStorage {
   updateOrderAvcId(id: string, avcId: string): Promise<ServiceOrder | undefined>;
   getOrderHistory(orderId: string): Promise<OrderStatusHistory[]>;
   deleteOrder(id: string): Promise<void>;
+
+  // Plans
+  getPlans(): Promise<Plan[]>;
+  getAllPlansAdmin(): Promise<Plan[]>;
+  getPlan(id: string): Promise<Plan | undefined>;
+  createPlan(plan: InsertPlan): Promise<Plan>;
+  updatePlan(id: string, data: Partial<InsertPlan>): Promise<Plan>;
+  deletePlan(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -139,6 +153,28 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(users)
       .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.joinedAt));
+  }
+
+  async disableUser(id: string): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({ disabled: 1 })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async enableUser(id: string): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({ disabled: 0 })
       .where(eq(users.id, id))
       .returning();
     return updated;
@@ -474,6 +510,45 @@ export class DatabaseStorage implements IStorage {
   async deleteOrder(id: string): Promise<void> {
     await db.delete(orderStatusHistory).where(eq(orderStatusHistory.orderId, id));
     await db.delete(serviceOrders).where(eq(serviceOrders.id, id));
+  }
+
+  // Plans
+  async getPlans(): Promise<Plan[]> {
+    return await db
+      .select()
+      .from(plans)
+      .where(eq(plans.isActive, 1))
+      .orderBy(plans.displayOrder);
+  }
+
+  async getAllPlansAdmin(): Promise<Plan[]> {
+    return await db
+      .select()
+      .from(plans)
+      .orderBy(plans.displayOrder);
+  }
+
+  async getPlan(id: string): Promise<Plan | undefined> {
+    const result = await db.select().from(plans).where(eq(plans.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createPlan(plan: InsertPlan): Promise<Plan> {
+    const [newPlan] = await db.insert(plans).values(plan).returning();
+    return newPlan;
+  }
+
+  async updatePlan(id: string, data: Partial<InsertPlan>): Promise<Plan> {
+    const [updated] = await db
+      .update(plans)
+      .set(data)
+      .where(eq(plans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePlan(id: string): Promise<void> {
+    await db.delete(plans).where(eq(plans.id, id));
   }
 }
 

@@ -617,7 +617,7 @@ export function registerChatRoutes(app: Express): void {
   // Enhanced chat stream endpoint with AI and fallback modes
   app.post("/api/chat/stream", async (req: Request, res: Response) => {
     try {
-      const { conversationId, message, systemPrompt } = req.body;
+      const { conversationId, message, systemPrompt, history } = req.body;
       const userId = req.session?.userId;
       const ip = req.ip || req.socket.remoteAddress || 'unknown';
       const saveLogs = process.env.SAVE_CHAT_LOGS === 'true';
@@ -661,21 +661,30 @@ export function registerChatRoutes(app: Express): void {
       if (openai) {
         // AI mode: Use OpenAI with function calling
         try {
-          // Get conversation history for context (only if logging enabled)
+          // Build conversation history for context
           const chatMessages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> = [];
           
           if (systemPrompt) {
             chatMessages.push({ role: "system", content: systemPrompt });
           }
           
-          if (convId && saveLogs) {
+          // Use history from request if provided (allows memory without database logging)
+          if (history && Array.isArray(history) && history.length > 0) {
+            chatMessages.push(...history.map((m: { role: string; content: string }) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })));
+            // Add the current message
+            chatMessages.push({ role: "user", content: sanitizedMessage });
+          } else if (convId && saveLogs) {
+            // Fall back to database history if available
             const messages = await chatStorage.getMessagesByConversation(convId);
             chatMessages.push(...messages.map((m) => ({
               role: m.role as "user" | "assistant",
               content: m.content,
             })));
           } else {
-            // No conversation history, just add current message
+            // No history, just add current message
             chatMessages.push({ role: "user", content: sanitizedMessage });
           }
           
