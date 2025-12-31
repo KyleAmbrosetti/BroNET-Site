@@ -115,6 +115,18 @@ export const api = {
 
   getAllTickets: () => apiFetch('/admin/tickets'),
 
+  getAdminTicket: (id: string) => apiFetch(`/admin/tickets/${id}`),
+
+  addAdminTicketReply: (id: string, message: string) => apiFetch(`/admin/tickets/${id}/reply`, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  }),
+
+  updateAdminTicketStatus: (id: string, status: string) => apiFetch(`/admin/tickets/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
+
   getAllContactMessages: () => apiFetch('/admin/messages'),
 
   updateModemEnquiryStatus: (id: string, status: string) => apiFetch(`/admin/modems/enquiry/${id}`, {
@@ -221,6 +233,53 @@ export const api = {
   }),
   
   deleteAdminOrder: (id: string) => apiFetch(`/admin/orders/${id}`, {
+    method: 'DELETE',
+  }),
+
+  exportAdminOrders: (orderIds?: string[]) => {
+    const params = orderIds && orderIds.length > 0 ? `?ids=${orderIds.join(',')}` : '';
+    return `/api/admin/orders/export${params}`;
+  },
+
+  bulkUpdateOrderStatus: (orderIds: string[], status: string, message?: string) => apiFetch('/admin/orders/bulk-status', {
+    method: 'POST',
+    body: JSON.stringify({ orderIds, status, message }),
+  }),
+
+  // Admin User Management
+  getAdminUsers: () => apiFetch('/admin/users'),
+
+  disableAdminUser: (id: string) => apiFetch(`/admin/users/${id}/disable`, {
+    method: 'PATCH',
+  }),
+
+  enableAdminUser: (id: string) => apiFetch(`/admin/users/${id}/enable`, {
+    method: 'PATCH',
+  }),
+
+  resetAdminUserPassword: (id: string) => apiFetch(`/admin/users/${id}/reset-password`, {
+    method: 'POST',
+  }),
+
+  // Admin Analytics
+  getAdminAnalytics: () => apiFetch('/admin/analytics'),
+
+  // Plans
+  getPlans: () => apiFetch('/plans'),
+
+  getAdminPlans: () => apiFetch('/admin/plans'),
+
+  createAdminPlan: (data: any) => apiFetch('/admin/plans', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateAdminPlan: (id: string, data: any) => apiFetch(`/admin/plans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  deleteAdminPlan: (id: string) => apiFetch(`/admin/plans/${id}`, {
     method: 'DELETE',
   }),
 };
