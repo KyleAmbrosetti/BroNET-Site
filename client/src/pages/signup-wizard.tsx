@@ -436,13 +436,13 @@ export default function SignupWizard() {
 
     // NBN fibre/HFC/FTTC/FTTB plans - show all that fit within maxSpeed
     const nbnPlans = [
-      { id: "nbn50", name: "NBN 50/20", speed: 50, upload: 20, price: 69, typicalEvening: 50 },
-      { id: "nbn100", name: "NBN 100/20", speed: 100, upload: 20, price: 79, typicalEvening: 98 },
-      { id: "nbn250", name: "NBN 250/25", speed: 250, upload: 25, price: 89, typicalEvening: 230 },
-      { id: "nbn500", name: "NBN 500/50", speed: 500, upload: 50, price: 109, typicalEvening: 480 },
-      { id: "nbn1000", name: "NBN 1000/50", speed: 1000, upload: 50, price: 129, typicalEvening: 900 },
-      { id: "nbn2000-200", name: "NBN 2000/200", speed: 2000, upload: 200, price: 169, typicalEvening: 1800 },
-      { id: "nbn2000-400", name: "NBN 2000/400", speed: 2000, upload: 400, price: 199, typicalEvening: 1800 },
+      { id: "nbn50", name: "NBN 50/20", speed: 50, upload: 20, price: 79, typicalEvening: 50 },
+      { id: "nbn100", name: "NBN 100/20", speed: 100, upload: 20, price: 89, typicalEvening: 98 },
+      { id: "nbn250", name: "NBN 250/100", speed: 250, upload: 100, price: 94, typicalEvening: 245 },
+      { id: "nbn500", name: "NBN 500/200", speed: 500, upload: 200, price: 115, typicalEvening: 480 },
+      { id: "nbn1000", name: "NBN 1000/400", speed: 1000, upload: 400, price: 136, typicalEvening: 900 },
+      { id: "nbn2000-200", name: "NBN 2000/200", speed: 2000, upload: 200, price: 162, typicalEvening: 1800 },
+      { id: "nbn2000-500", name: "NBN 2000/500", speed: 2000, upload: 500, price: 208, typicalEvening: 1800 },
     ];
     
     return nbnPlans.filter(p => p.speed <= maxSpeed);
