@@ -11,6 +11,8 @@ import {
   emailSignups,
   billingHistory,
   usageRecords,
+  serviceOrders,
+  orderStatusHistory,
   type User, 
   type InsertUser,
   type Ticket,
@@ -35,6 +37,10 @@ import {
   type InsertBillingHistory,
   type UsageRecord,
   type InsertUsageRecord,
+  type ServiceOrder,
+  type InsertServiceOrder,
+  type OrderStatusHistory,
+  type InsertOrderStatusHistory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or } from "drizzle-orm";
@@ -101,6 +107,13 @@ export interface IStorage {
   // Usage Records
   getUsageRecords(userId: string): Promise<UsageRecord[]>;
   createUsageRecord(record: InsertUsageRecord): Promise<UsageRecord>;
+
+  // Service Orders (Admin)
+  getAllOrders(): Promise<ServiceOrder[]>;
+  getOrder(id: string): Promise<ServiceOrder | undefined>;
+  getOrdersByUser(userId: string): Promise<ServiceOrder[]>;
+  updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder>;
+  getOrderHistory(orderId: string): Promise<OrderStatusHistory[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -384,6 +397,59 @@ export class DatabaseStorage implements IStorage {
       .values(record)
       .returning();
     return newRecord;
+  }
+
+  // Service Orders (Admin)
+  async getAllOrders(): Promise<ServiceOrder[]> {
+    return await db
+      .select()
+      .from(serviceOrders)
+      .orderBy(desc(serviceOrders.createdAt));
+  }
+
+  async getOrder(id: string): Promise<ServiceOrder | undefined> {
+    const result = await db
+      .select()
+      .from(serviceOrders)
+      .where(eq(serviceOrders.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getOrdersByUser(userId: string): Promise<ServiceOrder[]> {
+    return await db
+      .select()
+      .from(serviceOrders)
+      .where(eq(serviceOrders.userId, userId))
+      .orderBy(desc(serviceOrders.createdAt));
+  }
+
+  async updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder> {
+    const [updated] = await db
+      .update(serviceOrders)
+      .set({ 
+        status, 
+        updatedAt: new Date() 
+      })
+      .where(eq(serviceOrders.id, id))
+      .returning();
+    
+    await db.insert(orderStatusHistory).values({
+      orderId: id,
+      status,
+      message: message || `Status changed to ${status}`,
+      updatedBy,
+    });
+    
+    return updated;
+  }
+
+  async getOrderHistory(orderId: string): Promise<OrderStatusHistory[]> {
+    return await db
+      .select()
+      .from(orderStatusHistory)
+      .where(eq(orderStatusHistory.orderId, orderId))
+      .orderBy(desc(orderStatusHistory.createdAt));
   }
 }
 

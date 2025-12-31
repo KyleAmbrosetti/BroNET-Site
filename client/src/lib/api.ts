@@ -188,4 +188,14 @@ export const api = {
   activateOrder: (orderId: string) => apiFetch(`/orders/${orderId}/activate`, {
     method: 'POST',
   }),
+
+  // Admin Orders
+  getAdminOrders: () => apiFetch('/admin/orders'),
+  
+  getAdminOrder: (id: string) => apiFetch(`/admin/orders/${id}`),
+  
+  updateAdminOrderStatus: (id: string, status: string, message?: string) => apiFetch(`/admin/orders/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, message }),
+  }),
 };

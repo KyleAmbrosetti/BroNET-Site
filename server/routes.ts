@@ -768,6 +768,76 @@ export async function registerRoutes(
     }
   });
 
+  // ============ ADMIN ORDER MANAGEMENT ============
+
+  // Get all orders (admin only)
+  app.get("/api/admin/orders", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const orders = await storage.getAllOrders();
+      res.json({ orders });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get single order (admin only)
+  app.get("/api/admin/orders/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const order = await storage.getOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      const history = await storage.getOrderHistory(req.params.id);
+      res.json({ order, history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update order status (admin only)
+  app.patch("/api/admin/orders/:id/status", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { status, message } = req.body;
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+      const validStatuses = ['pending', 'submitted', 'in_progress', 'provisioning', 'active', 'cancelled', 'failed', 'on_hold'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const order = await storage.updateOrderStatus(req.params.id, status, `admin:${user.email}`, message);
+      res.json({ order });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get order history (admin only)
+  app.get("/api/admin/orders/:id/history", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const history = await storage.getOrderHistory(req.params.id);
+      res.json({ history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ EMAIL SIGNUP ROUTES ============
 
   // Subscribe to email notifications (coming soon page)
