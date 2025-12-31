@@ -28,17 +28,21 @@ import Mobile from "@/pages/mobile";
 import SpeedTest from "@/pages/speed-test";
 
 function TimeBasedThemeSwitcher() {
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   
   useEffect(() => {
     const checkTimeAndSetTheme = () => {
-      const hour = new Date().getHours();
-      // Day time: 6 AM to 6 PM (light mode)
-      // Night time: 6 PM to 6 AM (dark mode)
-      if (hour >= 6 && hour < 18) {
-        setTheme('light');
-      } else {
-        setTheme('dark');
+      // Only auto-switch if user hasn't explicitly chosen light/dark
+      const storedPreference = localStorage.getItem('theme-preference');
+      if (storedPreference === 'auto' || !storedPreference) {
+        const hour = new Date().getHours();
+        // Day time: 6 AM to 6 PM (light mode)
+        // Night time: 6 PM to 6 AM (dark mode)
+        if (hour >= 6 && hour < 18) {
+          setTheme('light');
+        } else {
+          setTheme('dark');
+        }
       }
     };
     
