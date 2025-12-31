@@ -5,7 +5,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { AuthProvider } from "@/hooks/use-user";
 import { Layout } from "@/components/layout";
 import NotFound from "@/pages/not-found";
@@ -26,6 +26,33 @@ import Abuse from "@/pages/abuse";
 import SignupWizard from "@/pages/signup-wizard";
 import Mobile from "@/pages/mobile";
 import SpeedTest from "@/pages/speed-test";
+
+function TimeBasedThemeSwitcher() {
+  const { setTheme } = useTheme();
+  
+  useEffect(() => {
+    const checkTimeAndSetTheme = () => {
+      const hour = new Date().getHours();
+      // Day time: 6 AM to 6 PM (light mode)
+      // Night time: 6 PM to 6 AM (dark mode)
+      if (hour >= 6 && hour < 18) {
+        setTheme('light');
+      } else {
+        setTheme('dark');
+      }
+    };
+    
+    // Check immediately on mount
+    checkTimeAndSetTheme();
+    
+    // Check every minute
+    const interval = setInterval(checkTimeAndSetTheme, 60000);
+    
+    return () => clearInterval(interval);
+  }, [setTheme]);
+  
+  return null;
+}
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -106,7 +133,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TimeBasedThemeSwitcher />
         <AuthProvider>
           <TooltipProvider>
             <Toaster />

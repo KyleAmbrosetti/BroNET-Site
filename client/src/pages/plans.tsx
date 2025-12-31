@@ -46,21 +46,25 @@ function PlansCarousel({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [canScrollRight, setCanScrollRight] = useState(plans.length > 3);
 
   const checkScrollability = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+      setCanScrollLeft(scrollLeft > 5);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
     }
   };
 
   useEffect(() => {
-    checkScrollability();
+    // Check after a short delay to ensure DOM is fully rendered
+    const timer = setTimeout(checkScrollability, 100);
     window.addEventListener('resize', checkScrollability);
-    return () => window.removeEventListener('resize', checkScrollability);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkScrollability);
+    };
+  }, [plans.length]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -71,28 +75,30 @@ function PlansCarousel({
     }
   };
 
+  const cardHeight = 520; // Approximate height of plan cards
+
   return (
-    <div className="relative mb-16 flex items-center">
+    <div className="relative mb-16 overflow-visible" style={{ minHeight: cardHeight }}>
       {canScrollLeft && (
         <Button
           variant="outline"
           size="icon"
-          className="flex-shrink-0 mr-2 bg-background shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
+          className="absolute left-2 z-20 bg-background/90 backdrop-blur-sm shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
+          style={{ top: cardHeight / 2, transform: 'translateY(-50%)' }}
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
       )}
-      {!canScrollLeft && <div className="w-14 flex-shrink-0" />}
       
       <div 
         ref={scrollRef}
-        className="overflow-x-auto pb-4 pt-2 flex-1 scrollbar-hide"
+        className="overflow-x-auto pb-4 pt-2 scrollbar-hide"
         onScroll={checkScrollability}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className="flex gap-4 min-w-max py-2 px-2">
+        <div className="flex gap-4 min-w-max py-2 px-4">
           {plans.map((plan) => {
             const available = isPlanAvailable(plan.speed);
             return (
@@ -121,14 +127,14 @@ function PlansCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="flex-shrink-0 ml-2 bg-background shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
+          className="absolute right-2 z-20 bg-background/90 backdrop-blur-sm shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
+          style={{ top: cardHeight / 2, transform: 'translateY(-50%)' }}
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
       )}
-      {!canScrollRight && <div className="w-14 flex-shrink-0" />}
     </div>
   );
 }
