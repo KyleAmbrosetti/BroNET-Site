@@ -110,12 +110,12 @@ const getRouterOptions = (planSpeed: number): RouterOption[] => {
   const options: RouterOption[] = [];
   
   // Free modem on ALL plans (36-month commitment)
-  if (planSpeed >= 500) {
-    // WiFi 7 for high-speed plans
-    options.push({ id: "free", name: "Free eero 7", description: "WiFi 7 mesh router included (36-month commitment)", price: 0, commitment: 36 });
+  if (planSpeed >= 2000) {
+    // eero Pro 7 for NBN 2000 plans
+    options.push({ id: "free", name: "Free eero Pro 7", description: "Premium tri-band WiFi 7 mesh router included (36-month commitment)", price: 0, commitment: 36 });
   } else {
-    // Standard eero for all other plans  
-    options.push({ id: "free", name: "Free eero Router", description: "High-performance mesh router included (36-month commitment)", price: 0, commitment: 36 });
+    // eero 7 for all other plans
+    options.push({ id: "free", name: "Free eero 7", description: "High-performance WiFi 7 mesh router included (36-month commitment)", price: 0, commitment: 36 });
   }
   
   // BYO option always available
