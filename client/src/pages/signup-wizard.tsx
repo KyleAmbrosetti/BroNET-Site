@@ -110,6 +110,7 @@ export default function SignupWizard() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
+  const [avcId, setAvcId] = useState("");
   
   // Account
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
@@ -380,6 +381,7 @@ export default function SignupWizard() {
         locId: qualification?.locId,
         csaId: qualification?.csaId,
         sqReference: qualification?.sqReference,
+        avcId: avcId || undefined,
         technology: qualification?.technology || coverageResult?.technology,
         downloadSpeed: selectedPlan.speed,
         uploadSpeed: selectedPlan.upload,
@@ -895,6 +897,26 @@ export default function SignupWizard() {
 
         <Separator />
 
+        <div className="space-y-2">
+          <Label htmlFor="avcId">AVC ID (Optional - for transfers)</Label>
+          <div className="relative">
+            <Cable className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="avcId"
+              placeholder="AVC123456789012"
+              value={avcId}
+              onChange={(e) => setAvcId(e.target.value.toUpperCase())}
+              className="pl-10"
+              data-testid="input-avc-id"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            If you're transferring from another provider, enter your existing AVC ID. You can find this on your current provider's bill.
+          </p>
+        </div>
+
+        <Separator />
+
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>Service Address</AlertTitle>
@@ -1085,6 +1107,19 @@ export default function SignupWizard() {
               <span className="text-muted-foreground">NBN Location ID:</span>
               <span className="font-mono font-medium text-blue-700 dark:text-blue-300" data-testid="text-loc-id">
                 {qualification.locId}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* AVC ID (for transfers) */}
+        {avcId && (
+          <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center gap-2 text-sm">
+              <Cable className="h-4 w-4 text-purple-600" />
+              <span className="text-muted-foreground">Transfer AVC ID:</span>
+              <span className="font-mono font-medium text-purple-700 dark:text-purple-300" data-testid="text-avc-id">
+                {avcId}
               </span>
             </div>
           </div>
