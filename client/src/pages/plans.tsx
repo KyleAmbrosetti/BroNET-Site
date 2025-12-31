@@ -72,26 +72,27 @@ function PlansCarousel({
   };
 
   return (
-    <div className="relative mb-16">
+    <div className="relative mb-16 flex items-center">
       {canScrollLeft && (
         <Button
           variant="outline"
           size="icon"
-          className="absolute -left-4 top-[45%] -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          className="flex-shrink-0 mr-2 bg-background shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
       )}
+      {!canScrollLeft && <div className="w-14 flex-shrink-0" />}
       
       <div 
         ref={scrollRef}
-        className="overflow-x-auto pb-4 px-8 pt-2 scrollbar-hide"
+        className="overflow-x-auto pb-4 pt-2 flex-1 scrollbar-hide"
         onScroll={checkScrollability}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className="flex gap-4 min-w-max py-2">
+        <div className="flex gap-4 min-w-max py-2 px-2">
           {plans.map((plan) => {
             const available = isPlanAvailable(plan.speed);
             return (
@@ -120,13 +121,14 @@ function PlansCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="absolute -right-4 top-[45%] -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          className="flex-shrink-0 ml-2 bg-background shadow-lg border-2 h-12 w-12 rounded-full hover:bg-accent"
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
       )}
+      {!canScrollRight && <div className="w-14 flex-shrink-0" />}
     </div>
   );
 }
