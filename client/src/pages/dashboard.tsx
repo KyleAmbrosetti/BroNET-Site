@@ -152,6 +152,12 @@ export default function Dashboard() {
       return;
     }
     
+    // Redirect admin users to admin dashboard
+    if (user.isAdmin === 1) {
+      setLocation("/admin");
+      return;
+    }
+    
     // Load Data from API
     const loadData = async () => {
       const [ticketsRes, usageRes, messagesRes, modemEnquiriesRes, billingRes, ordersRes] = await Promise.all([
