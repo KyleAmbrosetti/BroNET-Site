@@ -818,6 +818,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid status" });
       }
       const order = await storage.updateOrderStatus(req.params.id, status, `admin:${user.email}`, message);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
       res.json({ order });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
