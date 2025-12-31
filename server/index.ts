@@ -5,9 +5,51 @@ import { createServer } from "http";
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
+import bcrypt from 'bcrypt';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Create admin account if it doesn't exist
+async function ensureAdminAccount() {
+  try {
+    const { db } = await import('./db');
+    const { users } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    const adminEmail = 'admin@brointernet.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'BroNet2025!';
+    
+    // Check if admin exists
+    const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
+    
+    if (existingAdmin.length === 0) {
+      console.log('Creating admin account...');
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await db.insert(users).values({
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        isAdmin: 1,
+      });
+      console.log('Admin account created: admin@brointernet.com');
+    } else if (existingAdmin[0].isAdmin !== 1) {
+      // Promote existing user to admin
+      await db.update(users).set({ isAdmin: 1 }).where(eq(users.email, adminEmail));
+      console.log('Promoted admin@brointernet.com to admin');
+    } else {
+      console.log('Admin account already exists');
+    }
+  } catch (error) {
+    console.error('Failed to ensure admin account:', error);
+  }
+}
+
+// Initialize admin account on startup
+(async () => {
+  await ensureAdminAccount();
+})();
 
 declare module "http" {
   interface IncomingMessage {
