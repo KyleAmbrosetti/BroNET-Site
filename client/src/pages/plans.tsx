@@ -76,57 +76,59 @@ function PlansCarousel({
   };
 
   return (
-    <div className="relative mb-16">
-      <div 
-        ref={scrollRef}
-        className="overflow-x-auto pb-4 pt-2 scrollbar-hide"
-        onScroll={checkScrollability}
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        <div className="flex gap-4 py-2 px-16">
-          {plans.map((plan) => {
-            const available = isPlanAvailable(plan.speed);
-            return (
-              <div key={plan.name} className="w-[280px] flex-shrink-0">
-                <PlanCard
-                  name={plan.name}
-                  speed={plan.speed}
-                  upload={plan.upload}
-                  price={plan.price}
-                  typicalSpeed={plan.typical}
-                  typicalUpload={plan.typicalUpload}
-                  isPopular={plan.popular}
-                  tier={plan.tier}
-                  badge={plan.badge}
-                  disabled={coverageVerified && !available}
-                  showSignup={available}
-                  address={address}
-                />
-              </div>
-            );
-          })}
+    <div className="mb-16">
+      <div className="relative">
+        <div 
+          ref={scrollRef}
+          className="overflow-x-auto scrollbar-hide"
+          onScroll={checkScrollability}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div className="flex gap-4 py-4 px-4">
+            {plans.map((plan) => {
+              const available = isPlanAvailable(plan.speed);
+              return (
+                <div key={plan.name} className="w-[280px] flex-shrink-0">
+                  <PlanCard
+                    name={plan.name}
+                    speed={plan.speed}
+                    upload={plan.upload}
+                    price={plan.price}
+                    typicalSpeed={plan.typical}
+                    typicalUpload={plan.typicalUpload}
+                    isPopular={plan.popular}
+                    tier={plan.tier}
+                    badge={plan.badge}
+                    disabled={coverageVerified && !available}
+                    showSignup={available}
+                    address={address}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Left Arrow - overlaying cards */}
+        <button
+          className={`absolute left-2 top-0 bottom-0 my-auto h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => scroll('left')}
+          data-testid="button-scroll-left"
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+
+        {/* Right Arrow - overlaying cards */}
+        <button
+          className={`absolute right-2 top-0 bottom-0 my-auto h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => scroll('right')}
+          data-testid="button-scroll-right"
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
       </div>
-
-      <Button
-        variant="outline"
-        size="icon"
-        className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm shadow-xl border-2 h-12 w-12 rounded-full hover:bg-accent hover:scale-110 transition-all ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => scroll('left')}
-        data-testid="button-scroll-left"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </Button>
-
-      <Button
-        variant="outline"
-        size="icon"
-        className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-background/95 backdrop-blur-sm shadow-xl border-2 h-12 w-12 rounded-full hover:bg-accent hover:scale-110 transition-all ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => scroll('right')}
-        data-testid="button-scroll-right"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </Button>
     </div>
   );
 }
