@@ -113,7 +113,7 @@ function PlansCarousel({
 
         {/* Left Arrow - overlaying cards */}
         <button
-          className={`absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/70 backdrop-blur-md shadow-lg border border-border/50 rounded-full hover:bg-background/90 hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
         >
@@ -122,7 +122,7 @@ function PlansCarousel({
 
         {/* Right Arrow - overlaying cards */}
         <button
-          className={`absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/95 backdrop-blur-sm shadow-xl border-2 border-border rounded-full hover:bg-accent hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/70 backdrop-blur-md shadow-lg border border-border/50 rounded-full hover:bg-background/90 hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
         >
