@@ -970,6 +970,7 @@ export default function Admin() {
                         <TableHead>Customer</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Plan</TableHead>
+                        <TableHead>AVC ID</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Address</TableHead>
                         <TableHead>Created</TableHead>
@@ -983,6 +984,7 @@ export default function Admin() {
                           <TableCell>{order.contactName}</TableCell>
                           <TableCell className="text-sm">{order.contactEmail}</TableCell>
                           <TableCell>{order.planName}</TableCell>
+                          <TableCell className="font-mono text-sm">{order.avcId || '—'}</TableCell>
                           <TableCell>
                             <Badge className={getStatusBadgeClass(order.status)}>
                               {order.status.replace('_', ' ')}
