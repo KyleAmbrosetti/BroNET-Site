@@ -325,4 +325,37 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ avcId }),
   }),
+
+  // Admin Events
+  getAdminEvents: (type?: string) => apiFetch(`/admin/events${type ? `?type=${encodeURIComponent(type)}` : ''}`),
+
+  acknowledgeEvent: (eventId: string) => apiFetch(`/admin/events/${eventId}/acknowledge`, {
+    method: 'POST',
+  }),
+
+  // Admin Disruptions
+  getAdminDisruptions: () => apiFetch('/admin/disruptions'),
+
+  createDisruption: (data: {
+    title: string;
+    description?: string;
+    severity: string;
+    status: string;
+    affectedAreas?: string;
+    affectedTechnologies?: string;
+    estimatedResolution?: string;
+    startedAt: string;
+  }) => apiFetch('/admin/disruptions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateDisruption: (id: string, data: {
+    status?: string;
+    resolvedAt?: string;
+    estimatedResolution?: string;
+  }) => apiFetch(`/admin/disruptions/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
 };
