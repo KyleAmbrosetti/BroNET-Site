@@ -424,7 +424,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(serviceOrders.createdAt));
   }
 
-  async updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder> {
+  async updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder | undefined> {
     const [updated] = await db
       .update(serviceOrders)
       .set({ 
@@ -433,6 +433,10 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(serviceOrders.id, id))
       .returning();
+    
+    if (!updated) {
+      return undefined;
+    }
     
     await db.insert(orderStatusHistory).values({
       orderId: id,
