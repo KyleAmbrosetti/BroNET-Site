@@ -211,3 +211,39 @@ The signup wizard uses a modern 4-step flow with two-column layout:
 - `SUPERLOOP_CLIENT_ID` - Superloop API client ID
 - `SUPERLOOP_PRIVATE_KEY` - RSA private key for JWT signing (PEM format)
 - `SUPERLOOP_USE_SANDBOX` - Set to 'true' for sandbox environment
+
+### Superloop Webhook Events System
+The application receives and processes various event types from Superloop via webhooks:
+
+**Event Types Supported:**
+- `appointment` - Technician appointment scheduling, confirmation, completion, cancellation
+- `diagnostic` - Line diagnostic results and service health checks
+- `order` - Order status changes (submitted, accepted, provisioning, activated, cancelled)
+- `service` - Service lifecycle events (activated, suspended, cancelled)
+- `disruption` - Network outages and planned maintenance
+- `health` - Periodic service health status updates
+- `location_quote` - Infrastructure installation quotes and estimates
+
+**Webhook Endpoint:** `POST /api/webhooks/superloop`
+
+**Database Tables:**
+- `superloop_events` - All webhook events with acknowledgement tracking
+- `network_disruptions` - Aggregated network outage information
+- `service_health_records` - Service health diagnostics history
+- `appointment_slots` - Technician appointment scheduling
+
+**Admin Dashboard Features:**
+- Events tab with event type filtering
+- Event acknowledgement for tracking
+- Network disruption management (create, update, resolve)
+- Manual disruption creation for planned maintenance
+
+**API Endpoints:**
+- `GET /api/admin/events` - List Superloop events (filterable by type)
+- `POST /api/admin/events/:eventId/acknowledge` - Mark event as acknowledged
+- `GET /api/network/disruptions` - Public active disruptions
+- `GET /api/admin/disruptions` - All disruptions for admin
+- `POST /api/admin/disruptions` - Create manual disruption
+- `PATCH /api/admin/disruptions/:id` - Update disruption status
+- `GET /api/orders/:orderId/appointments` - Appointment slots for order
+- `GET /api/orders/:orderId/health` - Service health records for order
