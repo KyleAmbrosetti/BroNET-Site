@@ -68,11 +68,24 @@ type RouterOption = {
   image?: string;
 };
 
-const ROUTER_OPTIONS: RouterOption[] = [
-  { id: "free", name: "Free BroNET Router", description: "Free WiFi 7 router on 500Mbps+ plans (36-month commitment)", price: 0, commitment: 36 },
-  { id: "eero", name: "eero 7 WiFi Router", description: "Premium whole-home mesh WiFi 7 system", price: 199, commitment: 24 },
-  { id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 },
-];
+const getRouterOptions = (planSpeed: number): RouterOption[] => {
+  const options: RouterOption[] = [];
+  
+  // Free router for 500Mbps+ plans
+  if (planSpeed >= 500) {
+    if (planSpeed >= 2000) {
+      options.push({ id: "free", name: "Free eero Pro 7", description: "Premium tri-band WiFi 7 mesh router (36-month commitment)", price: 0, commitment: 36 });
+    } else {
+      options.push({ id: "free", name: "Free eero 7", description: "WiFi 7 mesh router (36-month commitment)", price: 0, commitment: 36 });
+    }
+  }
+  
+  // Always available options
+  options.push({ id: "eero", name: "eero 7 WiFi Router", description: "Premium whole-home mesh WiFi 7 system", price: 199, commitment: 24 });
+  options.push({ id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 });
+  
+  return options;
+};
 
 const STEPS: { id: Step; label: string; number: number }[] = [
   { id: "plan", label: "Plan", number: 1 },
@@ -423,7 +436,7 @@ export default function SignupWizard() {
   };
 
   const getSelectedRouterDetails = () => {
-    return ROUTER_OPTIONS.find(r => r.id === selectedRouter);
+    return getRouterOptions(selectedPlan?.speed || 0).find(r => r.id === selectedRouter);
   };
 
   // Step Progress Indicator
@@ -780,11 +793,7 @@ export default function SignupWizard() {
             <CardContent>
               <RadioGroup value={selectedRouter} onValueChange={setSelectedRouter}>
                 <div className="grid gap-3">
-                  {ROUTER_OPTIONS.filter(router => {
-                    // Free router only available for 500Mbps+ plans
-                    if (router.id === "free" && selectedPlan.speed < 500) return false;
-                    return true;
-                  }).map((router) => (
+                  {getRouterOptions(selectedPlan.speed).map((router) => (
                     <div
                       key={router.id}
                       className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
