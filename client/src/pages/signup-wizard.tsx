@@ -109,14 +109,17 @@ type RouterOption = {
 const getRouterOptions = (planSpeed: number): RouterOption[] => {
   const options: RouterOption[] = [];
   
-  // Free router for 500Mbps+ plans
+  // Free modem on ALL plans (24-month commitment)
   if (planSpeed >= 500) {
-    if (planSpeed >= 2000) {
-      options.push({ id: "free", name: "Free eero Pro 7", description: "Premium tri-band WiFi 7 mesh router (36-month commitment)", price: 0, commitment: 36 });
-    } else {
-      options.push({ id: "free", name: "Free eero 7", description: "WiFi 7 mesh router (36-month commitment)", price: 0, commitment: 36 });
-    }
+    // WiFi 7 for high-speed plans
+    options.push({ id: "free", name: "Free eero 7", description: "WiFi 7 mesh router included (24-month commitment)", price: 0, commitment: 24 });
+  } else {
+    // Standard eero for all other plans  
+    options.push({ id: "free", name: "Free eero Router", description: "High-performance mesh router included (24-month commitment)", price: 0, commitment: 24 });
   }
+  
+  // Premium upgrade option
+  options.push({ id: "premium", name: "eero Pro 7", description: "Premium tri-band WiFi 7 mesh system (+$10/mth)", price: 1000, commitment: 24 });
   
   // BYO option always available
   options.push({ id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 });
@@ -456,11 +459,8 @@ export default function SignupWizard() {
     const priceId = getPriceId(plan.name);
     setSelectedPlan({ ...plan, priceId });
     
-    // Reset router selection if free router not available for this plan
-    if (plan.speed < 500 && selectedRouter === "free") {
-      setSelectedRouter("byo");
-    } else if (plan.speed >= 500 && selectedRouter === "byo") {
-      // Default to free router for 500Mbps+ plans
+    // Default to free router (now available on all plans)
+    if (selectedRouter !== "free" && selectedRouter !== "premium") {
       setSelectedRouter("free");
     }
   };
@@ -1016,10 +1016,7 @@ export default function SignupWizard() {
                 Router Options
               </CardTitle>
               <CardDescription>
-                {selectedPlan.speed >= 500 
-                  ? "Get a free router with your 500Mbps+ plan, or choose premium options"
-                  : "Add an eero mesh system or bring your own router"
-                }
+                All plans include a free modem - or upgrade to premium WiFi 7
               </CardDescription>
             </CardHeader>
             <CardContent>

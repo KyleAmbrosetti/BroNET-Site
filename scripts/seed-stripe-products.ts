@@ -9,78 +9,63 @@ interface PlanConfig {
     upload: string;
     typical: string;
     planType: string;
+    freeModem: string;
+    modemType: string;
+    modemCommitment: string;
   };
 }
 
 const fibrePlans: PlanConfig[] = [
   {
     name: "NBN 50/20",
-    description: "Perfect for small households with basic streaming and browsing",
-    priceMonthly: 9400,
-    metadata: { speed: "50", upload: "20", typical: "50 Mbps", planType: "fibre" }
+    description: "Perfect for small households with basic streaming and browsing. Includes free modem.",
+    priceMonthly: 6900,
+    metadata: { speed: "50", upload: "20", typical: "50 Mbps", planType: "fibre", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   },
   {
     name: "NBN 100/20",
-    description: "Great for families with multiple devices and HD streaming",
-    priceMonthly: 10500,
-    metadata: { speed: "100", upload: "20", typical: "98 Mbps", planType: "fibre" }
+    description: "Great for families with multiple devices and HD streaming. Includes free modem.",
+    priceMonthly: 7900,
+    metadata: { speed: "100", upload: "20", typical: "98 Mbps", planType: "fibre", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   },
   {
-    name: "NBN 250/100",
-    description: "Ideal for power users and 4K streaming on multiple devices",
-    priceMonthly: 11000,
-    metadata: { speed: "250", upload: "100", typical: "245 Mbps", planType: "fibre" }
+    name: "NBN 250/25",
+    description: "Ideal for power users and 4K streaming on multiple devices. Includes free modem.",
+    priceMonthly: 8900,
+    metadata: { speed: "250", upload: "25", typical: "230 Mbps", planType: "fibre", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   },
   {
-    name: "NBN 500/200",
-    description: "High-speed fibre for heavy users and large households",
-    priceMonthly: 13100,
-    metadata: { speed: "500", upload: "200", typical: "480 Mbps", planType: "fibre" }
+    name: "NBN 500/50",
+    description: "High-speed fibre for heavy users and large households. Includes free WiFi 7 modem.",
+    priceMonthly: 10900,
+    metadata: { speed: "500", upload: "50", typical: "480 Mbps", planType: "fibre", freeModem: "true", modemType: "eero7", modemCommitment: "24" }
   },
   {
-    name: "NBN 1000/400",
-    description: "Ultra-fast speeds for demanding households and home offices",
-    priceMonthly: 15200,
-    metadata: { speed: "1000", upload: "400", typical: "900 Mbps", planType: "fibre" }
-  },
-  {
-    name: "NBN 2000/200",
-    description: "Ultra-connected smart homes with blazing fast speeds",
-    priceMonthly: 18300,
-    metadata: { speed: "2000", upload: "200", typical: "1800 Mbps", planType: "fibre" }
-  },
-  {
-    name: "NBN 2000/500",
-    description: "Ultimate performance with maximum upload for professionals",
-    priceMonthly: 24600,
-    metadata: { speed: "2000", upload: "500", typical: "1800 Mbps", planType: "fibre" }
+    name: "NBN 1000/50",
+    description: "Ultra-fast speeds for demanding households and home offices. Includes free WiFi 7 modem.",
+    priceMonthly: 12900,
+    metadata: { speed: "1000", upload: "50", typical: "900 Mbps", planType: "fibre", freeModem: "true", modemType: "eero7", modemCommitment: "24" }
   }
 ];
 
 const fixedWirelessPlans: PlanConfig[] = [
   {
-    name: "Fixed Wireless 25",
-    description: "Entry-level wireless broadband for light users",
-    priceMonthly: 5900,
-    metadata: { speed: "25", upload: "5", typical: "25 Mbps", planType: "wireless" }
-  },
-  {
     name: "Fixed Wireless 50",
-    description: "Balanced wireless plan for everyday use",
-    priceMonthly: 6900,
-    metadata: { speed: "50", upload: "10", typical: "47 Mbps", planType: "wireless" }
+    description: "Entry-level wireless broadband for light users. Includes free modem.",
+    priceMonthly: 5900,
+    metadata: { speed: "50", upload: "10", typical: "47 Mbps", planType: "wireless", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   },
   {
     name: "Fixed Wireless 75",
-    description: "Enhanced wireless speeds for streaming and gaming",
-    priceMonthly: 7900,
-    metadata: { speed: "75", upload: "10", typical: "70 Mbps", planType: "wireless" }
+    description: "Balanced wireless plan for everyday streaming and gaming. Includes free modem.",
+    priceMonthly: 6900,
+    metadata: { speed: "75", upload: "10", typical: "70 Mbps", planType: "wireless", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   },
   {
     name: "Fixed Wireless Plus",
-    description: "Premium wireless tier with maximum available speeds",
-    priceMonthly: 8900,
-    metadata: { speed: "100", upload: "20", typical: "90 Mbps", planType: "wireless" }
+    description: "Premium wireless tier with maximum available speeds. Includes free modem.",
+    priceMonthly: 7900,
+    metadata: { speed: "100", upload: "20", typical: "90 Mbps", planType: "wireless", freeModem: "true", modemType: "eero", modemCommitment: "24" }
   }
 ];
 
