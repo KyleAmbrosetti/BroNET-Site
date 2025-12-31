@@ -118,9 +118,6 @@ const getRouterOptions = (planSpeed: number): RouterOption[] => {
     options.push({ id: "free", name: "Free eero Router", description: "High-performance mesh router included (24-month commitment)", price: 0, commitment: 24 });
   }
   
-  // Premium upgrade option
-  options.push({ id: "premium", name: "eero Pro 7", description: "Premium tri-band WiFi 7 mesh system (+$10/mth)", price: 1000, commitment: 24 });
-  
   // BYO option always available
   options.push({ id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 });
   
