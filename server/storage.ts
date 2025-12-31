@@ -113,6 +113,7 @@ export interface IStorage {
   getOrder(id: string): Promise<ServiceOrder | undefined>;
   getOrdersByUser(userId: string): Promise<ServiceOrder[]>;
   updateOrderStatus(id: string, status: string, updatedBy: string, message?: string): Promise<ServiceOrder>;
+  updateOrderAvcId(id: string, avcId: string): Promise<ServiceOrder | undefined>;
   getOrderHistory(orderId: string): Promise<OrderStatusHistory[]>;
   deleteOrder(id: string): Promise<void>;
 }
@@ -445,6 +446,19 @@ export class DatabaseStorage implements IStorage {
       message: message || `Status changed to ${status}`,
       updatedBy,
     });
+    
+    return updated;
+  }
+
+  async updateOrderAvcId(id: string, avcId: string): Promise<ServiceOrder | undefined> {
+    const [updated] = await db
+      .update(serviceOrders)
+      .set({ 
+        avcId, 
+        updatedAt: new Date() 
+      })
+      .where(eq(serviceOrders.id, id))
+      .returning();
     
     return updated;
   }
