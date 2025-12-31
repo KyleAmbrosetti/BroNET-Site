@@ -181,6 +181,9 @@ export const api = {
     preferredDate?: string;
     routerOption?: string;
     promoCode?: string;
+    locationId?: string;
+    qualificationSearchId?: string;
+    ntdOption?: string;
   }) => apiFetch('/stripe/checkout', {
     method: 'POST',
     body: JSON.stringify({ priceId, planName, ...orderDetails }),

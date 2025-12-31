@@ -10,6 +10,7 @@ type AddressSuggestion = {
   suburb?: string;
   state?: string;
   postcode?: string;
+  locationId?: string;
 };
 
 interface AddressSearchProps {
