@@ -109,8 +109,21 @@ const PLANS = [
   { id: 'nbn50', name: 'NBN 50', speed: '50/20 Mbps', price: '$69' },
   { id: 'nbn100', name: 'NBN 100', speed: '100/20 Mbps', price: '$89' },
   { id: 'nbn250', name: 'NBN 250', speed: '250/25 Mbps', price: '$109' },
+  { id: 'nbn500', name: 'NBN 500', speed: '500/200 Mbps', price: '$119' },
   { id: 'nbn1000', name: 'NBN 1000', speed: '1000/50 Mbps', price: '$139' },
+  { id: 'nbn2000', name: 'NBN 2000', speed: '2000/200 Mbps', price: '$189' },
 ];
+
+// Helper to get active order from orders list
+const getActiveOrder = (orders: ServiceOrder[]): ServiceOrder | null => {
+  // Priority: active > provisioning > in_progress > submitted > pending
+  const statusPriority = ['active', 'provisioning', 'in_progress', 'submitted', 'pending'];
+  for (const status of statusPriority) {
+    const order = orders.find(o => o.status === status);
+    if (order) return order;
+  }
+  return null;
+};
 
 export default function Dashboard() {
   const { user, logout, updateProfile } = useUser();
@@ -360,31 +373,67 @@ export default function Dashboard() {
                   <CardTitle>Current Plan</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-center py-4">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      {user.planId ? user.planId.replace('nbn', 'NBN ') : 'NBN 100'}
-                    </div>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Price</span>
-                      <span className="font-medium">$89.00/mo</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Speed</span>
-                      <span className="font-medium">100/20 Mbps</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Next Bill</span>
-                      <span className="font-medium">{format(nextBillDate, 'MMM d, yyyy')}</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const activeOrder = getActiveOrder(orders);
+                    if (activeOrder) {
+                      return (
+                        <>
+                          <div className="text-center py-4">
+                            <div className="text-2xl font-bold text-primary mb-1">
+                              {activeOrder.planName}
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className={activeOrder.status === 'active' 
+                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                                : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800"
+                              }
+                            >
+                              {activeOrder.status === 'active' ? 'Active' : activeOrder.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </div>
+                          <Separator />
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Speed</span>
+                              <span className="font-medium">{activeOrder.downloadSpeed}/{activeOrder.uploadSpeed} Mbps</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Technology</span>
+                              <span className="font-medium">{activeOrder.technology || 'NBN'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Address</span>
+                              <span className="font-medium text-right max-w-[150px] truncate" title={activeOrder.serviceAddress}>
+                                {activeOrder.serviceAddress}
+                              </span>
+                            </div>
+                            {activeOrder.status === 'active' && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Next Bill</span>
+                                <span className="font-medium">{format(nextBillDate, 'MMM d, yyyy')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    }
+                    return (
+                      <div className="text-center py-8">
+                        <Wifi className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground mb-4">No active plan yet</p>
+                        <Button asChild>
+                          <Link href="/signup">Get Connected</Link>
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full" onClick={() => setActiveTab("billing")}>Manage Plan</Button>
-                </CardFooter>
+                {getActiveOrder(orders) && (
+                  <CardFooter>
+                    <Button variant="outline" className="w-full" onClick={() => setActiveTab("orders")}>View Orders</Button>
+                  </CardFooter>
+                )}
               </Card>
             </div>
 
@@ -510,39 +559,60 @@ export default function Dashboard() {
                   <CardDescription>Your active internet plan</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-center py-4">
-                    <div className="text-2xl font-bold text-primary mb-1" data-testid="text-plan-name">
-                      {PLANS.find(p => p.id === user.planId)?.name || user.planId?.replace('nbn', 'NBN ') || 'NBN 100'}
-                    </div>
-                    <div className="text-muted-foreground" data-testid="text-plan-speed">
-                      {PLANS.find(p => p.id === user.planId)?.speed || '100/20 Mbps'}
-                    </div>
-                    <div className="text-xl font-semibold mt-2" data-testid="text-plan-price">
-                      {PLANS.find(p => p.id === user.planId)?.price || '$89'}/mo
-                    </div>
-                    <Badge variant="outline" className="mt-2 bg-green-50 text-green-700 border-green-200">Active</Badge>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <Label>Change Plan</Label>
-                    <Select 
-                      value={user.planId || 'nbn100'} 
-                      onValueChange={handleChangePlan}
-                      disabled={isChangingPlan}
-                      data-testid="select-plan"
-                    >
-                      <SelectTrigger data-testid="select-plan-trigger">
-                        <SelectValue placeholder="Select a plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PLANS.map(plan => (
-                          <SelectItem key={plan.id} value={plan.id} data-testid={`option-plan-${plan.id}`}>
-                            {plan.name} - {plan.speed} - {plan.price}/mo
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {(() => {
+                    const activeOrder = getActiveOrder(orders);
+                    if (activeOrder) {
+                      return (
+                        <>
+                          <div className="text-center py-4">
+                            <div className="text-2xl font-bold text-primary mb-1" data-testid="text-plan-name">
+                              {activeOrder.planName}
+                            </div>
+                            <div className="text-muted-foreground" data-testid="text-plan-speed">
+                              {activeOrder.downloadSpeed}/{activeOrder.uploadSpeed} Mbps
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className={`mt-2 ${activeOrder.status === 'active' 
+                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                                : "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800"
+                              }`}
+                            >
+                              {activeOrder.status === 'active' ? 'Active' : activeOrder.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          </div>
+                          <Separator />
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Technology</span>
+                              <span className="font-medium">{activeOrder.technology || 'NBN'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Service Address</span>
+                              <span className="font-medium text-right max-w-[200px] truncate" title={activeOrder.serviceAddress}>
+                                {activeOrder.serviceAddress}
+                              </span>
+                            </div>
+                            {activeOrder.locId && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">LOC ID</span>
+                                <span className="font-mono text-xs">{activeOrder.locId}</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    }
+                    return (
+                      <div className="text-center py-8">
+                        <Wifi className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground mb-4">No active plan</p>
+                        <Button asChild>
+                          <Link href="/signup">Get Connected</Link>
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
 
