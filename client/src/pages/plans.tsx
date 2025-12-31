@@ -111,22 +111,22 @@ function PlansCarousel({
           </div>
         </div>
 
-        {/* Left Arrow - overlaying cards */}
+        {/* Left Arrow */}
         <button
-          className={`absolute left-0 top-1/2 -translate-y-1/2 h-14 w-14 flex items-center justify-center backdrop-blur-2xl bg-primary/10 shadow-2xl rounded-full hover:bg-primary/20 hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/90 dark:bg-card/90 border shadow-lg rounded-full hover:bg-primary hover:text-white hover:border-primary hover:scale-110 transition-all z-20 ${canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('left')}
           data-testid="button-scroll-left"
         >
-          <ChevronLeft className="h-7 w-7 text-primary" />
+          <ChevronLeft className="h-6 w-6" />
         </button>
 
-        {/* Right Arrow - overlaying cards */}
+        {/* Right Arrow */}
         <button
-          className={`absolute right-0 top-1/2 -translate-y-1/2 h-14 w-14 flex items-center justify-center backdrop-blur-2xl bg-primary/10 shadow-2xl rounded-full hover:bg-primary/20 hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center bg-background/90 dark:bg-card/90 border shadow-lg rounded-full hover:bg-primary hover:text-white hover:border-primary hover:scale-110 transition-all z-20 ${canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => scroll('right')}
           data-testid="button-scroll-right"
         >
-          <ChevronRight className="h-7 w-7 text-primary" />
+          <ChevronRight className="h-6 w-6" />
         </button>
       </div>
     </div>
