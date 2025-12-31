@@ -159,6 +159,7 @@ export const api = {
     locId?: string;
     csaId?: string;
     sqReference?: string;
+    avcId?: string;
     technology?: string;
     downloadSpeed?: number;
     uploadSpeed?: number;
