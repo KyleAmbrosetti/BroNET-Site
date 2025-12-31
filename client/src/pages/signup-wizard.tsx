@@ -374,36 +374,29 @@ export default function SignupWizard() {
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await api.createCheckoutSession(selectedPlan.priceId, selectedPlan.name);
+      const { data, error } = await api.createCheckoutSession(selectedPlan.priceId, selectedPlan.name, {
+        planId: selectedPlan.id,
+        serviceAddress: qualification?.address || coverageResult?.normalizedAddress || address,
+        locId: qualification?.locId,
+        csaId: qualification?.csaId,
+        sqReference: qualification?.sqReference,
+        technology: qualification?.technology || coverageResult?.technology,
+        downloadSpeed: selectedPlan.speed,
+        uploadSpeed: selectedPlan.upload,
+        contactName,
+        contactEmail,
+        contactPhone,
+        preferredDate: preferredDate || undefined,
+        routerOption: selectedRouter,
+        promoCode: promoApplied ? promoCode : undefined,
+      });
+      
       if (error) {
         toast({ title: "Checkout Error", description: error, variant: "destructive" });
         return;
       }
       
       if (data?.url) {
-        await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            planId: selectedPlan.id,
-            planName: selectedPlan.name,
-            downloadSpeed: selectedPlan.speed,
-            uploadSpeed: selectedPlan.upload,
-            serviceAddress: qualification?.address || coverageResult?.normalizedAddress || address,
-            locId: qualification?.locId,
-            csaId: qualification?.csaId,
-            sqReference: qualification?.sqReference,
-            technology: qualification?.technology || coverageResult?.technology,
-            contactName,
-            contactEmail,
-            contactPhone,
-            preferredDate: preferredDate || undefined,
-            routerOption: selectedRouter,
-            promoCode: promoApplied ? promoCode : undefined,
-          }),
-        });
-
         window.location.href = data.url;
       }
     } catch (err) {
@@ -1083,6 +1076,19 @@ export default function SignupWizard() {
             <div className="font-medium">{contactPhone}</div>
           </div>
         </div>
+        
+        {/* NBN Location ID */}
+        {qualification?.locId && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 text-sm">
+              <Cable className="h-4 w-4 text-blue-600" />
+              <span className="text-muted-foreground">NBN Location ID:</span>
+              <span className="font-mono font-medium text-blue-700 dark:text-blue-300" data-testid="text-loc-id">
+                {qualification.locId}
+              </span>
+            </div>
+          </div>
+        )}
 
         <Separator />
 

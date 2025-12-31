@@ -153,9 +153,24 @@ export const api = {
   
   getStripeConfig: () => apiFetch('/stripe/config'),
   
-  createCheckoutSession: (priceId: string, planName: string) => apiFetch('/stripe/checkout', {
+  createCheckoutSession: (priceId: string, planName: string, orderDetails?: {
+    planId?: string;
+    serviceAddress?: string;
+    locId?: string;
+    csaId?: string;
+    sqReference?: string;
+    technology?: string;
+    downloadSpeed?: number;
+    uploadSpeed?: number;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    preferredDate?: string;
+    routerOption?: string;
+    promoCode?: string;
+  }) => apiFetch('/stripe/checkout', {
     method: 'POST',
-    body: JSON.stringify({ priceId, planName }),
+    body: JSON.stringify({ priceId, planName, ...orderDetails }),
   }),
   
   createBillingPortal: () => apiFetch('/stripe/portal', {

@@ -945,13 +945,38 @@ export async function registerRoutes(
     }
   });
 
-  // Create checkout session
+  // Create checkout session with order
   app.post("/api/stripe/checkout", requireAuth, async (req, res) => {
     try {
-      const { priceId, planName } = req.body;
+      const { 
+        priceId, 
+        planName,
+        planId,
+        serviceAddress,
+        locId,
+        csaId,
+        sqReference,
+        technology,
+        downloadSpeed,
+        uploadSpeed,
+        contactName,
+        contactEmail,
+        contactPhone,
+        preferredDate,
+        routerOption,
+        promoCode
+      } = req.body;
       
       if (!priceId) {
         return res.status(400).json({ message: "Price ID is required" });
+      }
+
+      if (!serviceAddress || !contactName || !contactEmail || !contactPhone) {
+        return res.status(400).json({ message: "Order details are required (address, name, email, phone)" });
+      }
+
+      if (!locId) {
+        return res.status(400).json({ message: "NBN service qualification is required. Please verify your address first." });
       }
 
       const user = await storage.getUser(req.session.userId!);
@@ -973,6 +998,38 @@ export async function registerRoutes(
         customerId = customer.id;
       }
 
+      // Create order with pending_payment status BEFORE checkout
+      const orderRef = `BRO-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      const { serviceOrders, orderStatusHistory } = await import('@shared/schema');
+      const [order] = await db.insert(serviceOrders).values({
+        userId: req.session.userId!,
+        orderReference: orderRef,
+        planId: planId || planName?.toLowerCase().replace(/\s+/g, '') || 'unknown',
+        planName: planName || 'Unknown Plan',
+        downloadSpeed: downloadSpeed || 0,
+        uploadSpeed: uploadSpeed || 0,
+        serviceAddress,
+        locId,
+        technology: technology || null,
+        status: 'pending_payment',
+        contactName,
+        contactEmail,
+        contactPhone,
+        preferredDate: preferredDate ? new Date(preferredDate) : null,
+        notes: JSON.stringify({ routerOption, promoCode, csaId, sqReference }),
+      }).returning();
+      
+      const orderId = order.id;
+      const orderReference = orderRef;
+      
+      await db.insert(orderStatusHistory).values({
+        orderId: order.id,
+        status: 'pending_payment',
+        message: 'Order created - awaiting payment',
+        updatedBy: 'system',
+      });
+
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
@@ -980,12 +1037,18 @@ export async function registerRoutes(
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         currency: 'aud',
-        success_url: `${baseUrl}/dashboard?checkout=success&plan=${encodeURIComponent(planName || '')}`,
-        cancel_url: `${baseUrl}/plans?checkout=cancelled`,
-        metadata: { userId: user.id, planName }
+        success_url: `${baseUrl}/dashboard?checkout=success&plan=${encodeURIComponent(planName || '')}&orderId=${orderId}`,
+        cancel_url: `${baseUrl}/signup?checkout=cancelled`,
+        metadata: { 
+          userId: user.id, 
+          planName: planName || 'Unknown Plan',
+          orderId,
+          orderReference,
+          locId,
+        }
       });
 
-      res.json({ url: session.url });
+      res.json({ url: session.url, orderId, orderReference });
     } catch (error: any) {
       console.error("Checkout error:", error);
       res.status(500).json({ message: error.message || "Checkout failed" });
