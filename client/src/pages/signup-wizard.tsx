@@ -80,8 +80,7 @@ const getRouterOptions = (planSpeed: number): RouterOption[] => {
     }
   }
   
-  // Always available options
-  options.push({ id: "eero", name: "eero 7 WiFi Router", description: "Premium whole-home mesh WiFi 7 system", price: 199, commitment: 24 });
+  // BYO option always available
   options.push({ id: "byo", name: "BYO Router", description: "Use your own compatible router", price: 0 });
   
   return options;
