@@ -615,6 +615,226 @@ export async function registerRoutes(
     }
   });
 
+  // ============ SUPERLOOP CONNECT API ROUTES ============
+  
+  // Check if Superloop is configured
+  app.get("/api/superloop/status", async (_req, res) => {
+    try {
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      res.json({ 
+        configured: client.isConfigured(),
+        mode: client.isConfigured() ? 'live' : 'simulated'
+      });
+    } catch (error: any) {
+      res.json({ configured: false, mode: 'simulated' });
+    }
+  });
+
+  // Superloop location search (address autocomplete)
+  app.get("/api/superloop/locations", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 3) {
+        return res.json({ locations: [] });
+      }
+
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      
+      if (!client.isConfigured()) {
+        return res.json({ locations: [], mode: 'simulated' });
+      }
+
+      const locations = await client.searchLocationEnhanced(query);
+      res.json({ 
+        locations: locations.map(loc => ({
+          id: loc.id,
+          address: loc.description || loc.address,
+          suburb: loc.suburb,
+          state: loc.state,
+          postcode: loc.postcode
+        })),
+        mode: 'live'
+      });
+    } catch (error: any) {
+      console.error('Superloop location search error:', error);
+      res.json({ locations: [], error: error.message });
+    }
+  });
+
+  // Superloop full service qualification
+  app.post("/api/superloop/qualify", async (req, res) => {
+    try {
+      const { locationId } = req.body;
+      
+      if (!locationId) {
+        return res.status(400).json({ message: "Location ID is required" });
+      }
+
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      
+      if (!client.isConfigured()) {
+        return res.status(400).json({ 
+          message: "Superloop API not configured",
+          mode: 'simulated'
+        });
+      }
+
+      const qualification = await client.qualifyLocation(locationId);
+      
+      res.json({
+        success: true,
+        qualification: {
+          locId: qualification.locId,
+          locationId: qualification.locationId,
+          qualificationSearchId: qualification.qualificationSearchId,
+          remoteQualificationSearchId: qualification.remoteQualificationSearchId,
+          technologyType: qualification.technologyType,
+          serviceClass: qualification.serviceClass,
+          maxDownload: qualification.maxDownload,
+          maxUpload: qualification.maxUpload,
+          available: qualification.available,
+          region: qualification.region,
+          poi: qualification.poi,
+          poiName: qualification.poiName,
+          hasActivePOTS: qualification.hasActivePOTS,
+          serviceType: qualification.serviceType,
+          generationTwoNtds: qualification.generationTwoNtds,
+          firstOrAdditionalNtdPlans: qualification.firstOrAdditionalNtdPlans,
+          generationOneNtdPlans: qualification.generationOneNtdPlans,
+          generationTwoNtdPlans: qualification.generationTwoNtdPlans,
+          infrastructures: qualification.infrastructures,
+          infrastructureInstallationOptions: qualification.infrastructureInstallationOptions,
+          plans: qualification.plans,
+        },
+        mode: 'live'
+      });
+    } catch (error: any) {
+      console.error('Superloop qualification error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: error.message || "Service qualification failed"
+      });
+    }
+  });
+
+  // Superloop create order
+  app.post("/api/superloop/orders", requireAuth, async (req, res) => {
+    try {
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      
+      if (!client.isConfigured()) {
+        return res.status(400).json({ 
+          message: "Superloop API not configured",
+          mode: 'simulated'
+        });
+      }
+
+      const {
+        qualificationSearchId,
+        locationId,
+        planName,
+        term,
+        trafficClass,
+        restorationSla,
+        contactName,
+        contactPhone,
+        contactEmail,
+        aggregationMethod,
+        ntdInstallation,
+        ntdOption,
+        infrastructureId,
+        portId,
+        avcIdForTransfer,
+        transferType,
+        customerReference,
+      } = req.body;
+
+      const orderResponse = await client.createOrder({
+        sourceType: 'nbn',
+        qualificationSearchId,
+        locationId,
+        planName,
+        term: term || 1,
+        trafficClass: trafficClass || 'tc4',
+        restorationSla: restorationSla || 'Standard',
+        contactName,
+        contactPhone,
+        contactEmail,
+        aggregationMethod: aggregationMethod || 'L2TP',
+        ntdInstallation: ntdInstallation || 'nbn-tech',
+        ntdOption,
+        infrastructureId,
+        portId,
+        avcIdForTransfer,
+        transferType,
+        customerReference: customerReference || `BRO-${req.session.userId}`,
+      });
+
+      res.json({
+        success: true,
+        order: orderResponse,
+        mode: 'live'
+      });
+    } catch (error: any) {
+      console.error('Superloop order creation error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: error.message || "Order creation failed"
+      });
+    }
+  });
+
+  // Superloop get order status
+  app.get("/api/superloop/orders/:orderId", requireAuth, async (req, res) => {
+    try {
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      
+      if (!client.isConfigured()) {
+        return res.status(400).json({ message: "Superloop API not configured" });
+      }
+
+      const orderId = parseInt(req.params.orderId);
+      if (isNaN(orderId)) {
+        return res.status(400).json({ message: "Invalid order ID" });
+      }
+
+      const order = await client.getOrder(orderId);
+      res.json({ success: true, order });
+    } catch (error: any) {
+      console.error('Superloop get order error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Superloop AVC qualification (for transfer orders)
+  app.post("/api/superloop/avc-qualify", async (req, res) => {
+    try {
+      const { avcId } = req.body;
+      
+      if (!avcId) {
+        return res.status(400).json({ message: "AVC ID is required" });
+      }
+
+      const { getSuperloopClient } = await import('./superloopClient');
+      const client = getSuperloopClient();
+      
+      if (!client.isConfigured()) {
+        return res.status(400).json({ message: "Superloop API not configured" });
+      }
+
+      const result = await client.qualifyAvc(avcId);
+      res.json({ success: true, qualification: result });
+    } catch (error: any) {
+      console.error('Superloop AVC qualification error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ ADMIN: NBN DATASET MANAGEMENT ============
   
   // Get all dataset records
