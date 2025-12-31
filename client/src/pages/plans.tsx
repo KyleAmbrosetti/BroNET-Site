@@ -1,11 +1,11 @@
 import { PlanCard } from "@/components/plan-card";
 import { AddressSearch } from "@/components/address-search";
 import { Button } from "@/components/ui/button";
-import { Check, X, MapPin, CheckCircle2, Cable, Zap, Lock, Wifi } from "lucide-react";
+import { Check, X, MapPin, CheckCircle2, Cable, Zap, Lock, Wifi, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -20,6 +20,116 @@ type CoverageResult = {
   available?: boolean;
   source: string;
 };
+
+type PlanData = {
+  name: string;
+  speed: number;
+  upload: number;
+  price: number;
+  typical: string;
+  typicalUpload?: string;
+  tier: 'basic' | 'power' | 'ultra';
+  popular?: boolean;
+  badge?: string;
+};
+
+function PlansCarousel({ 
+  plans, 
+  isPlanAvailable, 
+  coverageVerified, 
+  address 
+}: { 
+  plans: PlanData[];
+  isPlanAvailable: (speed: number) => boolean;
+  coverageVerified: boolean;
+  address?: string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScrollability = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollability();
+    window.addEventListener('resize', checkScrollability);
+    return () => window.removeEventListener('resize', checkScrollability);
+  }, []);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const cardWidth = 296; // 280px card + 16px gap
+      const scrollAmount = direction === 'left' ? -cardWidth : cardWidth;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      setTimeout(checkScrollability, 300);
+    }
+  };
+
+  return (
+    <div className="relative mb-16">
+      {canScrollLeft && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          onClick={() => scroll('left')}
+          data-testid="button-scroll-left"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+      )}
+      
+      <div 
+        ref={scrollRef}
+        className="overflow-x-auto pb-4 px-8 pt-2 scrollbar-hide"
+        onScroll={checkScrollability}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div className="flex gap-4 min-w-max py-2">
+          {plans.map((plan) => {
+            const available = isPlanAvailable(plan.speed);
+            return (
+              <div key={plan.name} className="w-[280px] flex-shrink-0">
+                <PlanCard
+                  name={plan.name}
+                  speed={plan.speed}
+                  upload={plan.upload}
+                  price={plan.price}
+                  typicalSpeed={plan.typical}
+                  typicalUpload={plan.typicalUpload}
+                  isPopular={plan.popular}
+                  tier={plan.tier}
+                  badge={plan.badge}
+                  disabled={coverageVerified && !available}
+                  showSignup={available}
+                  address={address}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {canScrollRight && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg border-2 h-12 w-12 rounded-full"
+          onClick={() => scroll('right')}
+          data-testid="button-scroll-right"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export default function Plans() {
   const [address, setAddress] = useState("");
@@ -303,31 +413,12 @@ export default function Plans() {
           </p>
         </div>
 
-        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4 pt-2">
-          <div className="flex gap-4 min-w-max py-2">
-            {plans.map((plan) => {
-              const available = isPlanAvailable(plan.speed, false);
-              return (
-                <div key={plan.name} className="w-[280px] flex-shrink-0">
-                  <PlanCard
-                    name={plan.name}
-                    speed={plan.speed}
-                    upload={plan.upload}
-                    price={plan.price}
-                    typicalSpeed={plan.typical}
-                    typicalUpload={plan.typicalUpload}
-                    isPopular={plan.popular}
-                    tier={plan.tier}
-                    badge={plan.badge}
-                    disabled={coverageVerified && !available}
-                    showSignup={available}
-                    address={coverageResult?.normalizedAddress}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <PlansCarousel
+          plans={plans}
+          isPlanAvailable={(speed) => isPlanAvailable(speed, false)}
+          coverageVerified={coverageVerified}
+          address={coverageResult?.normalizedAddress}
+        />
 
         {/* Fixed Wireless Plans */}
         <div className="mb-8">
@@ -338,30 +429,12 @@ export default function Plans() {
           <p className="text-muted-foreground text-center mb-8">For regional and rural areas</p>
         </div>
 
-        <div className="overflow-x-auto pb-4 mb-16 -mx-4 px-4 pt-2">
-          <div className="flex gap-4 min-w-max justify-center py-2">
-            {fixedWirelessPlans.map((plan) => {
-              const available = isPlanAvailable(plan.speed, true);
-              return (
-                <div key={plan.name} className="w-[280px] flex-shrink-0">
-                  <PlanCard
-                    name={plan.name}
-                    speed={plan.speed}
-                    upload={plan.upload}
-                    price={plan.price}
-                    typicalSpeed={plan.typical}
-                    isPopular={plan.popular}
-                    tier={plan.tier}
-                    badge={plan.badge}
-                    disabled={coverageVerified && !available}
-                    showSignup={available}
-                    address={coverageResult?.normalizedAddress}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <PlansCarousel
+          plans={fixedWirelessPlans}
+          isPlanAvailable={(speed) => isPlanAvailable(speed, true)}
+          coverageVerified={coverageVerified}
+          address={coverageResult?.normalizedAddress}
+        />
 
         {/* Why Choose Section */}
         <section className="py-16 max-w-5xl mx-auto">
