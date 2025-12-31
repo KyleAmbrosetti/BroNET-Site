@@ -850,6 +850,30 @@ export async function registerRoutes(
     }
   });
 
+  // Delete order (admin only, cancelled orders only)
+  app.delete("/api/admin/orders/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const order = await storage.getOrder(req.params.id);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      if (order.status !== 'cancelled') {
+        return res.status(400).json({ message: "Only cancelled orders can be deleted" });
+      }
+      
+      await storage.deleteOrder(req.params.id);
+      res.json({ success: true, message: "Order deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ EMAIL SIGNUP ROUTES ============
 
   // Subscribe to email notifications (coming soon page)

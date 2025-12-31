@@ -305,6 +305,25 @@ export default function Admin() {
     setStatusMessage('');
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to delete this cancelled order? This action cannot be undone.')) {
+      return;
+    }
+    
+    const { error } = await api.deleteAdminOrder(orderId);
+    
+    if (error) {
+      toast({
+        title: "Failed to delete order",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "Order deleted" });
+      loadOrders();
+    }
+  };
+
   const handleCreate = async () => {
     const { data, error } = await api.createIncident({
       title,
@@ -997,15 +1016,27 @@ export default function Admin() {
                             {format(new Date(order.createdAt), 'PP')}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleViewOrder(order)}
-                              data-testid={`button-view-order-${order.id}`}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleViewOrder(order)}
+                                data-testid={`button-view-order-${order.id}`}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              {order.status === 'cancelled' && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  data-testid={`button-delete-order-${order.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

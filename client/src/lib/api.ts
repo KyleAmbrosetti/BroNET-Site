@@ -214,4 +214,8 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ status, message }),
   }),
+  
+  deleteAdminOrder: (id: string) => apiFetch(`/admin/orders/${id}`, {
+    method: 'DELETE',
+  }),
 };
