@@ -142,60 +142,69 @@ export default function Plans() {
 
   const plans = [
     { 
-      name: "NBN 50", 
+      name: "NBN 50/20", 
       speed: 50, 
       upload: 20, 
-      price: 69, 
+      price: 94, 
       typical: "50 Mbps",
       typicalUpload: "17",
       tier: 'basic' as const
     },
     { 
-      name: "NBN 100", 
+      name: "NBN 100/20", 
       speed: 100, 
       upload: 20, 
-      price: 89, 
+      price: 105, 
       typical: "98 Mbps",
       typicalUpload: "18",
       tier: 'basic' as const,
       popular: true
     },
     { 
-      name: "NBN 250", 
+      name: "NBN 250/100", 
       speed: 250, 
-      upload: 25, 
-      price: 109, 
+      upload: 100, 
+      price: 110, 
       typical: "245 Mbps",
-      typicalUpload: "23",
+      typicalUpload: "95",
       tier: 'power' as const
     },
     { 
-      name: "NBN 500", 
+      name: "NBN 500/200", 
       speed: 500, 
-      upload: 50, 
-      price: 119, 
+      upload: 200, 
+      price: 131, 
       typical: "480 Mbps",
-      typicalUpload: "45",
+      typicalUpload: "190",
       tier: 'power' as const
     },
     { 
-      name: "NBN 1000", 
+      name: "NBN 1000/400", 
       speed: 1000, 
-      upload: 50, 
-      price: 129, 
-      typical: "850 Mbps",
-      typicalUpload: "45",
+      upload: 400, 
+      price: 152, 
+      typical: "900 Mbps",
+      typicalUpload: "380",
       tier: 'ultra' as const
     },
     { 
-      name: "NBN 2000", 
+      name: "NBN 2000/200", 
       speed: 2000, 
       upload: 200, 
-      price: 155, 
+      price: 183, 
       typical: "1800 Mbps",
-      typicalUpload: "170",
+      typicalUpload: "190",
+      tier: 'ultra' as const
+    },
+    { 
+      name: "NBN 2000/500", 
+      speed: 2000, 
+      upload: 500, 
+      price: 246, 
+      typical: "1800 Mbps",
+      typicalUpload: "480",
       tier: 'ultra' as const,
-      badge: "New"
+      badge: "Ultimate"
     },
   ];
 
