@@ -405,8 +405,15 @@ export default function SignupWizard() {
   };
 
   const getAvailablePlans = (): Plan[] => {
-    // Get max speed from qualification, default to highest if not yet qualified
-    const maxSpeed = qualification?.maxDownload || 2000;
+    // Get max speed from qualification first, then try to parse from coverageResult.maxTier
+    let maxSpeed = qualification?.maxDownload || 2000;
+    if (!qualification?.maxDownload && coverageResult?.maxTier) {
+      // Parse maxTier string like "75 Mbps" or "1000 Mbps"
+      const tierMatch = coverageResult.maxTier.match(/(\d+)/);
+      if (tierMatch) {
+        maxSpeed = parseInt(tierMatch[1], 10);
+      }
+    }
     
     // Determine technology type - check both qualification and coverage result
     const technology = qualification?.technology || coverageResult?.technology || "";
@@ -420,9 +427,9 @@ export default function SignupWizard() {
 
     if (isWireless) {
       return [
-        { id: "fw25", name: "Fixed Wireless 25", speed: 25, upload: 5, price: 59, typicalEvening: 22 },
-        { id: "fw50", name: "Fixed Wireless 50", speed: 50, upload: 10, price: 69, typicalEvening: 45 },
-        { id: "fw75", name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typicalEvening: 68 },
+        { id: "fw25", name: "Fixed Wireless 25", speed: 25, upload: 5, price: 59, typicalEvening: 25 },
+        { id: "fw50", name: "Fixed Wireless 50", speed: 50, upload: 10, price: 69, typicalEvening: 47 },
+        { id: "fw75", name: "Fixed Wireless 75", speed: 75, upload: 10, price: 79, typicalEvening: 70 },
         { id: "fwplus", name: "Fixed Wireless Plus", speed: 100, upload: 20, price: 89, typicalEvening: 90 },
       ].filter(p => p.speed <= maxSpeed);
     }
