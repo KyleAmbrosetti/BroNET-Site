@@ -268,9 +268,18 @@ export default function SignupWizard() {
   };
 
   const getAvailablePlans = (): Plan[] => {
+    // Get max speed from qualification, default to highest if not yet qualified
     const maxSpeed = qualification?.maxDownload || 2000;
-    const isWireless = qualification?.technology?.toLowerCase().includes("wireless") || 
-                       coverageResult?.technology?.toLowerCase().includes("wireless");
+    
+    // Determine technology type - check both qualification and coverage result
+    const technology = qualification?.technology || coverageResult?.technology || "";
+    const techLower = technology.toLowerCase();
+    
+    // Fixed Wireless plans only for wireless technology
+    const isWireless = techLower.includes("wireless") || techLower.includes("fixed wireless");
+    
+    // Satellite has very limited speeds
+    const isSatellite = techLower.includes("satellite");
 
     if (isWireless) {
       return [
@@ -281,13 +290,24 @@ export default function SignupWizard() {
       ].filter(p => p.speed <= maxSpeed);
     }
 
-    return [
+    if (isSatellite) {
+      return [
+        { id: "sat25", name: "Satellite 25", speed: 25, upload: 5, price: 69, typicalEvening: 20 },
+        { id: "sat50", name: "Satellite 50", speed: 50, upload: 10, price: 89, typicalEvening: 40 },
+      ].filter(p => p.speed <= maxSpeed);
+    }
+
+    // NBN fibre/HFC/FTTC/FTTB plans - show all that fit within maxSpeed
+    // Plans must match Stripe products exactly
+    const nbnPlans = [
       { id: "nbn50", name: "NBN 50", speed: 50, upload: 20, price: 69, typicalEvening: 45 },
       { id: "nbn100", name: "NBN 100", speed: 100, upload: 20, price: 89, typicalEvening: 90 },
       { id: "nbn250", name: "NBN 250", speed: 250, upload: 25, price: 109, typicalEvening: 215 },
       { id: "nbn1000", name: "NBN 1000", speed: 1000, upload: 50, price: 129, typicalEvening: 850 },
       { id: "nbn2000", name: "NBN 2000", speed: 2000, upload: 500, price: 155, typicalEvening: 1700 },
-    ].filter(p => p.speed <= maxSpeed);
+    ];
+    
+    return nbnPlans.filter(p => p.speed <= maxSpeed);
   };
 
   const getPriceId = (planName: string) => {
