@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { 
@@ -6,76 +5,125 @@ import {
   SheetContent, 
   SheetTrigger 
 } from "@/components/ui/sheet";
-import { Menu, Zap, User, Moon, Sun } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, Zap, User, Moon, Sun, LayoutDashboard, Phone, ChevronRight, Monitor, Check } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/hooks/use-user";
+import { Alex } from "@/components/chatbot";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useUser();
 
   const isPortal = location.startsWith("/dashboard");
 
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
     const isActive = location === href;
     return (
-      <Link href={href}>
-        <a className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-          {children}
-        </a>
+      <Link href={href} className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary" : "text-foreground"}`}>
+        {children}
       </Link>
     );
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      {/* Navbar - Superloop Style */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/">
-            <a className="flex items-center gap-2">
-              <div className="bg-gradient-brand p-1.5 rounded-lg text-white">
-                <Zap className="h-5 w-5 fill-current" />
-              </div>
-              <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
-            </a>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-primary p-1.5 rounded-lg text-white">
+              <Zap className="h-5 w-5 fill-current" />
+            </div>
+            <span className="font-heading font-bold text-xl tracking-tight">BroNET</span>
           </Link>
+          {/* BroNET logo links to coming soon page (/) */}
 
           {/* Desktop Nav */}
-          {!isPortal && (
-            <nav className="hidden md:flex items-center gap-8">
-              <NavLink href="/">Home</NavLink>
-              <NavLink href="/plans">Plans</NavLink>
-              <NavLink href="/coverage">Coverage</NavLink>
-              <NavLink href="/support">Support</NavLink>
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-6">
+            <NavLink href="/home">Home</NavLink>
+            <NavLink href="/plans">nbn plans</NavLink>
+            <NavLink href="/mobile">Mobile</NavLink>
+            <NavLink href="/modems">Modems</NavLink>
+            <NavLink href="/coverage">Check address</NavLink>
+            <NavLink href="/speed-test">Speed test</NavLink>
+            <NavLink href="/support">Support</NavLink>
+            {user?.isAdmin && <NavLink href="/admin">Admin</NavLink>}
+          </nav>
 
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-
-            {isPortal ? (
-              <Button variant="ghost" asChild>
-                <Link href="/auth">Sign Out</Link>
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" className="hidden sm:flex" asChild>
-                  <Link href="/auth">
-                    <User className="mr-2 h-4 w-4" />
-                    Portal
-                  </Link>
+          <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-theme-toggle">
+                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
                 </Button>
-                <Button className="bg-gradient-brand text-white border-0 hover:opacity-90 transition-opacity" asChild>
-                  <Link href="/coverage">Check Address</Link>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={() => {
+                    localStorage.setItem('theme-preference', 'light');
+                    setTheme('light');
+                  }}
+                  data-testid="theme-light"
+                >
+                  <Sun className="mr-2 h-4 w-4" />
+                  Light
+                  {localStorage.getItem('theme-preference') === 'light' && (
+                    <Check className="ml-auto h-4 w-4" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    localStorage.setItem('theme-preference', 'dark');
+                    setTheme('dark');
+                  }}
+                  data-testid="theme-dark"
+                >
+                  <Moon className="mr-2 h-4 w-4" />
+                  Dark
+                  {localStorage.getItem('theme-preference') === 'dark' && (
+                    <Check className="ml-auto h-4 w-4" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    localStorage.setItem('theme-preference', 'auto');
+                    const hour = new Date().getHours();
+                    setTheme(hour >= 6 && hour < 18 ? 'light' : 'dark');
+                  }}
+                  data-testid="theme-auto"
+                >
+                  <Monitor className="mr-2 h-4 w-4" />
+                  Auto
+                  {(localStorage.getItem('theme-preference') === 'auto' || !localStorage.getItem('theme-preference')) && (
+                    <Check className="ml-auto h-4 w-4" />
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {user ? (
+               <Button variant="outline" size="sm" asChild>
+                 <Link href="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    My Account
+                 </Link>
+               </Button>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/auth">
+                    Log in
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             )}
@@ -88,13 +136,44 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
-                  <div className="flex flex-col gap-4 mt-8">
-                    <Link href="/"><a className="text-lg font-medium">Home</a></Link>
-                    <Link href="/plans"><a className="text-lg font-medium">Plans</a></Link>
-                    <Link href="/coverage"><a className="text-lg font-medium">Coverage</a></Link>
-                    <Link href="/support"><a className="text-lg font-medium">Support</a></Link>
-                    <Link href="/auth"><a className="text-lg font-medium">Customer Portal</a></Link>
+                <SheetContent side="right" className="w-80">
+                  <div className="flex flex-col gap-1 mt-8">
+                    <Link href="/home" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Home <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/plans" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      nbn plans <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/mobile" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Mobile <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/modems" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Modems <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/coverage" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Check address <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/speed-test" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Speed test <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <Link href="/support" className="flex items-center justify-between py-3 px-2 text-lg font-medium hover:bg-muted rounded-lg">
+                      Support <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                    <div className="border-t my-4" />
+                    {user ? (
+                      <>
+                        <Link href="/dashboard" className="flex items-center justify-between py-3 px-2 text-lg font-medium text-primary hover:bg-muted rounded-lg">
+                          My Account <ChevronRight className="h-5 w-5" />
+                        </Link>
+                        <button onClick={logout} className="flex items-center py-3 px-2 text-lg font-medium text-muted-foreground hover:bg-muted rounded-lg text-left">
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <Link href="/auth" className="flex items-center justify-between py-3 px-2 text-lg font-medium text-primary hover:bg-muted rounded-lg">
+                        Log in <ChevronRight className="h-5 w-5" />
+                      </Link>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>
@@ -108,48 +187,79 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      {/* Footer */}
+      {/* Footer - Superloop Style */}
       {!isPortal && (
-        <footer className="border-t bg-muted/30 py-12">
-          <div className="container px-4 md:px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <footer className="border-t bg-muted/30">
+          {/* CTA Banner */}
+          <div className="bg-gradient-brand py-12">
+            <div className="container px-4 md:px-6 text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Upgrade your internet</h2>
+              <p className="text-white/80 mb-6">Or, contact our call centre on <a href="tel:0742766387" className="underline font-medium">07 4276 6387</a></p>
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/plans">View Plans</Link>
+              </Button>
+            </div>
+          </div>
+          
+          <div className="container px-4 md:px-6 py-12">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
               <div>
-                <h3 className="font-bold mb-4">BroNET</h3>
-                <p className="text-sm text-muted-foreground">
-                  Lightning fast NBN for Aussie legends. No BS, just speed.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-bold mb-4">Plans</h3>
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  Residential
+                </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><Link href="/plans">NBN 100</Link></li>
-                  <li><Link href="/plans">NBN 250</Link></li>
-                  <li><Link href="/plans">NBN 1000</Link></li>
+                  <li><Link href="/plans" className="hover:text-foreground">nbn plans</Link></li>
+                  <li><Link href="/nbn-2000" className="hover:text-foreground">nbn 2000 plans</Link></li>
+                  <li><Link href="/modems" className="hover:text-foreground">Modems</Link></li>
+                  <li><Link href="/mobile" className="hover:text-foreground">Mobile SIM</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-bold mb-4">Support</h3>
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                  Contact
+                </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><Link href="/support">Help Center</Link></li>
-                  <li><Link href="/support">Network Status</Link></li>
-                  <li><Link href="/support">Contact Us</Link></li>
+                  <li><Link href="/support" className="hover:text-foreground">Support</Link></li>
+                  <li><Link href="/support" className="hover:text-foreground">Network Status</Link></li>
+                  <li><a href="tel:0742766387" className="hover:text-foreground">07 4276 6387</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold mb-4">Company</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/about" className="hover:text-foreground">About BroNET</Link></li>
+                  <li><Link href="/support" className="hover:text-foreground">Careers</Link></li>
                 </ul>
               </div>
               <div>
                 <h3 className="font-bold mb-4">Legal</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Terms of Service</li>
-                  <li>Privacy Policy</li>
-                  <li>Critical Info Summaries</li>
+                  <li><Link href="/terms" className="hover:text-foreground">Terms & Conditions</Link></li>
+                  <li><Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link></li>
+                  <li><Link href="/cis" className="hover:text-foreground">Critical Info Summary</Link></li>
+                  <li><Link href="/abuse" className="hover:text-foreground">Report Abuse</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold mb-4">Support</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/support" className="hover:text-foreground">Help Centre</Link></li>
+                  <li><Link href="/coverage" className="hover:text-foreground">Check Coverage</Link></li>
+                  <li><Link href="/speed-test" className="hover:text-foreground">Speed Test</Link></li>
                 </ul>
               </div>
             </div>
             <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-              <p>&copy; 2025 BroNET Pty Ltd. ABN 12 345 678 901.</p>
+              <p>&copy; 2025 BroNET Pty Ltd. ABN 43 150 753 265. All rights reserved.</p>
             </div>
           </div>
         </footer>
       )}
+      
+      {/* Alex AI Assistant - Hidden */}
+      {/* <Alex /> */}
     </div>
   );
 }

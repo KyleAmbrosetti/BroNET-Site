@@ -2,15 +2,236 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { runMigrations } from 'stripe-replit-sync';
+import { getStripeSync } from './stripeClient';
+import { WebhookHandlers } from './webhookHandlers';
+import bcrypt from 'bcrypt';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Create admin account if it doesn't exist
+async function ensureAdminAccount() {
+  try {
+    const { db } = await import('./db');
+    const { users } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    const adminEmail = 'admin@brointernet.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'BroNet2025!';
+    
+    // Check if admin exists
+    const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
+    
+    if (existingAdmin.length === 0) {
+      console.log('Creating admin account...');
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await db.insert(users).values({
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        isAdmin: 1,
+      });
+      console.log('Admin account created: admin@brointernet.com');
+    } else if (existingAdmin[0].isAdmin !== 1) {
+      // Promote existing user to admin
+      await db.update(users).set({ isAdmin: 1 }).where(eq(users.email, adminEmail));
+      console.log('Promoted admin@brointernet.com to admin');
+    } else {
+      console.log('Admin account already exists');
+    }
+  } catch (error) {
+    console.error('Failed to ensure admin account:', error);
+  }
+}
+
+// Initialize admin account on startup
+(async () => {
+  await ensureAdminAccount();
+})();
 
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
 }
+
+async function initStripe() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.log('DATABASE_URL not set, skipping Stripe initialization');
+    return;
+  }
+
+  try {
+    console.log('Initializing Stripe schema...');
+    await runMigrations({ databaseUrl, schema: 'stripe' });
+    console.log('Stripe schema ready');
+
+    const stripeSync = await getStripeSync();
+
+    console.log('Setting up managed webhook...');
+    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+    try {
+      const result = await stripeSync.findOrCreateManagedWebhook(
+        `${webhookBaseUrl}/api/stripe/webhook`
+      );
+      if (result?.webhook?.url) {
+        console.log(`Webhook configured: ${result.webhook.url}`);
+      } else {
+        console.log('Webhook setup completed (no URL returned)');
+      }
+    } catch (webhookError) {
+      console.log('Webhook setup skipped (will be configured on next restart)');
+    }
+
+    console.log('Syncing Stripe data...');
+    stripeSync.syncBackfill()
+      .then(() => console.log('Stripe data synced'))
+      .catch((err: any) => console.error('Error syncing Stripe data:', err));
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+  }
+}
+
+// Initialize Stripe (wrapped in IIFE for CommonJS compatibility)
+(async () => {
+  await initStripe();
+})();
+
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      if (!Buffer.isBuffer(req.body)) {
+        console.error('Webhook body is not a Buffer');
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      
+      // Handle checkout.session.completed to update order status
+      try {
+        const { getUncachableStripeClient } = await import('./stripeClient');
+        const stripe = await getUncachableStripeClient();
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        
+        if (webhookSecret) {
+          const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+          
+          if (event.type === 'checkout.session.completed') {
+            const session = event.data.object as any;
+            const orderId = session.metadata?.orderId;
+            const subscriptionId = session.subscription;
+            
+            if (orderId) {
+              console.log(`Checkout completed for order: ${orderId}`);
+              const { db } = await import('./db');
+              const { serviceOrders, orderStatusHistory } = await import('@shared/schema');
+              const { eq } = await import('drizzle-orm');
+              
+              await db.update(serviceOrders)
+                .set({ 
+                  status: 'submitted',
+                  stripeSessionId: session.id,
+                  stripeSubscriptionId: subscriptionId || null,
+                  updatedAt: new Date()
+                })
+                .where(eq(serviceOrders.id, orderId));
+              
+              await db.insert(orderStatusHistory).values({
+                orderId,
+                status: 'submitted',
+                message: 'Payment completed - order submitted for processing',
+                updatedBy: 'stripe_webhook',
+              });
+              
+              console.log(`Order ${orderId} updated to submitted status`);
+            }
+          }
+        }
+      } catch (webhookErr: any) {
+        console.log('Custom webhook handling skipped:', webhookErr.message);
+      }
+      
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
+
+// Nitrogen webhook - must be BEFORE express.json() to get raw body for signature verification
+app.post(
+  '/api/webhooks/nitrogen',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    try {
+      const { nitrogenClient } = await import('./nitrogenClient');
+      const { nbnService } = await import('./nbnService');
+      
+      const signature = req.headers['x-nitrogen-signature'] as string;
+      const payload = Buffer.isBuffer(req.body) ? req.body.toString() : String(req.body);
+      
+      if (signature && !nitrogenClient.verifyWebhookSignature(payload, signature)) {
+        console.warn("Invalid Nitrogen webhook signature");
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+
+      const event = nitrogenClient.parseWebhookEvent(payload);
+      console.log(`Nitrogen webhook: ${event.eventType} for ${event.resourceType}/${event.resourceId}`);
+
+      const updateByNbnId = async (status: string, message: string) => {
+        const updated = await nbnService.updateOrderByNbnOrderId(event.resourceId, status, message, 'nitrogen');
+        if (!updated) {
+          console.warn(`No order found with nbnOrderId: ${event.resourceId}`);
+        }
+        return updated;
+      };
+
+      switch (event.eventType) {
+        case 'order.completed.event':
+          await updateByNbnId('active', 'Service connected successfully');
+          break;
+        
+        case 'order.accepted.event':
+          await updateByNbnId('in_progress', 'Order accepted by NBN');
+          break;
+
+        case 'order.rejected.event':
+        case 'order.failed.event':
+          await updateByNbnId('failed', event.data?.reason || 'Order rejected');
+          break;
+
+        case 'order.cancelled.event':
+          await updateByNbnId('cancelled', event.data?.reason || 'Order cancelled');
+          break;
+
+        case 'order.appointment-required.event':
+        case 'order.appointment-reschedule-required.event':
+          await updateByNbnId('pending', 'Appointment required - please contact support');
+          break;
+
+        default:
+          console.log(`Unhandled Nitrogen event: ${event.eventType}`);
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error("Nitrogen webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  }
+);
 
 app.use(
   express.json({
